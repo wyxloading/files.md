@@ -1,3 +1,5 @@
+// Package stats generates fancy reports
+// containing completed tasks and habits, checked items and so on
 package stats
 
 import (
@@ -24,18 +26,6 @@ func TodayReport(fsys *fs.FS, db *db.DB, userID int64) (string, error) {
 	for _, file := range files {
 		ico := icon(file)
 		stats = append(stats, fmt.Sprintf("%s <b>%s</b>", ico, fs.Title(file)))
-		//	if (preg_match('/-read-_.*/', $task)) {
-		//	$list .=
-		//	} elseif (preg_match('/-watch-_.*/', $task)) {
-		//	$list .= '📺 <b>' . preg_replace('/-.*?-_/', '', $this->toTitle($task)) . "</b>\n";
-		//	} elseif (preg_match('/-shop-_.*/', $task)) {
-		//	$list .= '🛒 <b>' . preg_replace('/-.*?-_/', '', $this->toTitle($task)) . "</b>\n";
-		//	} elseif (preg_match('/-.*?-_.*/', $task)) {
-		//	$list .= '☑️ <b>' . preg_replace('/-.*?-_/', '', $this->toTitle($task)) . "</b>\n";
-		//	} else {
-		//	$list .= '✅ <b>' . $this->toTitle($task) . "</b>\n";
-		//	}
-		//}
 	}
 
 	trashedFiles, err := fsys.FilesAndDirs(fs.DirTrash)

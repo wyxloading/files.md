@@ -8,7 +8,7 @@
 make install && make run
 ```
 
-### Overarching principles
+### Overarching design principles
 - Clarity: The code’s purpose and rationale is clear to the reader.
 - Simplicity: The code accomplishes its goal in the simplest way possible.
 - Concision: The code has a high signal-to-noise ratio.
@@ -16,7 +16,8 @@ make install && make run
 - Consistency: The code is consistent across the database  
 Refer to [developer's handbook](https://github.com/zakirullin/cognitive-load) for more comprehensive guiding rules.
 
-### Decisions
+### Guidelines
+- With portability in mind, everything is stored in **plain text files**
 - Write tests!
 - Don't use get* prefix for methods
 - Panics are part of business logic, don't use them

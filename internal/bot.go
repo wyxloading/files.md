@@ -857,7 +857,10 @@ func (b *Bot) complete(params []string) error {
 		return fmt.Errorf("b.complete: can't unhash filename %s: %w", filename, err)
 	}
 
-	// TODO touch
+	if err = b.fs.Touch(dir, filename); err != nil {
+		return fmt.Errorf("b.complete: can't touch %s: %w", filename, err)
+	}
+
 	// TODO multiline
 	err = b.fs.Rename(dir, filename, fs.DirTrash, filename)
 	if err != nil {

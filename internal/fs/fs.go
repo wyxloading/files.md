@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/spf13/afero"
 	"golang.org/x/exp/slices"
@@ -443,4 +444,24 @@ func (fs FS) path(dir, filename string) string {
 	}
 
 	return fmt.Sprintf("%s/%s/%s", fs.rootPath, dir, filename)
+}
+
+// Creates a file if it doesn't exist
+// Otherwise, updates its access and modification times
+func (fs FS) Touch(dir, filename string) error {
+	exists, err := fs.Exists(dir, filename)
+	if err != nil {
+		return fmt.Errorf("fs.Touch: can't check if file exists: %w", err)
+	}
+	if exists {
+		err = fs.backend.Chtimes(fs.path(dir, filename), time.Now(), time.Now())
+		if err != nil {
+			return fmt.Errorf("fs.Touch: can't update file's ctime: %w", err)
+		}
+	}
+	err = fs.Put(dir, filename, "")
+	if err != nil {
+		return fmt.Errorf("fs.Touch: can't create empty file: %w", err)
+	}
+	return nil
 }

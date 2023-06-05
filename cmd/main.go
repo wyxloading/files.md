@@ -32,7 +32,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Error loading i18n: %s\n", err))
 	}
-	err = i18n.LoadEmojiFile("assets/emoji.json")
+	err = i18n.LoadEmojiFile("assets/emojis.json")
 	if err != nil {
 		panic(fmt.Sprintf("Error loading emoji: %s\n", err))
 	}

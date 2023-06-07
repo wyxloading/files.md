@@ -1,6 +1,6 @@
 <img src="https://github.com/zakirullin/stuff-bot/raw/main/cmd/testdata/_img_/gopher_only.svg" alt="Stuff Bot logo" title="Stuff Bot" align="right" height="60" />
 
-# Stuff Bot 🌱
+# Stuff Bot
 A telegram bot for your personal stuff.
 
 ## Spin it up

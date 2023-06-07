@@ -571,7 +571,7 @@ func (b *Bot) showRenameFile(params []string) error {
 	}
 
 	kb := tg.NewKeyboard([]tg.Row{
-		tg.NewRow(tg.NewBtn("back", tg.NewCmd(dir, []string{dir}))),
+		tg.NewRow(tg.NewBtn(strBtnBack, tg.NewCmd(dir, []string{dir}))),
 	})
 
 	err = b.db.SetInputExpectation(b.userID, tg.NewCmd(cmdMove, []string{dir, filename, dir, "%s"}))
@@ -616,7 +616,7 @@ func (b *Bot) showTask(params []string) error {
 	}
 
 	kb := tg.NewKeyboard([]tg.Row{
-		tg.NewRow(tg.NewBtn("back", tg.NewCmd(dir, []string{dir}))),
+		tg.NewRow(tg.NewBtn(strBtnBack, tg.NewCmd(dir, []string{dir}))),
 	})
 
 	err = b.show(fmt.Sprintf("%s\n%s", fs.Title(filename), content), kb, tg.MarkupHTML)
@@ -641,7 +641,7 @@ func (b *Bot) showDoc(params []string) error {
 	}
 
 	kb := tg.NewKeyboard([]tg.Row{
-		tg.NewRow(tg.NewBtn("back", tg.NewCmd(cmdShowDocs, nil))),
+		tg.NewRow(tg.NewBtn(strBtnBack, tg.NewCmd(cmdShowDocs, nil))),
 	})
 
 	err = b.show(fmt.Sprintf("%s\n%s", fs.Title(filename), content), kb, tg.MarkupHTML)
@@ -669,7 +669,7 @@ func (b *Bot) showChecklist(params []string) error {
 	for _, item := range items {
 		kb.AddRow(tg.NewBtn(item.Title, tg.NewCmd(cmdComplete, []string{})))
 	}
-	kb.AddRow(tg.NewRow(tg.NewBtn("back", tg.NewCmd(cmdShowDocs, nil))))
+	kb.AddRow(tg.NewRow(tg.NewBtn(strBtnBack, tg.NewCmd(cmdShowDocs, nil))))
 
 	err = b.show(fs.Title(checklist), kb, tg.MarkupHTML)
 	if err != nil {

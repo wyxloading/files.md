@@ -1,6 +1,6 @@
 package str
 
-// return a int value in [0, 100], which stands for match level
+// Similar returns an int value in [0, 100], which stands for match level
 func Similar(str1 string, str2 string) int {
 	txt1, txt2 := []rune(str1), []rune(str2)
 	if len(txt1) == 0 || len(txt2) == 0 {
@@ -9,7 +9,7 @@ func Similar(str1 string, str2 string) int {
 	return similarChar(txt1, txt2) * 200 / (len(txt1) + len(txt2))
 }
 
-// return the len of longest string both in str1 and str2 and the positions in str1 and str2
+// returns the len of the longest string both in str1 and str2 and the positions in str1 and str2
 func similarStr(str1 []rune, str2 []rune) (int, int, int) {
 	var maxLen, tmp, pos1, pos2 = 0, 0, 0, 0
 	len1, len2 := len(str1), len(str2)
@@ -30,7 +30,7 @@ func similarStr(str1 []rune, str2 []rune) (int, int, int) {
 	return maxLen, pos1, pos2
 }
 
-// return the total length of longest string both in str1 and str2
+// returns the total length of longest string both in str1 and str2
 func similarChar(str1 []rune, str2 []rune) int {
 	maxLen, pos1, pos2 := similarStr(str1, str2)
 	total := maxLen

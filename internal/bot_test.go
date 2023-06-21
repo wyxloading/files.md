@@ -391,15 +391,16 @@ func TestBot_togglePomodoro(t *testing.T) {
 	r.False(pomodoroIn(fs.DirToday) || pomodoroIn(fs.DirArchive))
 }
 
-func TestBot_pomodoroCompletion(t *testing.T) {
+// Check that pomodoro is returned back to today when it's due
+func TestBot_pomodoroCompletion1(t *testing.T) {
 	r := require.New(t)
 	fsBackend := afero.NewMemMapFs()
 	t.Setenv("ADMIN_USER_ID", "-1")
 	fsys, err := fs.NewFS(-1, fsBackend)
-	r.Nil(err)
+	r.NoError(err)
 	tgram := fake.NewTG()
 	redis, err := miniredis.Run()
-	r.Nil(err)
+	r.NoError(err)
 	defer redis.Close()
 	b := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
 
@@ -413,24 +414,45 @@ func TestBot_pomodoroCompletion(t *testing.T) {
 	// Add pomodoro	to today
 	r.Nil(b.togglePomodoro(nil))
 	r.True(pomodoroIn(fs.DirToday) && !pomodoroIn(fs.DirArchive))
-	// set pomodoro duration to 100ms
-	err = b.conf.SetPomodoroDuration(2 * time.Second)
-	r.Nil(err)
+	// set pomodoro duration to 1us
+	r.NoError(b.conf.SetPomodoroDuration(time.Nanosecond))
 	// complete it
-	r.Nil(b.complete([]string{fs.DirToday, fs.FilePomodoro}))
+	r.NoError(b.complete([]string{fs.DirToday, fs.FilePomodoro}))
 	r.True(!pomodoroIn(fs.DirToday) && pomodoroIn(fs.DirArchive))
-
-	// wait less than pomodoro duration
-	time.Sleep(100 * time.Millisecond)
-	err = worker.MoveDueTasksToToday(redis, fsBackend)
-	r.Nil(err)
-	r.True(!pomodoroIn(fs.DirToday) && pomodoroIn(fs.DirArchive))
-
-	// wait until it gets back to today
-	time.Sleep(2500 * time.Millisecond)
-	err = worker.MoveDueTasksToToday(redis, fsBackend)
-	r.Nil(err)
+	// "wait" until it gets back to today
+	r.NoError(worker.MoveDueTasksToToday(redis, fsBackend))
 	r.True(pomodoroIn(fs.DirToday) && !pomodoroIn(fs.DirArchive))
+}
+
+// Check that pomodoro is not returned back to today until it's due
+func TestBot_pomodoroCompletion2(t *testing.T) {
+	r := require.New(t)
+	fsBackend := afero.NewMemMapFs()
+	t.Setenv("ADMIN_USER_ID", "-1")
+	fsys, err := fs.NewFS(-1, fsBackend)
+	r.NoError(err)
+	tgram := fake.NewTG()
+	redis, err := miniredis.Run()
+	r.NoError(err)
+	defer redis.Close()
+	b := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
+
+	pomodoroIn := func(dirName string) bool {
+		hasPomodoroInDir, err := b.fs.Exists(dirName, fs.FilePomodoro)
+		r.Nil(err)
+		return hasPomodoroInDir
+	}
+	r.False(pomodoroIn(fs.DirToday) || pomodoroIn(fs.DirArchive))
+
+	r.NoError(b.togglePomodoro(nil))
+	r.True(pomodoroIn(fs.DirToday) && !pomodoroIn(fs.DirArchive))
+	r.NoError(b.conf.SetPomodoroDuration(2 * time.Second))
+	r.NoError(b.complete([]string{fs.DirToday, fs.FilePomodoro}))
+	r.True(!pomodoroIn(fs.DirToday) && pomodoroIn(fs.DirArchive))
+	// trigger due tasks processing
+	r.NoError(worker.MoveDueTasksToToday(redis, fsBackend))
+	// pomodoro is not returned back to today
+	r.True(!pomodoroIn(fs.DirToday) && pomodoroIn(fs.DirArchive))
 }
 
 func TestBot_todayLabelIcons(t *testing.T) {

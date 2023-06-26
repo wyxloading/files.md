@@ -1,9 +1,8 @@
-package text
+package internal
 
 import (
 	"bytes"
 	"fmt"
-	"time"
 
 	"github.com/Kunde21/markdownfmt/v3/markdown"
 	"github.com/yuin/goldmark"
@@ -14,11 +13,24 @@ import (
 const (
 	dateFormat  = "02, Monday"
 	headerLevel = 4
+	journalDir  = "journal"
 )
 
-var now = time.Now // to be replaced in tests
+func (b *Bot) AddDailyNote(note string) error {
+	path := b.pathToJournal()
+	// TODO: somehow lock the file
+	content, err := b.fs.Content(journalDir, path)
+	if err != nil {
+		return err
+	}
+	content = insertDailyNote(content, note)
+	b.fs.Put(journalDir, path, content)
 
-func AddDailyNote(mdContent, note string) string {
+	return nil
+
+}
+
+func insertDailyNote(mdContent, note string) string {
 	r := markdown.NewRenderer()
 	md := goldmark.New(
 		goldmark.WithRenderer(r),
@@ -89,4 +101,8 @@ func newListItem(txt string) *ast.ListItem {
 	listItem := ast.NewListItem(0)
 	listItem.AppendChild(listItem, ast.NewString([]byte(txt)))
 	return listItem
+}
+
+func (b *Bot) pathToJournal() string {
+	return now().Format(b.conf.PathToJournal())
 }

@@ -46,6 +46,7 @@ type raw struct {
 	HomeCmd                string   `json:"homeCmd"`
 	MoveToCommands         []string `json:"moveToCommands"`
 	PomodoroDurationMinute float64  `json:"pomodoroDurationMinute"`
+	pathToJournal          string   `json:"pathToJournal"`
 }
 
 func NewConfig() *Config {
@@ -121,4 +122,15 @@ func (c *Config) PomodoroDuration() time.Duration {
 		minutes = DefaultConfig.raw.PomodoroDurationMinute
 	}
 	return time.Duration(minutes * float64(time.Minute))
+}
+
+func (c *Config) PathToJournal() string {
+	if c.raw.pathToJournal == "" {
+		return "journal/January 2006.md" // Same as in PHP bot
+	}
+	return c.raw.pathToJournal
+}
+
+func (c *Config) SetPathToJournal(path string) {
+	c.raw.pathToJournal = path
 }

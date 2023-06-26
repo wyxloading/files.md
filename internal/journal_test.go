@@ -1,10 +1,11 @@
-package text
+package internal
 
 import (
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"zakirullin/dumpbot/internal/userconfig"
 )
 
 func Test_AddDailyNote(t *testing.T) {
@@ -49,8 +50,37 @@ func Test_AddDailyNote(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := AddDailyNote(tt.md, tt.note)
+			got := insertDailyNote(tt.md, tt.note)
 			r.Equal(tt.want, got)
+		})
+	}
+}
+
+func TestBot_pathToJournal(t *testing.T) {
+	now = func() time.Time {
+		return time.Date(2023, 05, 30, 10, 04, 36, 0, time.UTC)
+	}
+	tests := []struct {
+		pathToJournalConfig string
+		want                string
+	}{
+		{
+			pathToJournalConfig: "January 2006.md",
+			want:                "May 2023.md",
+		},
+		{
+			pathToJournalConfig: "2006/01/2006-01-02.md",
+			want:                "2023/05/2023-05-30.md",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.pathToJournalConfig, func(t *testing.T) {
+			conf := userconfig.NewConfig()
+			conf.SetPathToJournal(tt.pathToJournalConfig)
+			b := &Bot{conf: conf}
+			if got := b.pathToJournal(); got != tt.want {
+				t.Errorf("pathToJournal() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

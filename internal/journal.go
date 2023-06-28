@@ -8,7 +8,7 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/text"
-	"zakirullin/dumpbot/internal/fs"
+	"zakirullin/stuffbot/internal/fs"
 )
 
 const (

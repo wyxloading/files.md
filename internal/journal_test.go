@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"zakirullin/dumpbot/internal/userconfig"
+	"zakirullin/stuffbot/internal/userconfig"
 )
 
 func Test_AddDailyNote(t *testing.T) {

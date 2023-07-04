@@ -416,3 +416,18 @@ func TestFS_PathTraversalAttack(t *testing.T) {
 	path = fs.Path("note", "../root/.ssh/authorized_keys")
 	r.Equal("/note/..|root|.ssh|authorized_keys", path)
 }
+
+func TestFS_OnlyUserDirs(t *testing.T) {
+	r := require.New(t)
+
+	fs, _ := NewFS("/", afero.NewMemMapFs())
+	_ = fs.MakeDir("str")
+	_ = fs.MakeDir("123")
+	_ = fs.MakeDir("123.56")
+
+	dirs, _ := fs.FilesAndDirs("")
+	userDirs := OnlyUserDirs(dirs)
+
+	r.Len(userDirs, 1)
+	r.Equal("123", userDirs[0].Name)
+}

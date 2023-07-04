@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -21,6 +22,7 @@ import (
 )
 
 var (
+	DefaultBackend  = afero.NewOsFs()
 	errUnsafePath   = errors.New("unsafe path, possible security issue")
 	errCannotUnhash = errors.New("cannot unhash, maybe the file is missing")
 )
@@ -590,4 +592,12 @@ func (fs FS) Path(dir, filename string) string {
 	}
 
 	return fmt.Sprintf("%s/%s/%s", fs.rootPath, dir, filename)
+}
+
+func Exists(path string) (bool, error) {
+	return afero.Exists(DefaultBackend, path)
+}
+
+func WriteFile(filename string, data []byte, perm os.FileMode) error {
+	return afero.WriteFile(DefaultBackend, filename, data, perm)
 }

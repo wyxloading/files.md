@@ -409,10 +409,10 @@ func TestBot_pomodoroCompletion1(t *testing.T) {
 	defer redis.Close()
 	b := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
 
-	currentBackend := userconfig.DefaultFS
-	userconfig.DefaultFS = fsBackend
+	currentBackend := fs.DefaultBackend
+	fs.DefaultBackend = fsBackend
 	defer func() {
-		userconfig.DefaultFS = currentBackend
+		fs.DefaultBackend = currentBackend
 	}()
 
 	pomodoroIn := func(dirName string) bool {
@@ -448,10 +448,10 @@ func TestBot_pomodoroCompletion2(t *testing.T) {
 	defer redis.Close()
 	b := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
 
-	currentBackend := userconfig.DefaultFS
-	userconfig.DefaultFS = fsBackend
+	currentBackend := fs.DefaultBackend
+	fs.DefaultBackend = fsBackend
 	defer func() {
-		userconfig.DefaultFS = currentBackend
+		fs.DefaultBackend = currentBackend
 	}()
 
 	pomodoroIn := func(dirName string) bool {

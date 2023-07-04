@@ -9,13 +9,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/spf13/afero"
 	"golang.org/x/exp/slog"
 
 	"zakirullin/stuffbot/i18n"
+	"zakirullin/stuffbot/internal/fs"
 )
-
-var DefaultFS = afero.NewOsFs()
 
 var DefaultConfig = Config{ // TODO apply default config if some fields are missing
 	raw: raw{
@@ -65,7 +63,7 @@ func NewConfig() *Config {
 }
 
 func (c *Config) LoadOrCreate(path string) error {
-	exists, err := afero.Exists(DefaultFS, path)
+	exists, err := fs.Exists(path)
 	if err != nil {
 		return fmt.Errorf("config load: %w", err)
 	}
@@ -100,7 +98,7 @@ func (c *Config) Save(path string) error { // TODO add lazy saving, save only if
 		return fmt.Errorf("config save: can't marshal config: %w", err)
 	}
 
-	err = afero.WriteFile(DefaultFS, path, bytes, 0644)
+	err = fs.WriteFile(path, bytes, 0644)
 	if err != nil {
 		return fmt.Errorf("config save: can't write config file: %w", err)
 	}

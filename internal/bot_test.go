@@ -190,6 +190,26 @@ func TestToday(t *testing.T) {
 	), tgram.SentKeyboard)
 }
 
+func TestToday_QuickMenuFilled(t *testing.T) {
+	var cfg = &userconfig.DefaultConfig
+	cfg.AddPanelButton("doc")
+	cfg.AddPanelButton("checklists")
+	cfg.AddPanelButton("postpone")
+	var bot, tgram, r = makeBot(t, cfg)
+	var err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("today", nil)))
+	r.NoError(err)
+	r.Equal("<b>1</b> left", tgram.SentText)
+	r.Equal(tg.NewKeyboard([]tg.Row{
+		tg.NewBtn("First task", tg.NewCmd("comp", []string{"today", "0824149b387"})),
+		tg.NewRow(tg.NewBtn("📝", tg.NewCmd("doc", []string{})),
+			tg.NewBtn("☑️", tg.NewCmd("checklists", []string{})),
+			tg.NewBtn("🦥", tg.NewCmd("postpone", []string{})),
+		),
+		tg.NewBtn("⏳ Later", tg.NewCmd("later", []string{"later"}))},
+	), tgram.SentKeyboard)
+
+}
+
 func TestLater(t *testing.T) {
 	r := require.New(t)
 
@@ -214,6 +234,26 @@ func TestLater(t *testing.T) {
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("First task", tg.NewCmd("comp", []string{"later", "0824149b387"})),
 		tg.NewBtn("Second task", tg.NewCmd("comp", []string{"later", "2940ad40402"})),
+		tg.NewBtn("🏠 Today", tg.NewCmd("today", []string{"today"}))},
+	), tgram.SentKeyboard)
+
+}
+
+func TestLater_QuickMenuFilled(t *testing.T) {
+	var cfg = &userconfig.DefaultConfig
+	cfg.AddPanelButton("doc")
+	cfg.AddPanelButton("checklists")
+	cfg.AddPanelButton("postpone")
+	var bot, tgram, r = makeBot(t, cfg)
+	var err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("later", nil)))
+	r.NoError(err)
+	r.Equal("⏳ Your tasks for later:", tgram.SentText)
+	r.Equal(tg.NewKeyboard([]tg.Row{
+		tg.NewBtn("Second task", tg.NewCmd("comp", []string{"later", "2940ad40402"})),
+		tg.NewRow(tg.NewBtn("📝", tg.NewCmd("doc", []string{})),
+			tg.NewBtn("☑️", tg.NewCmd("checklists", []string{})),
+			tg.NewBtn("🦥", tg.NewCmd("postpone", []string{})),
+		),
 		tg.NewBtn("🏠 Today", tg.NewCmd("today", []string{"today"}))},
 	), tgram.SentKeyboard)
 
@@ -518,6 +558,11 @@ func makeBot(t *testing.T, conf *userconfig.Config) (*Bot, *fake.TG, *require.As
 	r := require.New(t)
 	fsys, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
+	err = fsys.Put("today", "First task.md", "")
+	r.NoError(err)
+	err = fsys.Put("later", "Second task", "")
+	r.NoError(err)
+
 	redis, err := miniredis.Run()
 	r.NoError(err)
 	defer redis.Close()

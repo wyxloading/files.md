@@ -72,9 +72,7 @@ type BotPluginInterface interface {
 	ExecutePlugin(string) bool
 }
 
-// Quick panel (cmd => appropriate icon).
-// Key is a command on a quick panel (e.g = 'docs')
-// Value is a display icon on that panel (e.g = 📝)
+// Quick panel (cmd => appropriate icon). By now, it's hardcoded.
 
 type CmdMeta struct {
 	cmd   string

@@ -25,6 +25,7 @@ var DefaultConfig = Config{ // TODO apply default config if some fields are miss
 		Schedules:              []Schedule{},
 		JournalFilenameFormat:  "January 2006.md",
 		JournalHeaderFormat:    "02, Monday",
+		QuickPanelCommands:     []string{},
 	},
 }
 
@@ -61,6 +62,7 @@ type raw struct {
 	JournalFilenameFormat  string     `json:"journalFilename"`
 	JournalHeaderFormat    string     `json:"journalHeaderFormat"`
 	Schedules              []Schedule `json:"schedules"`
+	QuickPanelCommands     []string   `json:"QuickPanelCommands"`
 }
 
 func NewConfig() *Config {
@@ -192,4 +194,38 @@ func (c *Config) JournalHeaderFormat() string {
 
 func (c *Config) SetJournalHeaderFormat(format string) {
 	c.raw.JournalHeaderFormat = format
+}
+
+func (c *Config) AddPanelButton(button string) bool {
+	// Does this button already exist?
+	for _, curBtn := range c.raw.QuickPanelCommands {
+		if curBtn == button {
+			return false
+		}
+	}
+	c.raw.QuickPanelCommands = append(c.raw.QuickPanelCommands, button)
+	return true
+}
+
+func (c *Config) HasQuickPanelCmd(cmd string) bool {
+	for _, pref := range c.raw.QuickPanelCommands {
+		if cmd == pref {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *Config) DelPanelButton(toDelete string) bool {
+	var newButtons []string
+	var found = false // Was the target
+	for _, curBtn := range c.raw.QuickPanelCommands {
+		if curBtn == toDelete {
+			found = true
+		} else {
+			newButtons = append(newButtons, curBtn)
+		}
+	}
+	c.raw.QuickPanelCommands = newButtons
+	return found
 }

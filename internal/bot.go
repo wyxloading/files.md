@@ -73,6 +73,20 @@ type BotPluginInterface interface {
 	ExecutePlugin(string) bool
 }
 
+// Quick panel (cmd => appropriate icon). By now, it's hardcoded.
+
+type CmdMeta struct {
+	cmd   string
+	desc  string
+	emoji string
+}
+
+var quickPanelAvailableCmds = []CmdMeta{
+	{constants.CmdShowDoc, "Documents", i18n.EmDocs},
+	{constants.CmdShowChecklists, "Checklists", i18n.EmCheckList},
+	{constants.CmdShowPostpone, "Postpone", i18n.EmPostpone},
+}
+
 func NewBot(userID int64, tg TGInterface, fs *fs.FS, db *db.DB, conf *userconfig.Config) *Bot {
 	botPlugins = append(botPlugins,
 		plugins.NewWorldClockPlugin(userID, tg),
@@ -163,6 +177,10 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		constants.CmdPostpone:           b.postpone,
 		constants.CmdPomodoro:           b.togglePomodoro,
 		constants.CmdShowRecurringKB:    b.showRecurringKeyBoard,
+		constants.CmdShowSettings:       b.showSettings,
+		constants.CmdConfigurePanel:     b.showConfigureQuickPanel,
+		constants.CmdAddToPanel:         b.addToPanel,
+		constants.CmdDelFromPonel:       b.delFromPanel,
 	}
 }
 
@@ -419,6 +437,20 @@ func (b *Bot) showMove(params []string) error {
 	return nil
 }
 
+func (b *Bot) quickPanelRow() []tg.Btn {
+	var quickPanelRow = tg.NewRow()
+	// We iterate through hardcoded panel to preserve order of buttons in UI
+	for _, pair := range quickPanelAvailableCmds {
+		var cmd = pair.cmd
+		if b.conf.HasQuickPanelCmd(cmd) {
+			quickPanelRow = append(quickPanelRow, tg.NewBtn(
+				pair.emoji,
+				tg.NewCmd(cmd, []string{})))
+		}
+	}
+	return quickPanelRow
+}
+
 // TODO separate today and later list
 func (b *Bot) showList(params []string) error {
 	dir := fs.DirToday
@@ -451,7 +483,10 @@ func (b *Bot) showList(params []string) error {
 		kb.AddRow(btn)
 	}
 
-	kb.AddRow(tg.NewRow(tg.NewBtn(i18n.EmDocs, tg.NewCmd(constants.CmdShowDocs, []string{}))))
+	var quickPanelRow = b.quickPanelRow()
+	if len(quickPanelRow) > 0 {
+		kb.AddRow(quickPanelRow)
+	}
 	kb.AddRow(tg.NewBtn(oppositeLabel, tg.NewCmd(oppositeDir, []string{oppositeDir})))
 
 	var msg string
@@ -1304,6 +1339,103 @@ func (b *Bot) togglePomodoro(_ []string) error {
 	}
 
 	return b.showToday(nil)
+}
+
+func (b *Bot) showSettings(params []string) error {
+
+	var kb tg.Keyboard
+	kb.AddRow(tg.NewBtn(i18n.StrBtnQuickPanel, tg.NewCmd(constants.CmdConfigurePanel, nil)))
+	kb.AddRow(tg.NewBtn(i18n.StrBtnToday, tg.NewCmd(constants.CmdShowToday, nil)))
+
+	err := b.show("Settings: ", &kb, tg.MarkupHTML)
+	if err != nil {
+		return fmt.Errorf("showSettings : %w", err)
+	}
+
+	return nil
+}
+
+func (b *Bot) showConfigureQuickPanel(params []string) error {
+
+	var kb tg.Keyboard
+
+	// Step 1. Append all buttons that are already chosen by user
+
+	var enabled []string
+
+	// We iterate through hardcoded panel to preserve order of buttons in UI
+	for _, cmdDef := range quickPanelAvailableCmds {
+		var cmd = cmdDef.cmd
+		if b.conf.HasQuickPanelCmd(cmd) {
+			kb.AddRow(tg.NewBtn(fmt.Sprintf("%s %s %s", cmdDef.emoji, cmdDef.desc, i18n.QuickPanelDelButton), tg.NewCmd(constants.CmdDelFromPonel, []string{cmd})))
+			enabled = append(enabled, cmd)
+		}
+	}
+
+	// Step 2. Good, we're in the middle! Just a dummy delimiter column.
+	kb.AddRow(tg.NewBtn(i18n.QuickPanelDelimiter, tg.NewCmd("", nil)))
+
+	// Step 3. Now, let's fill buttons that are not disabled...
+	for _, cmdDef := range quickPanelAvailableCmds {
+		var cmd = cmdDef.cmd
+		// Check if command is enabled
+		var cmdEnabled = false
+		for _, enabledCmd := range enabled {
+			if cmd == enabledCmd {
+				cmdEnabled = true
+			}
+		}
+		// Command is not enabled, so add it to disabled list
+		if !cmdEnabled {
+			kb.AddRow(
+				tg.NewBtn(fmt.Sprintf("%s %s %s", cmdDef.emoji, cmdDef.desc, i18n.QuickPanelAddButton), tg.NewCmd(constants.CmdAddToPanel, []string{cmd})))
+		}
+	}
+
+	kb.AddRow(tg.NewBtn(i18n.StrBtnBack, tg.NewCmd(constants.CmdShowSettings, nil)))
+
+	err := b.show(fmt.Sprintf("Configure quick panel (%s = add to panel, %s = to remove): ", i18n.QuickPanelAddButton, i18n.QuickPanelDelButton), &kb, tg.MarkupHTML)
+	if err != nil {
+		return fmt.Errorf("configureQuickPanel : %w", err)
+	}
+
+	return nil
+}
+
+func (b *Bot) addToPanel(params []string) error {
+	if len(params) == 0 {
+		return fmt.Errorf("No params suplied to addToPanel")
+	}
+	// Search whether a command is valid
+	var found = false
+	for _, cmd := range quickPanelAvailableCmds {
+		if cmd.cmd == params[0] {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("Unknown command: %s", params[0])
+	}
+
+	if !b.conf.AddPanelButton(params[0]) {
+		return fmt.Errorf("Button already exists in user's prefs: %s", params[0])
+	}
+	b.showConfigureQuickPanel([]string{})
+	return nil
+}
+
+func (b *Bot) delFromPanel(params []string) error {
+	if len(params) == 0 {
+		return fmt.Errorf("No params suplied to delFromPanel")
+	}
+	if !b.conf.DelPanelButton(params[0]) {
+		return fmt.Errorf("Button doesn't exist in user's prefs: %s", params[0])
+	}
+
+	b.showConfigureQuickPanel([]string{})
+	return nil
 }
 
 func (b *Bot) showRecurringKeyBoard(params []string) error {

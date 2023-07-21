@@ -16,6 +16,7 @@ const (
 	StrToJournal      = "📔 To Journal"
 	StrBtnGoToToday   = "➡️ Today"
 	StrBtnRepeat      = "🔄️ Repeat the task"
+	StrBtnQuickPanel  = "🎛 Quick Panel"
 
 	//Calendar
 	StrMonday    = "1️⃣ Mn"
@@ -29,5 +30,11 @@ const (
 	StrEveryday  = "☀️ Every day"
 
 	// Emoji
-	EmDocs = "📝"
+	EmDocs      = "📝"
+	EmCheckList = "☑️"
+	EmPostpone  = "🦥"
+
+	QuickPanelDelimiter = "---"
+	QuickPanelAddButton = "➕"
+	QuickPanelDelButton = "➖"
 )

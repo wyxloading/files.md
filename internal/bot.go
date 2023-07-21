@@ -29,7 +29,7 @@ var now = func() time.Time {
 	return time.Now()
 }
 
-var botPlugins = []BotPluginInterface{}
+var botPlugins []BotPluginInterface
 
 const (
 	maxTitleLength         = 100

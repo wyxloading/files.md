@@ -147,19 +147,22 @@ func (b *Bot) Reply(u UpdInterface) error {
 func (b *Bot) handlers() map[string]func([]string) error {
 	return map[string]func([]string) error{
 		// Direct user commands
-		constants.CmdShowStart:      b.showStart,
-		constants.CmdShowToday:      b.showToday,
-		constants.CmdShowLater:      b.showLater,
-		constants.CmdShowNotes:      b.showNotes,
-		constants.CmdShowDocs:       b.showDocs,
-		constants.CmdShowChecklists: b.showChecklists,
-		constants.CmdShowPostpone:   b.showPostpone,
-		constants.CmdShowRename:     b.showRename,
-		constants.CmdShowStats:      b.showStats,
+		constants.CmdShowStart:          b.showStart,
+		constants.CmdShowToday:          b.showToday,
+		constants.CmdShowLater:          b.showLater,
+		constants.CmdShowNotes:          b.showNotes,
+		constants.CmdShowDocs:           b.showDocs,
+		constants.CmdShowChecklists:     b.showChecklists,
+		constants.CmdShowPostpone:       b.showPostpone,
+		constants.CmdShowRename:         b.showRename,
+		constants.CmdShowStats:          b.showStats,
+		constants.CmdShowReadChecklist:  b.showRead,
+		constants.CmdShowWatchChecklist: b.showWatch,
+		constants.CmdShowShopChecklist:  b.showShop,
 		// Button's commands (callbacks)
 		constants.CmdRenameFile:         b.showRenameFile,
 		constants.CmdShowMultilineTask:  b.showTask,
-		constants.CmdShowDoc:           b.showDoc,
+		constants.CmdShowDoc:            b.showDoc,
 		constants.CmdShowChecklist:      b.showChecklist,
 		constants.CmdShowChooseDay:      b.showChooseDay,
 		constants.CmdShowToFile:         b.showToFile,
@@ -706,6 +709,18 @@ func (b *Bot) showStats(params []string) error {
 	}
 
 	return nil
+}
+
+func (b *Bot) showRead(params []string) error {
+	return b.showChecklist([]string{fs.Hash("-read-")})
+}
+
+func (b *Bot) showWatch(params []string) error {
+	return b.showChecklist([]string{fs.Hash("-watch-")})
+}
+
+func (b *Bot) showShop(params []string) error {
+	return b.showChecklist([]string{fs.Hash("-shop-")})
 }
 
 func (b *Bot) showTask(params []string) error {

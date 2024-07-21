@@ -15,14 +15,17 @@ type QuickPanelBtn struct {
 
 var QuickPanelAvailableBtns = []QuickPanelBtn{
 	NewQuickPanelBtn(constants.CmdInlineQuerySearchEveryWhere, tg.CmdTypeInlineQueryCurrentChat, i18n.Emoji("Search"), "Search"),
-	NewQuickPanelBtn(constants.CmdShowFiles, tg.CmdTypeCallback, i18n.EmDocs, "Documents"),
-	NewQuickPanelBtn(constants.CmdShowChecklists, tg.CmdTypeCallback, i18n.EmCheckList, "Checklists"),
-	NewQuickPanelBtn(constants.CmdShowPostpone, tg.CmdTypeCallback, i18n.EmPostpone, "Postpone"),
+	NewQuickPanelBtn(constants.CmdShowFiles, tg.CmdTypeCallback, i18n.Emoji("Files"), "Files"),
+	NewQuickPanelBtn(constants.CmdShowChecklists, tg.CmdTypeCallback, i18n.Emoji("Checklists"), "Checklists"),
+	NewQuickPanelBtn(constants.CmdShowPostpone, tg.CmdTypeCallback, i18n.Emoji("Postpone"), "Postpone"),
 	NewQuickPanelBtn(constants.CmdShowReadChecklist, tg.CmdTypeCallback, i18n.Emoji("Read"), "Read"),
 	NewQuickPanelBtn(constants.CmdShowWatchChecklist, tg.CmdTypeCallback, i18n.Emoji("Watch"), "Watch"),
 	NewQuickPanelBtn(constants.CmdShowShopChecklist, tg.CmdTypeCallback, i18n.Emoji("Shop"), "Shop"),
 	NewQuickPanelBtn(constants.CmdWebAppHabits, tg.CmdTypeWebApp, i18n.Emoji("Habits"), "Habits"),
 }
+
+var QuickPanelAddButton = "➕"
+var QuickPanelDelButton = "➖"
 
 func NewQuickPanelBtn(cmd, cmdType, emoji, description string) QuickPanelBtn {
 	return QuickPanelBtn{cmd, cmdType, emoji, description}

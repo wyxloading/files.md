@@ -1417,13 +1417,13 @@ func (b *Bot) showConfigureQuickPanel(params []string) error {
 			continue
 		}
 
-		name := fmt.Sprintf("%s %s %s", btn.Emoji, btn.Description, i18n.QuickPanelDelButton)
+		name := fmt.Sprintf("%s %s %s", btn.Emoji, btn.Description, userconfig.QuickPanelDelButton)
 		enabledCmd := tg.NewCmd(constants.CmdDelFromPonel, []string{btn.Cmd})
 		kb.AddRow(tg.NewBtn(name, enabledCmd))
 		usedBtns = append(usedBtns, btn.Cmd)
 	}
 
-	kb.AddRow(tg.NewBtn(i18n.QuickPanelDelimiter, tg.NewCmd("", nil)))
+	kb.AddRow(tg.NewBtn("-", tg.NewCmd(constants.CmdDoNothing, nil)))
 
 	// Step 2. Now, let's fill buttons that are not disabled...
 	for _, btn := range userconfig.QuickPanelAvailableBtns {
@@ -1438,14 +1438,16 @@ func (b *Bot) showConfigureQuickPanel(params []string) error {
 			continue
 		}
 		// Command is not enabled, so add it to disabled list
-		name := fmt.Sprintf("%s %s %s", btn.Emoji, btn.Description, i18n.QuickPanelAddButton)
+		name := fmt.Sprintf("%s %s %s", btn.Emoji, btn.Description, userconfig.QuickPanelAddButton)
 		disabledCmd := tg.NewCmd(constants.CmdAddToPanel, []string{btn.Cmd})
 		kb.AddRow(tg.NewBtn(name, disabledCmd))
 	}
 
 	kb.AddRow(tg.NewBtn(i18n.StrBtnBack, tg.NewCmd(constants.CmdShowSettings, nil)))
 
-	text := fmt.Sprintf("Configure quick panel (%s = add to panel, %s = to remove): ", i18n.QuickPanelAddButton, i18n.QuickPanelDelButton)
+	addBtn := userconfig.QuickPanelAddButton
+	delBtn := userconfig.QuickPanelDelButton 
+	text := fmt.Sprintf("Configure quick panel (%s = add to panel, %s = to remove): ", addBtn, delBtn)
 	err := b.show(text, &kb, tg.MarkupHTML)
 	if err != nil {
 		return fmt.Errorf("configureQuickPanel : %w", err)

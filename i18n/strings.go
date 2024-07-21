@@ -28,13 +28,4 @@ const (
 	StrSunday    = "7️⃣😴 Sn"
 	StrWeekdays  = "🏭 Weekdays"
 	StrEveryday  = "☀️ Every day"
-
-	// Emoji
-	EmDocs      = "📝"
-	EmCheckList = "☑️"
-	EmPostpone  = "🦥"
-
-	QuickPanelDelimiter = "---"
-	QuickPanelAddButton = "➕"
-	QuickPanelDelButton = "➖"
 )

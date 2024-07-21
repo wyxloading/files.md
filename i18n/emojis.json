@@ -3742,7 +3742,8 @@
   ],
   "🦥": [
     "sloth",
-    "animal"
+    "animal",
+    "postpone"
   ],
   "🦦": [
     "otter",
@@ -7686,7 +7687,9 @@
     "documents",
     "office",
     "paper",
-    "information"
+    "information",
+    "file",
+    "files"
   ],
   "📰": [
     "newspaper",
@@ -7948,7 +7951,9 @@
   "📂": [
     "open_file_folder",
     "documents",
-    "load"
+    "load",
+    "dir",
+    "dirs"
   ],
   "🗂️": [
     "card_index_dividers",
@@ -9136,7 +9141,9 @@
     "vote",
     "election",
     "yes",
-    "tick"
+    "tick",
+    "checklist",
+    "checklists"
   ],
   "✔️": [
     "check_mark",

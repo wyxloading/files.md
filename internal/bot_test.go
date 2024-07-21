@@ -202,7 +202,7 @@ func TestToday_QuickMenuFilled(t *testing.T) {
 	r.Equal("<b>1</b> left", tgram.SentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("First task", tg.NewCmd("comp", []string{"today", "0824149b387"})),
-		tg.NewRow(tg.NewBtn("📝", tg.NewCmd("files", []string{})),
+		tg.NewRow(tg.NewBtn("📄", tg.NewCmd("files", []string{})),
 			tg.NewBtn("☑️", tg.NewCmd("checklists", []string{})),
 			tg.NewBtn("🦥", tg.NewCmd("postpone", []string{})),
 		),
@@ -251,7 +251,7 @@ func TestLater_QuickMenuFilled(t *testing.T) {
 	r.Equal("⏳ Your tasks for later:", tgram.SentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("Second task", tg.NewCmd("comp", []string{"later", "2940ad40402"})),
-		tg.NewRow(tg.NewBtn("📝", tg.NewCmd("files", []string{})),
+		tg.NewRow(tg.NewBtn("📄", tg.NewCmd("files", []string{})),
 			tg.NewBtn("☑️", tg.NewCmd("checklists", []string{})),
 			tg.NewBtn("🦥", tg.NewCmd("postpone", []string{})),
 		),
@@ -590,19 +590,19 @@ func TestSettingsMainPanel(t *testing.T) {
 // Quick Panel Data-driven tests
 
 var (
-	btnDocumentsDel  = tg.NewBtn("📝 Documents ➖", tg.NewCmd("panel_del", []string{"files"}))
+	btnFilesDel      = tg.NewBtn("📄 Files ➖", tg.NewCmd("panel_del", []string{"files"}))
 	btnChecklistsDel = tg.NewBtn("☑️ Checklists ➖", tg.NewCmd("panel_del", []string{"checklists"}))
 	btnPostponeDel   = tg.NewBtn("🦥 Postpone ➖", tg.NewCmd("panel_del", []string{"postpone"}))
 )
 
 var (
-	delimiter = tg.NewBtn("---", tg.NewCmd("", nil))
+	delimiter = tg.NewBtn("-", tg.NewCmd("nothing", nil))
 	backBtn   = tg.NewBtn("⬅️ Back", tg.NewCmd("settings", nil))
 )
 
 var (
 	btnSearch         = tg.NewBtn("🔎 Search ➕", tg.NewCmd("panel_add", []string{"search"}))
-	btnDocumentsAdd   = tg.NewBtn("📝 Documents ➕", tg.NewCmd("panel_add", []string{"files"}))
+	btnFilesAdd       = tg.NewBtn("📄 Files ➕", tg.NewCmd("panel_add", []string{"files"}))
 	btnChecklistsAdd  = tg.NewBtn("☑️ Checklists ➕", tg.NewCmd("panel_add", []string{"checklists"}))
 	btnPostponeAdd    = tg.NewBtn("🦥 Postpone ➕", tg.NewCmd("panel_add", []string{"postpone"}))
 	btnReadChecklist  = tg.NewBtn("📚 Read ➕", tg.NewCmd("panel_add", []string{"read"}))
@@ -618,7 +618,7 @@ func TestConfigureQP_Empty_Default(t *testing.T) {
 		[]tg.Row{
 			delimiter,
 			btnSearch,
-			btnDocumentsAdd,
+			btnFilesAdd,
 			btnChecklistsAdd,
 			btnPostponeAdd,
 			btnReadChecklist,
@@ -635,7 +635,7 @@ func TestConfigureQP_Empty_AddDoc(t *testing.T) {
 		[]string{""},
 		fake.NewUpdCmdFake(-1, tg.NewCmd("panel_add", []string{"files"})),
 		[]tg.Row{
-			btnDocumentsDel,
+			btnFilesDel,
 			delimiter,
 			btnSearch,
 			btnChecklistsAdd,
@@ -654,7 +654,7 @@ func TestConfigureQP_Doc_AddCheckList(t *testing.T) {
 		[]string{"files"},
 		fake.NewUpdCmdFake(-1, tg.NewCmd("panel_add", []string{"checklists"})),
 		[]tg.Row{
-			btnDocumentsDel,
+			btnFilesDel,
 			btnChecklistsDel,
 			delimiter,
 			btnSearch,
@@ -673,7 +673,7 @@ func TestConfigureQP_DocChecklists_AddPostpone(t *testing.T) {
 		[]string{"files", "checklists"},
 		fake.NewUpdCmdFake(-1, tg.NewCmd("panel_add", []string{"postpone"})),
 		[]tg.Row{
-			btnDocumentsDel,
+			btnFilesDel,
 			btnChecklistsDel,
 			btnPostponeDel,
 			delimiter,
@@ -692,7 +692,7 @@ func TestConfigureQP_DocChecklistsPostpone_Show(t *testing.T) {
 		[]string{"files", "checklists", "postpone"},
 		fake.NewUpdCmdFake(-1, tg.NewCmd("configure_panel", nil)),
 		[]tg.Row{
-			btnDocumentsDel,
+			btnFilesDel,
 			btnChecklistsDel,
 			btnPostponeDel,
 			delimiter,
@@ -711,7 +711,7 @@ func TestConfigureQP_DocChecklistsPostpone_DelChecklists(t *testing.T) {
 		[]string{"files", "checklists", "postpone"},
 		fake.NewUpdCmdFake(-1, tg.NewCmd("panel_del", []string{"checklists"})),
 		[]tg.Row{
-			btnDocumentsDel,
+			btnFilesDel,
 			btnPostponeDel,
 			delimiter,
 			btnSearch,
@@ -733,7 +733,7 @@ func TestConfigureQP_DocPostpone_DelDoc(t *testing.T) {
 			btnPostponeDel,
 			delimiter,
 			btnSearch,
-			btnDocumentsAdd,
+			btnFilesAdd,
 			btnChecklistsAdd,
 			btnReadChecklist,
 			btnWatchChecklist,
@@ -751,7 +751,7 @@ func TestConfigureQP_Postpone_DelPostpone(t *testing.T) {
 		[]tg.Row{
 			delimiter,
 			btnSearch,
-			btnDocumentsAdd,
+			btnFilesAdd,
 			btnChecklistsAdd,
 			btnPostponeAdd,
 			btnReadChecklist,

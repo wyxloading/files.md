@@ -37,7 +37,7 @@ func TestAddTaskToToday(t *testing.T) {
 	tgram := fake.NewTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
-	err = bot.Reply(fake.NewUpd(-1, "New task"))
+	err = bot.Answer(fake.NewUpd(-1, "New task"))
 	r.NoError(err)
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -60,7 +60,7 @@ func TestAddMultilineTaskToToday(t *testing.T) {
 	defer redis.Close()
 
 	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
-	err = bot.Reply(fake.NewUpd(-1, "New task\nContent"))
+	err = bot.Answer(fake.NewUpd(-1, "New task\nContent"))
 	r.NoError(err)
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -88,7 +88,7 @@ func TestAddTaskWithSpecCharsToToday(t *testing.T) {
 	defer redis.Close()
 
 	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
-	err = bot.Reply(fake.NewUpd(-1, "New task\nUrl! http://g.com (Also_text] ##header\n-item1\n-item2\n1+1=2"))
+	err = bot.Answer(fake.NewUpd(-1, "New task\nUrl! http://g.com (Also_text] ##header\n-item1\n-item2\n1+1=2"))
 	r.NoError(err)
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -120,7 +120,7 @@ func TestAddTaskToLater(t *testing.T) {
 	defer redis.Close()
 
 	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
-	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("mv", []string{"today", "0824149b387", "later"})))
+	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("mv", []string{"today", "0824149b387", "later"})))
 	r.NoError(err)
 
 	todayTasks, err := bot.fs.FilesAndDirs("today")
@@ -149,7 +149,7 @@ func TestCompleteTask(t *testing.T) {
 	tgram := fake.NewTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
-	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("comp", []string{"today", "0824149b387"})))
+	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("comp", []string{"today", "0824149b387"})))
 	r.NoError(err)
 
 	todayTasks, err := bot.fs.FilesAndDirs("today")
@@ -179,7 +179,7 @@ func TestToday(t *testing.T) {
 	tgram := fake.NewTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
-	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("today", nil)))
+	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("today", nil)))
 	r.NoError(err)
 
 	r.Equal("<b>2</b> left", tgram.SentText)
@@ -197,7 +197,7 @@ func TestToday_QuickMenuFilled(t *testing.T) {
 	cfg.AddPanelButton("checklists")
 	cfg.AddPanelButton("postpone")
 	bot, tgram, r := makeBot(t, cfg)
-	err := bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("today", nil)))
+	err := bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("today", nil)))
 	r.NoError(err)
 	r.Equal("<b>1</b> left", tgram.SentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
@@ -228,7 +228,7 @@ func TestLater(t *testing.T) {
 	tgram := fake.NewTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
-	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("later", nil)))
+	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("later", nil)))
 	r.NoError(err)
 
 	r.Equal("⏳ Your tasks for later:", tgram.SentText)
@@ -246,7 +246,7 @@ func TestLater_QuickMenuFilled(t *testing.T) {
 	cfg.AddPanelButton("checklists")
 	cfg.AddPanelButton("postpone")
 	bot, tgram, r := makeBot(t, cfg)
-	err := bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("later", nil)))
+	err := bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("later", nil)))
 	r.NoError(err)
 	r.Equal("⏳ Your tasks for later:", tgram.SentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
@@ -278,7 +278,7 @@ func TestTodayWithMultilineTasks(t *testing.T) {
 
 	upd := fake.NewUpdCmdFake(-1, tg.NewCmd("today", nil))
 	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
-	err = bot.Reply(upd)
+	err = bot.Answer(upd)
 	r.NoError(err)
 
 	r.Equal("<b>2</b> left", tgram.SentText)
@@ -309,7 +309,7 @@ func TestDocs(t *testing.T) {
 	tgram := fake.NewTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
-	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("docs", nil)))
+	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("docs", nil)))
 	r.NoError(err)
 
 	r.Equal("📝 Your docs:", tgram.SentText)
@@ -338,7 +338,7 @@ func TestChecklists(t *testing.T) {
 	tgram := fake.NewTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
-	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("checklists", nil)))
+	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("checklists", nil)))
 	r.NoError(err)
 
 	r.Equal("☑️ Checklists", tgram.SentText)
@@ -366,7 +366,7 @@ func TestAddSingleItemToChecklist(t *testing.T) {
 
 	tgram := fake.NewTG()
 	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
-	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("mv_to_chk", []string{"7b72407ca70", "-checklist1-"})))
+	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("mv_to_chk", []string{"7b72407ca70", "-checklist1-"})))
 	r.NoError(err)
 
 	files, err := userFS.FilesAndDirs("-checklist1-")
@@ -395,7 +395,7 @@ func TestAddMultipleItemsToChecklist(t *testing.T) {
 
 	tgram := fake.NewTG()
 	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
-	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("mv_to_chk", []string{"7b72407ca70", "-checklist1-"})))
+	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("mv_to_chk", []string{"7b72407ca70", "-checklist1-"})))
 	r.NoError(err)
 
 	files, err := userFS.FilesAndDirs("-checklist1-")
@@ -577,7 +577,7 @@ func makeBot(t *testing.T, conf *userconfig.Config) (*Bot, *fake.TG, *require.As
 
 func TestSettingsMainPanel(t *testing.T) {
 	bot, tgram, r := makeBot(t, &userconfig.DefaultConfig)
-	err := bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("settings", nil)))
+	err := bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("settings", nil)))
 	r.NoError(err)
 	r.Equal("Settings: ", tgram.SentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
@@ -811,7 +811,7 @@ func RunQuickPanelTc(tc PrefTableTestCase, t *testing.T) {
 
 	bot, tgram, r := makeBot(t, cnf)
 
-	err := bot.Reply(tc.cmd_to_execute)
+	err := bot.Answer(tc.cmd_to_execute)
 	r.NoError(err)
 	r.Equal("Configure quick panel (➕ = add to panel, ➖ = to remove): ", tgram.SentText)
 	r.Equal(tg.NewKeyboard(tc.buttons), tgram.SentKeyboard)
@@ -823,7 +823,7 @@ func RunQuickPanelTc_Error(tc PrefTableTestCase, expectedErr string, t *testing.
 		cnf.AddPanelButton(opt)
 	}
 	bot, _, r := makeBot(t, cnf)
-	actualErr := bot.Reply(tc.cmd_to_execute)
+	actualErr := bot.Answer(tc.cmd_to_execute)
 	r.EqualError(actualErr, expectedErr)
 }
 

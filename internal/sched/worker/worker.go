@@ -18,7 +18,7 @@ import (
 func MoveDueTasksToToday(storagePath, configFilename string, fsBackend afero.Fs) error {
 	rootFS, _ := fs.NewFS(storagePath, fsBackend)
 
-	userDirs, err := rootFS.FilesAndDirs("")
+	userDirs, err := rootFS.FilesAndDirs(fs.DirRoot)
 	if err != nil {
 		return fmt.Errorf("schedule worker: %w", err)
 	}

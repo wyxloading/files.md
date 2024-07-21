@@ -56,6 +56,10 @@ func (m *Upd) IsForwarded() bool {
 	return false
 }
 
+func (m *Upd) IsSentViaBot() bool {
+	return false
+}
+
 type TG struct {
 	SentText       string
 	EditedText     string

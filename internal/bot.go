@@ -42,6 +42,7 @@ type UpdInterface interface {
 	CallbackQueryID() (string, bool)
 	InlineQueryID() (string, bool)
 	InlineQuery() (string, bool)
+	IsSentViaBot() bool
 }
 
 // TGInterface provides a simple interface to telegram API
@@ -78,8 +79,8 @@ func NewBot(userID int64, tg TGInterface, fs *fs.FS, db *db.DB, conf *userconfig
 	return &Bot{userID, tg, fs, db, conf}
 }
 
-// Reply to incoming text message or command (inline queries aren't supported yet)
-func (b *Bot) Reply(u UpdInterface) error {
+// Answer to incoming text message or command (inline queries aren't supported yet)
+func (b *Bot) Answer(u UpdInterface) error {
 	if _, ok := u.InlineQueryID(); ok {
 		return b.search(u)
 	}
@@ -92,7 +93,7 @@ func (b *Bot) Reply(u UpdInterface) error {
 
 	cmd, err := b.extractCmd(u)
 	if err != nil {
-		return fmt.Errorf("reply: %w", err)
+		return fmt.Errorf("answer: %w", err)
 	}
 	if cmd != nil {
 		if _, ok := u.CallbackQueryID(); !ok {
@@ -116,6 +117,11 @@ func (b *Bot) Reply(u UpdInterface) error {
 		}
 
 		return nil
+	}
+
+	// Currently used for showing files
+	if u.IsSentViaBot() {
+		// return b.showDoc()
 	}
 
 	if u.IsForwarded() {
@@ -425,7 +431,7 @@ func (b *Bot) quickPanelRow() []tg.Btn {
 				params = []string{habitsUrl}
 			}
 
-			button := tg.NewBtn(btn.Emoji,tg.NewTypedCmd(btn.Cmd, params, btn.CmdType)) 
+			button := tg.NewBtn(btn.Emoji, tg.NewTypedCmd(btn.Cmd, params, btn.CmdType))
 			quickPanelRow = append(quickPanelRow, button)
 		}
 	}

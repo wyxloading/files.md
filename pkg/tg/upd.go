@@ -113,6 +113,15 @@ func (u *Upd) IsForwarded() bool {
 	return false
 }
 
+func (u *Upd) IsSentViaBot() bool {
+	message := u.raw.Message
+	if message == nil {
+		return false
+	}
+
+	return message.ViaBot != nil
+}
+
 // Takes into account Telegram's UTF-16 encoding
 // First we encode runes [128078 127997] into UTF-16 representation
 // We get string [55357 56398 55356 57341]

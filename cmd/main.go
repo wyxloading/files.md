@@ -191,7 +191,7 @@ func main() {
 
 			bot := internal.NewBot(userID, telegram, userFS, db.NewDB(redis), userconf)
 
-			if err := bot.Reply(u); err != nil {
+			if err := bot.Answer(u); err != nil {
 				slog.Error("Bot error", "err", err)
 			}
 		}(upd)

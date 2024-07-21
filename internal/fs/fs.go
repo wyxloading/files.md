@@ -31,6 +31,7 @@ var (
 )
 
 const (
+	DirRoot      = ""
 	DirArchive   = "_archive_"
 	DirToday     = "today"
 	DirLater     = "later"
@@ -230,8 +231,8 @@ func Filename(title string) string {
 }
 
 func (fs FS) Unhash(dir, filenameHash string) (string, error) {
-	if dir == "" && filenameHash == "" {
-		return "", nil
+	if dir == DirRoot && filenameHash == DirRoot {
+		return DirRoot, nil
 	}
 
 	// TODO add safety checks
@@ -302,14 +303,14 @@ func (fs FS) FilesAndDirs(dir string) ([]File, error) {
 }
 
 func (fs FS) Dirs() ([]File, error) {
-	files, err := fs.FilesAndDirs("")
+	files, err := fs.FilesAndDirs(DirRoot)
 	if err != nil {
 		return nil, fmt.Errorf("can't get dirs: %w", err)
 	}
 
 	var dirs []File
 	for _, file := range files {
-		isDir, err := afero.IsDir(fs.backend, fs.Path("", file.Name))
+		isDir, err := afero.IsDir(fs.backend, fs.Path(DirRoot, file.Name))
 		if err != nil {
 			return nil, fmt.Errorf("can't get dirs: %w", err)
 		}
@@ -415,7 +416,7 @@ func (fs FS) SearchNotes(query string) ([]File, error) {
 	}
 
 	var supposedDir, search string
-	dirExists, err := fs.Exists("", query)
+	dirExists, err := fs.Exists(DirRoot, query)
 	if err != nil {
 		return nil, fmt.Errorf("search notes: %w", err)
 	}
@@ -431,7 +432,7 @@ func (fs FS) SearchNotes(query string) ([]File, error) {
 
 	// Find match by notes directory name
 	var searchInDirs []string
-	notesDirs, err := fs.FilesAndDirs("")
+	notesDirs, err := fs.FilesAndDirs(DirRoot)
 	if err != nil {
 		return nil, fmt.Errorf("search notes: %w", err)
 	}

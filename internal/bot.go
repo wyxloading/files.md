@@ -503,7 +503,7 @@ func (b *Bot) showList(params []string) error {
 }
 
 func (b *Bot) showNotes(params []string) error {
-	dirs, err := b.fs.FilesAndDirs("")
+	dirs, err := b.fs.FilesAndDirs(fs.DirRoot)
 	if err != nil {
 		return fmt.Errorf("show notes: can't get dirs: %w", err)
 	}
@@ -528,7 +528,7 @@ func (b *Bot) showNotes(params []string) error {
 }
 
 func (b *Bot) showDocs(params []string) error {
-	files, err := b.fs.FilesAndDirs("")
+	files, err := b.fs.FilesAndDirs(fs.DirRoot)
 	if err != nil {
 		return fmt.Errorf("show docs: can't get dirs: %w", err)
 	}
@@ -553,7 +553,7 @@ func (b *Bot) showDocs(params []string) error {
 }
 
 func (b *Bot) showChecklists(params []string) error {
-	checklists, err := b.fs.FilesAndDirs("")
+	checklists, err := b.fs.FilesAndDirs(fs.DirRoot)
 	if err != nil {
 		return fmt.Errorf("show checklists: %w", err)
 	}
@@ -762,12 +762,12 @@ func (b *Bot) showTask(params []string) error {
 func (b *Bot) showDoc(params []string) error {
 	filenameHash := params[0]
 
-	filename, err := b.fs.Unhash("", filenameHash)
+	filename, err := b.fs.Unhash(fs.DirRoot, filenameHash)
 	if err != nil {
 		return fmt.Errorf("show doc: %w", err)
 	}
 
-	content, err := b.fs.Read("", filename)
+	content, err := b.fs.Read(fs.DirRoot, filename)
 	if err != nil {
 		return fmt.Errorf("show doc: : %w", err)
 	}
@@ -787,7 +787,7 @@ func (b *Bot) showDoc(params []string) error {
 func (b *Bot) showChecklist(params []string) error {
 	checklistHash := params[0]
 
-	checklist, err := b.fs.Unhash("", checklistHash)
+	checklist, err := b.fs.Unhash(fs.DirRoot, checklistHash)
 	if err != nil {
 		return fmt.Errorf("show checklist: %w", err)
 	}
@@ -837,7 +837,7 @@ func (b *Bot) move(params []string) error {
 	oldFilenameHash := params[1]
 	newDirHash := params[2]
 
-	oldDir, err := b.fs.Unhash("", oldDirHash)
+	oldDir, err := b.fs.Unhash(fs.DirRoot, oldDirHash)
 	if err != nil {
 		return fmt.Errorf("move: can't unhash old dir: %w", err)
 	}
@@ -851,7 +851,7 @@ func (b *Bot) move(params []string) error {
 		newFilename = params[3]
 	}
 
-	newDir, err := b.fs.Unhash("", newDirHash)
+	newDir, err := b.fs.Unhash(fs.DirRoot, newDirHash)
 	if err != nil {
 		return fmt.Errorf("move: can't unhash new dir %s: %w", newDir, err)
 	}
@@ -883,18 +883,18 @@ func (b *Bot) moveToFile(params []string) error {
 	filenameHash := params[0]
 	existingFileHash := params[1]
 
-	filename, err := b.fs.Unhash("", filenameHash)
+	filename, err := b.fs.Unhash(fs.DirRoot, filenameHash)
 	if err != nil {
 		return fmt.Errorf("move to file: can't unhash new filename '%s': %w", filenameHash, err)
 	}
 
 	// TODO when existing and new are the same files
-	existingFile, err := b.fs.Unhash("", existingFileHash)
+	existingFile, err := b.fs.Unhash(fs.DirRoot, existingFileHash)
 	if err != nil {
 		return fmt.Errorf("move to file: can't unhash doc '%s' in today: %w", filenameHash, err)
 	}
 
-	fileContent, err := b.fs.Read("", filename)
+	fileContent, err := b.fs.Read(fs.DirRoot, filename)
 	if err != nil {
 		return fmt.Errorf("move to file: can't read content of '%s': %w", filename, err)
 	}
@@ -903,13 +903,13 @@ func (b *Bot) moveToFile(params []string) error {
 		fileContent = fs.Title(filename)
 	}
 
-	existingContent, err := b.fs.Read("", existingFile)
+	existingContent, err := b.fs.Read(fs.DirRoot, existingFile)
 	if err != nil {
 		return fmt.Errorf("move to file: can't get doc content of '%s': %w", existingFile, err)
 	}
 
 	// We can tolerate this
-	_ = b.fs.Del("", filename)
+	_ = b.fs.Del(fs.DirRoot, filename)
 
 	existingContent = strings.TrimSpace(existingContent)
 	if len(existingContent) > 0 {
@@ -917,7 +917,7 @@ func (b *Bot) moveToFile(params []string) error {
 	}
 	existingContent += fileContent
 
-	err = b.fs.Write("", existingFile, existingContent)
+	err = b.fs.Write(fs.DirRoot, existingFile, existingContent)
 	if err != nil {
 		return fmt.Errorf("move to file: can't save file: %w", err)
 	}
@@ -934,7 +934,7 @@ func (b *Bot) moveToChecklist(params []string) error {
 		return fmt.Errorf("move to checkilst: %w", err)
 	}
 
-	checklist, err := b.fs.Unhash("", checklistHash)
+	checklist, err := b.fs.Unhash(fs.DirRoot, checklistHash)
 	if err != nil {
 		return fmt.Errorf("move to checklist: %w", err)
 	}
@@ -975,7 +975,7 @@ func (b *Bot) moveToNewDoc(params []string) error {
 	filenameHash := params[0]
 	doc := params[1]
 
-	err := b.fs.Write("", txt.Ucfirst(doc), "")
+	err := b.fs.Write(fs.DirRoot, txt.Ucfirst(doc), "")
 	if err != nil {
 		return fmt.Errorf("move to doc: can't create empty doc: %w", err)
 	}
@@ -987,7 +987,7 @@ func (b *Bot) moveToNewChecklist(params []string) error {
 	filenameHash := params[0]
 	doc := params[1]
 
-	err := b.fs.Write("", txt.Ucfirst(doc), "")
+	err := b.fs.Write(fs.DirRoot, txt.Ucfirst(doc), "")
 	if err != nil {
 		return fmt.Errorf("move to doc: can't create empty doc: %w", err)
 	}
@@ -1147,7 +1147,7 @@ func (b *Bot) showToFile(params []string) error {
 		return fmt.Errorf("to file dialog: %w", err)
 	}
 
-	err = b.fs.Rename(fs.DirToday, filename, "", filename)
+	err = b.fs.Rename(fs.DirToday, filename, fs.DirRoot, filename)
 	if err != nil {
 		return fmt.Errorf("to file dialog: %w", err)
 	}
@@ -1210,7 +1210,7 @@ func (b *Bot) showToChecklist(params []string) error {
 }
 
 func (b *Bot) toFileKeyboardButtons(filenameHash string) ([]tg.Btn, error) {
-	files, err := b.fs.FilesAndDirs("")
+	files, err := b.fs.FilesAndDirs(fs.DirRoot)
 	if err != nil {
 		return nil, fmt.Errorf("to doc keyboard: %w", err)
 	}
@@ -1232,10 +1232,10 @@ func (b *Bot) toFileKeyboardButtons(filenameHash string) ([]tg.Btn, error) {
 
 func (b *Bot) toDirKeyboardButtons(filenameHash string) ([]tg.Btn, error) {
 	newBtn := func(dir string) tg.Btn {
-		return tg.NewBtn(dir, tg.NewCmd(constants.CmdMove, []string{"", filenameHash, dir}))
+		return tg.NewBtn(dir, tg.NewCmd(constants.CmdMove, []string{fs.DirRoot, filenameHash, dir}))
 	}
 
-	dirs, err := b.fs.FilesAndDirs("")
+	dirs, err := b.fs.FilesAndDirs(fs.DirRoot)
 	if err != nil {
 		return nil, fmt.Errorf("to note keyboard: %w", err)
 	}
@@ -1254,7 +1254,7 @@ func (b *Bot) toChecklistKeyboard(filenameHash string) (*tg.Keyboard, error) {
 		return tg.NewBtn(title, tg.NewCmd(constants.CmdMoveToChecklist, []string{filenameHash, dir}))
 	}
 
-	dirs, err := b.fs.FilesAndDirs("")
+	dirs, err := b.fs.FilesAndDirs(fs.DirRoot)
 	if err != nil {
 		return nil, fmt.Errorf("to checklist keyboard: %w", err)
 	}

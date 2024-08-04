@@ -93,7 +93,7 @@ func TestAddEmojiNewFile(t *testing.T) {
 	err = AddEmoji(userFS, "🙂")
 	r.NoError(err)
 
-	content, err := userFS.Read("journal", "2024 January.md")
+	content, err := userFS.Read("journal", "2024.01 January.md")
 	r.NoError(err)
 
 	r.Equal("#### 1 January, Monday 🙂", content)
@@ -104,7 +104,7 @@ func TestAddEmojiExistingFile(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	md := "#### 0, Sunday\nSome Note\n#### 1 January, Monday\nSome Note"
-	userFS.Write("journal", "2024 January.md", md)
+	userFS.Write("journal", "2024.01 January.md", md)
 
 	savedNow := now
 	defer func() {
@@ -117,7 +117,7 @@ func TestAddEmojiExistingFile(t *testing.T) {
 	err = AddEmoji(userFS, "🙂")
 	r.NoError(err)
 
-	content, err := userFS.Read("journal", "2024 January.md")
+	content, err := userFS.Read("journal", "2024.01 January.md")
 	r.NoError(err)
 
 	r.Equal("#### 0, Sunday\nSome Note\n#### 1 January, Monday 🙂\nSome Note", content)
@@ -128,7 +128,7 @@ func TestAddEmojiExistingFileMissingDay(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	md := "#### 0, Sunday\nSome Note\n"
-	userFS.Write("journal", "2024 January.md", md)
+	userFS.Write("journal", "2024.01 January.md", md)
 
 	savedNow := now
 	defer func() {
@@ -141,7 +141,7 @@ func TestAddEmojiExistingFileMissingDay(t *testing.T) {
 	err = AddEmoji(userFS, "🙂")
 	r.NoError(err)
 
-	content, err := userFS.Read("journal", "2024 January.md")
+	content, err := userFS.Read("journal", "2024.01 January.md")
 	r.NoError(err)
 
 	r.Equal("#### 0, Sunday\nSome Note\n#### 1 January, Monday 🙂", content)
@@ -152,7 +152,7 @@ func TestAddMoodEmojiExistingFileExistingEmojis(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	md := "#### 0, Sunday\nSome Note\n#### 1 January, Monday 🌱📵\nSome Note"
-	userFS.Write("journal", "2024 January.md", md)
+	userFS.Write("journal", "2024.01 January.md", md)
 
 	savedNow := now
 	defer func() {
@@ -165,7 +165,7 @@ func TestAddMoodEmojiExistingFileExistingEmojis(t *testing.T) {
 	err = AddEmoji(userFS, "🙂")
 	r.NoError(err)
 
-	content, err := userFS.Read("journal", "2024 January.md")
+	content, err := userFS.Read("journal", "2024.01 January.md")
 	r.NoError(err)
 
 	r.Equal("#### 0, Sunday\nSome Note\n#### 1 January, Monday 🙂🌱📵\nSome Note", content)
@@ -176,7 +176,7 @@ func TestAddRegularEmojiExistingFileExistingEmojis(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	md := "#### 0, Sunday\nSome Note\n#### 1 January, Monday 🌱📵\nSome Note"
-	userFS.Write("journal", "2024 January.md", md)
+	userFS.Write("journal", "2024.01 January.md", md)
 
 	savedNow := now
 	defer func() {
@@ -189,7 +189,7 @@ func TestAddRegularEmojiExistingFileExistingEmojis(t *testing.T) {
 	err = AddEmoji(userFS, "🎃")
 	r.NoError(err)
 
-	content, err := userFS.Read("journal", "2024 January.md")
+	content, err := userFS.Read("journal", "2024.01 January.md")
 	r.NoError(err)
 
 	r.Equal("#### 0, Sunday\nSome Note\n#### 1 January, Monday 🌱📵🎃\nSome Note", content)

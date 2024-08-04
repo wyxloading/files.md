@@ -85,7 +85,10 @@ func habitsServer() {
 		} else {
 			emoji, _ = userFS.Read(fs.DirHabits, fs.Filename(habitName))
 		}
-		journal.AddEmoji(userFS, emoji)
+		err = journal.AddEmoji(userFS, emoji)
+		if err != nil {
+			w.Write([]byte("can't write journal"))
+		}
 	})
 
 	// TODO before release, don't panic if we don't want habits

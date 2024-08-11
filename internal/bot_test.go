@@ -159,7 +159,7 @@ func TestSaveFromRegularReply(t *testing.T) {
 	r.NoError(err)
 
 	tgram := fake.NewTG()
-	database := db.NewDB()
+	database := db.NewFakeDB()
 	database.SetDirByMsgID(-1, 255, "today")
 	database.SetFilenameByMsgID(-1, 255, "Existing file.md")
 	bot := NewBot(-1, tgram, userFS, database, &userconfig.DefaultConfig)
@@ -168,6 +168,10 @@ func TestSaveFromRegularReply(t *testing.T) {
 	upd.ReplyToMessageID = 255
 	err = bot.Answer(upd)
 	r.NoError(err)
+
+	files, err := bot.fs.FilesAndDirs("today")
+	r.NoError(err)
+	r.Len(files, 1)
 
 	content, err := bot.fs.Read("today", "Existing file.md")
 	r.NoError(err)
@@ -264,7 +268,7 @@ func TestSaveFromPhotoWithoutCaption(t *testing.T) {
 
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), &userconfig.DefaultConfig)
 	upd := fake.NewUpd(-1, "")
 	upd.PhotoID = "PHOTO_ID"
 	err = bot.Answer(upd)
@@ -300,7 +304,7 @@ func TestSaveFromReplyPhotoWithCaption(t *testing.T) {
 
 	tgram := fake.NewTG()
 
-	database := db.NewDB()
+	database := db.NewFakeDB()
 	database.SetDirByMsgID(-1, 255, "today")
 	database.SetFilenameByMsgID(-1, 255, "Existing file.md")
 	bot := NewBot(-1, tgram, userFS, database, &userconfig.DefaultConfig)
@@ -480,7 +484,7 @@ func TestTodayWithMultilineTasks(t *testing.T) {
 
 // 	tgram := fake.NewTG()
 
-// 	bot := NewBot(-1, tgram, userFS,db.NewDB(), &userconfig.DefaultConfig)
+// 	bot := NewBot(-1, tgram, userFS,db.NewFakeDB(), &userconfig.DefaultConfig)
 // 	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("files", nil)))
 // 	r.NoError(err)
 

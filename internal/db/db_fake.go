@@ -4,6 +4,8 @@ import (
 	"zakirullin/stuffbot/pkg/tg"
 )
 
+// FakeDB is a fake database, used for testing
+// We don't have to clear it after each test
 type FakeDB struct {
 	DirByMessageID      string
 	FilenameByMessageID string
@@ -35,15 +37,17 @@ func (db *FakeDB) DelInputExpectation(userID int64) {
 }
 
 func (db *FakeDB) SetFilenameByMsgID(userID int64, msgID int, filename string) {
+	db.FilenameByMessageID = filename
 }
 
 func (db *FakeDB) FilenameByMsgID(userID int64, msgID int) string {
-	return ""
+	return db.FilenameByMessageID
 }
 
 func (db *FakeDB) DirByMsgID(userID int64, msgID int) string {
-	return ""
+	return db.DirByMessageID
 }
 
-func (db *FakeDB) SetDirByMsgID(userID int64, msgID int, filename string) {
+func (db *FakeDB) SetDirByMsgID(userID int64, msgID int, dir string) {
+	db.DirByMessageID = dir
 }

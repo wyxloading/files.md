@@ -24,7 +24,7 @@ const (
 	CmdShowToChecklist    = "to_checklist"
 	CmdMoveToDir          = "mv"
 	CmdMoveToNewDir       = "mv_to_new_dir"
-	CmdMoveToExistingFile = "mv_to_file"
+	CmdMoveToExistingFile = "mvf"
 	CmdMoveToNewFile      = "mv_to_new_doc"
 	CmdMoveToChecklist    = "mv_to_chk"
 	CmdMoveToNewChecklist = "mv_to_new_chk"

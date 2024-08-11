@@ -394,15 +394,15 @@ func (b *Bot) saveFromForward(u UpdInterface) error {
 
 func (b *Bot) addToRepliedFile(replyToMsgID int, newContent string) error {
 	dir := b.db.DirByMsgID(b.userID, replyToMsgID)
-	filename := b.db.FilenameByMsgID(b.userID, replyToMsgID)
-	existingContent, err := b.fs.Read(dir, filename)
+	existingFilename := b.db.FilenameByMsgID(b.userID, replyToMsgID)
+	existingContent, err := b.fs.Read(dir, existingFilename)
 	if err != nil {
 		return fmt.Errorf("add: can't read: %w", err)
 	}
 
 	header := fmt.Sprintf("### %s", now().Format("02.01.2006 Monday"))
 	content := txt.InsertTextAfterHeader(existingContent, header, newContent)
-	err = b.fs.Write(dir, filename, content)
+	err = b.fs.Write(dir, existingFilename, content)
 	if err != nil {
 		return fmt.Errorf("add: can't write: %w", err)
 	}
@@ -410,7 +410,7 @@ func (b *Bot) addToRepliedFile(replyToMsgID int, newContent string) error {
 	b.delAllKeyboards()
 
 	b.db.SetQuickCommand(b.userID, constants.CmdMoveToExistingFile)
-	b.db.SetQuickCommandParams(b.userID, []string{fs.Hash(filename)})
+	b.db.SetQuickCommandParams(b.userID, []string{fs.Hash(existingFilename), fs.Hash(fs.DirToday)})
 
 	return b.ShowTodayTasks(nil)
 }
@@ -1057,23 +1057,29 @@ func (b *Bot) moveToNewDir(params []string) error {
 func (b *Bot) moveToExistingFile(params []string) error {
 	// TODO Remove input expectations if dir is not list
 	existingFilenameHash := params[0]
-	newFilenameHash := params[1]
+	fromDirHash := params[1]
+	newFilenameHash := params[2]
 
 	if newFilenameHash == existingFilenameHash {
 		return b.ShowTodayTasks(nil)
 	}
 
-	newFilename, err := b.fs.Unhash(fs.DirRoot, newFilenameHash)
+	existingFilename, err := b.fs.Unhash(fs.DirRoot, existingFilenameHash)
+	if err != nil {
+		return fmt.Errorf("move to file: can't unhash existing file '%s': %w", newFilenameHash, err)
+	}
+
+	fromDir, err := b.fs.Unhash(fs.DirRoot, fromDirHash)
+	if err != nil {
+		return fmt.Errorf("move to file: can't unhash from dir '%s': %w", newFilenameHash, err)
+	}
+
+	newFilename, err := b.fs.Unhash(fromDir, newFilenameHash)
 	if err != nil {
 		return fmt.Errorf("move to file: can't unhash new filename '%s': %w", newFilenameHash, err)
 	}
 
-	existingFilename, err := b.fs.Unhash(fs.DirRoot, existingFilenameHash)
-	if err != nil {
-		return fmt.Errorf("move to file: can't unhash file '%s' in today: %w", newFilenameHash, err)
-	}
-
-	fileContent, err := b.fs.Read(fs.DirRoot, newFilename)
+	fileContent, err := b.fs.Read(fromDir, newFilename)
 	if err != nil {
 		return fmt.Errorf("move to file: can't read content of '%s': %w", newFilename, err)
 	}
@@ -1088,7 +1094,7 @@ func (b *Bot) moveToExistingFile(params []string) error {
 	}
 
 	// We can tolerate this
-	_ = b.fs.Del(fs.DirRoot, newFilename)
+	_ = b.fs.Del(fromDir, newFilename)
 
 	header := fmt.Sprintf("### %s", now().Format("02.01.2006 Monday"))
 	content := txt.InsertTextAfterHeader(existingContent, header, fileContent)
@@ -1099,7 +1105,7 @@ func (b *Bot) moveToExistingFile(params []string) error {
 	}
 
 	b.db.SetQuickCommand(b.userID, constants.CmdMoveToExistingFile)
-	b.db.SetQuickCommandParams(b.userID, []string{fs.Hash(existingFilename)})
+	b.db.SetQuickCommandParams(b.userID, []string{fs.Hash(existingFilename), fs.Hash(fs.DirToday)})
 
 	return b.ShowTodayTasks(nil)
 }
@@ -1151,7 +1157,7 @@ func (b *Bot) moveToChecklist(params []string) error {
 }
 
 func (b *Bot) moveToNewFile(params []string) error {
-	filenameHash := params[0]
+	newFilenameHash := params[0]
 	existingFilename := params[1]
 
 	err := b.fs.Write(fs.DirRoot, txt.Ucfirst(existingFilename), "")
@@ -1159,7 +1165,7 @@ func (b *Bot) moveToNewFile(params []string) error {
 		return fmt.Errorf("move to new file: can't create empty file: %w", err)
 	}
 
-	return b.moveToExistingFile([]string{fs.Hash(existingFilename), filenameHash})
+	return b.moveToExistingFile([]string{fs.Hash(existingFilename), fs.DirRoot, newFilenameHash})
 }
 
 func (b *Bot) moveToNewChecklist(params []string) error {
@@ -1171,7 +1177,7 @@ func (b *Bot) moveToNewChecklist(params []string) error {
 		return fmt.Errorf("move to new checklist: can't create empty doc: %w", err)
 	}
 
-	return b.moveToExistingFile([]string{fs.Hash(checklist), filenameHash})
+	return b.moveToExistingFile([]string{fs.Hash(checklist), fs.DirRoot, filenameHash})
 }
 
 func (b *Bot) moveToJournal(params []string) error {
@@ -1421,7 +1427,7 @@ func (b *Bot) toFileKeyboardButtons(newFilenameHash string) ([]tg.Btn, error) {
 	var buttons []tg.Btn
 	newBtn := func(title, existingFilenameHash string) tg.Btn {
 		title = fmt.Sprintf("%s %s", i18n.Emoji("file"), title)
-		params := []string{existingFilenameHash, newFilenameHash}
+		params := []string{existingFilenameHash, fs.DirRoot, newFilenameHash}
 		return tg.NewBtn(title, tg.NewCmd(constants.CmdMoveToExistingFile, params))
 	}
 	for _, file := range files {

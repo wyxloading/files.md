@@ -961,7 +961,7 @@ func TestShowToFileNoDirs(t *testing.T) {
 	r.NoError(err)
 
 	r.Equal(tg.NewKeyboard([]tg.Row{
-		tg.NewRow(tg.NewBtn("📄 Note", tg.NewCmd("mv_to_file", []string{"345fbd7ab08", "345fbd7ab08"}))),
+		tg.NewRow(tg.NewBtn("📄 Note", tg.NewCmd("mvf", []string{"345fbd7ab08", "", "345fbd7ab08"}))),
 	},
 	), tgram.SentKeyboard)
 }
@@ -985,7 +985,7 @@ func TestShowToFile(t *testing.T) {
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewRow(tg.NewBtn("🗂️ dir", tg.NewCmd("mv", []string{"dir", "", "345fbd7ab08"}))),
 		tg.NewBtn("Or choose a file:", tg.NewCmd("nothing", nil)),
-		tg.NewRow(tg.NewBtn("📄 Note", tg.NewCmd("mv_to_file", []string{"345fbd7ab08", "345fbd7ab08"}))),
+		tg.NewRow(tg.NewBtn("📄 Note", tg.NewCmd("mvf", []string{"345fbd7ab08", "", "345fbd7ab08"}))),
 	},
 	), tgram.SentKeyboard)
 }
@@ -1108,7 +1108,7 @@ func TestMoveToExistingFile(t *testing.T) {
 
 	tgram := fake.NewTG()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), &userconfig.DefaultConfig)
-	upd := fake.NewUpdCmdFake(-1, tg.NewCmd("mv_to_file", []string{"1c8f819d075", "501ef2410e2"}))
+	upd := fake.NewUpdCmdFake(-1, tg.NewCmd("mvf", []string{"1c8f819d075", "", "501ef2410e2"}))
 	err = bot.Answer(upd)
 	r.NoError(err)
 

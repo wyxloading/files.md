@@ -96,7 +96,7 @@ func TestSaveFromTextMsgWithSanitize(t *testing.T) {
 	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("today", nil)))
 	r.NoError(err)
 
-	r.Equal("<b>1</b> left", tgram.LastSentText)
+	r.Equal("<b>1</b> left"+wideSpacer, tgram.LastSentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("👀 New task/", tg.NewCmd("task", []string{"today", "cd59b9e6546"})),
 	},
@@ -397,7 +397,7 @@ func TestToday(t *testing.T) {
 	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("today", nil)))
 	r.NoError(err)
 
-	r.Equal("<b>2</b> left", tgram.LastSentText)
+	r.Equal("<b>2</b> left"+wideSpacer, tgram.LastSentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("First task", tg.NewCmd("c", []string{"today", "0824149b387"})),
 		tg.NewBtn("🥈 Second task", tg.NewCmd("c", []string{"today", "2940ad40402"})),
@@ -438,7 +438,7 @@ func TestTodayQuickMenuFilled(t *testing.T) {
 	bot, tgram, r := makeBot(t, cfg)
 	err := bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("today", nil)))
 	r.NoError(err)
-	r.Equal("<b>1</b> left", tgram.LastSentText)
+	r.Equal("<b>1</b> left"+wideSpacer, tgram.LastSentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("First task", tg.NewCmd("c", []string{"today", "0824149b387"})),
 		tg.NewRow(
@@ -467,7 +467,7 @@ func TestTodayWithMultilineTasks(t *testing.T) {
 	err = bot.Answer(upd)
 	r.NoError(err)
 
-	r.Equal("<b>2</b> left", tgram.LastSentText)
+	r.Equal("<b>2</b> left"+wideSpacer, tgram.LastSentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("👀 First task", tg.NewCmd("task", []string{"today", "0824149b387"})),
 		tg.NewBtn("🥈 Second task", tg.NewCmd("c", []string{"today", "2940ad40402"})),

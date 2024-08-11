@@ -41,6 +41,7 @@ const (
 	maxInlineResults       = 50
 	maxMsgLength           = 4096 // UTF-8 characters
 	maxMsgsToSendAtOnce    = 5
+	wideSpacer             = "`            ⁠`" // On mobile phones, buttons shrink to msg width
 )
 
 // UpdInterface represents incoming user updates
@@ -661,7 +662,7 @@ func (b *Bot) todayLabel() string {
 		return statusBar + i18n.Tr("You don't have any tasks!")
 	}
 
-	return statusBar + fmt.Sprintf(i18n.Tr("<b>%d</b> left"), len(todayTasks))
+	return statusBar + fmt.Sprintf(i18n.Tr("<b>%d</b> left%s"), len(todayTasks), wideSpacer)
 }
 
 func (b *Bot) showFiles(params []string) error {

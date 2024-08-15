@@ -184,7 +184,7 @@ func MarkdownToHtml(md string) string {
 	// We try to convert as much markdown as possible to Telegram HTML.
 
 	text := markdown()
-	code := and(term("`"), and(text, term("`")))
+	code := and(openTerm("`"), and(text, closeTerm("`")))
 	italicNoCyclic := or(
 		and(openTerm("*"), and(some(or(
 			or(

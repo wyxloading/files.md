@@ -17,6 +17,10 @@ import (
 	"zakirullin/stuffbot/pkg/txt"
 )
 
+const (
+	daysInAdvanceForLater = 7 * 24 * time.Hour
+)
+
 func MoveDueTasksToToday(
 	storagePath,
 	configFilename string,
@@ -54,16 +58,26 @@ func MoveDueTasksToToday(
 		}
 
 		for _, schedule := range userconf.Schedules() {
-			if time.Now().Unix() < schedule.ScheduledAt {
+			shouldScheduleForToday := schedule.ScheduledAt <= time.Now().Unix()
+			shouldScheduleForLater := (schedule.ScheduledAt - time.Now().Unix()) < int64(daysInAdvanceForLater.Seconds())
+			if shouldScheduleForToday {
+				err = moveTaskToToday(schedule.Filename, userFS)
+				if err != nil {
+					slog.Error("schedule worker: can't move to today", "err", err)
+					continue
+				}
+			} else if shouldScheduleForLater {
+				err = moveTaskToLater(schedule.Filename, userFS)
+				if err != nil {
+					slog.Error("schedule worker: can't move to later", "err", err)
+				}
 				continue
-			}
-			err = moveTaskToToday(schedule.Filename, userFS)
-			if err != nil {
-				slog.Error("schedule worker: can't move", "err", err)
+			} else {
+				continue
 			}
 
 			bot := internal.NewBot(userID, telegram, userFS, db.NewDB(), userconf)
-			bot.ShowTodayTasks(nil)
+			_ = bot.ShowTodayTasks(nil)
 
 			slog.Debug("Scheduled task moved to today", schedule.Filename, "filename")
 
@@ -84,6 +98,24 @@ func MoveDueTasksToToday(
 			err = userconf.Save(userconfPath)
 			if err != nil {
 				return fmt.Errorf("schedule worker: can't save user config: %s", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func moveTaskToLater(filename string, userFS *fs.FS) error {
+	filenames, err := userFS.FilesAndDirs(fs.DirArchive)
+	if err != nil {
+		return fmt.Errorf("moveTaskToLater: %w", err)
+	}
+
+	for _, f := range filenames {
+		if f.Name == filename {
+			err = userFS.Rename(fs.DirArchive, filename, fs.DirLater, filename)
+			if err != nil {
+				return fmt.Errorf("moveTaskToLater: can't rename: %w", err)
 			}
 		}
 	}

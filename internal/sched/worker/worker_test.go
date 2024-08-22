@@ -155,6 +155,12 @@ func TestMoveDueTasksFromArchive(t *testing.T) {
 	cfg.AddToSchedule("due task.md", 0, "")
 	r.NoError(err)
 
+	sc, err := cfg.Schedules()
+	r.Equal("due task.md", sc[0].Filename)
+	r.Equal(int64(0), sc[0].ScheduledAt)
+	r.Equal("", sc[0].Cmd)
+	r.Equal("", sc[0].Cron)
+
 	tgram := fake.NewTG()
 	err = MoveDueTasks("/", "config.json", fsBackend, tgram)
 	r.NoError(err)
@@ -162,6 +168,10 @@ func TestMoveDueTasksFromArchive(t *testing.T) {
 	exists, err := userFS.Exists("today", "due task.md")
 	r.NoError(err)
 	r.True(exists)
+
+	sc, err = cfg.Schedules()
+	r.NoError(err)
+	r.Empty(sc)
 }
 
 func TestMoveDueTasksFromLater(t *testing.T) {
@@ -187,6 +197,12 @@ func TestMoveDueTasksFromLater(t *testing.T) {
 	cfg.AddToSchedule("due task.md", 0, "")
 	r.NoError(err)
 
+	sc, err := cfg.Schedules()
+	r.Equal("due task.md", sc[0].Filename)
+	r.Equal(int64(0), sc[0].ScheduledAt)
+	r.Equal("", sc[0].Cmd)
+	r.Equal("", sc[0].Cron)
+
 	tgram := fake.NewTG()
 	err = MoveDueTasks("/", "config.json", fsBackend, tgram)
 	r.NoError(err)
@@ -194,6 +210,10 @@ func TestMoveDueTasksFromLater(t *testing.T) {
 	exists, err := userFS.Exists("today", "due task.md")
 	r.NoError(err)
 	r.True(exists)
+
+	sc, err = cfg.Schedules()
+	r.NoError(err)
+	r.Empty(sc)
 }
 
 func TestMoveDueTasksMovesToLater(t *testing.T) {
@@ -219,6 +239,12 @@ func TestMoveDueTasksMovesToLater(t *testing.T) {
 	cfg.AddToSchedule("due task.md", 7*24*int64(time.Hour.Seconds()), "")
 	r.NoError(err)
 
+	sc, err := cfg.Schedules()
+	r.Equal("due task.md", sc[0].Filename)
+	r.Equal(int64(604800), sc[0].ScheduledAt)
+	r.Equal("", sc[0].Cmd)
+	r.Equal("", sc[0].Cron)
+
 	tgram := fake.NewTG()
 	err = MoveDueTasks("/", "config.json", fsBackend, tgram)
 	r.NoError(err)
@@ -226,6 +252,10 @@ func TestMoveDueTasksMovesToLater(t *testing.T) {
 	exists, err := userFS.Exists("later", "due task.md")
 	r.NoError(err)
 	r.True(exists)
+
+	sc, err = cfg.Schedules()
+	r.NoError(err)
+	r.Len(sc, 1)
 }
 
 func TestMoveDueTasksDoesntMove(t *testing.T) {
@@ -247,9 +277,17 @@ func TestMoveDueTasksDoesntMove(t *testing.T) {
 	userFS.Write("archive", "due task.md", "")
 
 	cfg := userconfig.NewConfig(userFS, -1, "config.json")
-	cfg.CreateDefaultIfNotExists()
-	cfg.AddToSchedule("due task.md", 7*24*int64(time.Hour.Seconds())+1, "")
+	err = cfg.CreateDefaultIfNotExists()
 	r.NoError(err)
+	err = cfg.AddToSchedule("due task.md", 7*24*int64(time.Hour.Seconds())+1, "")
+	r.NoError(err)
+
+	sc, err := cfg.Schedules()
+	r.NoError(err)
+	r.Equal("due task.md", sc[0].Filename)
+	r.Equal(7*24*int64(time.Hour.Seconds())+1, sc[0].ScheduledAt)
+	r.Equal("", sc[0].Cmd)
+	r.Equal("", sc[0].Cron)
 
 	tgram := fake.NewTG()
 	err = MoveDueTasks("/", "config.json", fsBackend, tgram)
@@ -258,4 +296,8 @@ func TestMoveDueTasksDoesntMove(t *testing.T) {
 	exists, err := userFS.Exists("archive", "due task.md")
 	r.NoError(err)
 	r.True(exists)
+	
+	sc, err = cfg.Schedules()
+	r.NoError(err)
+	r.Len(sc, 1)
 }

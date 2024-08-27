@@ -28,11 +28,11 @@ func TestUcfirstRu(t *testing.T) {
 func TestTomorrow(t *testing.T) {
 	r := require.New(t)
 
-	savedNow := now
+	savedNow := Now
 	defer func() {
-		now = savedNow
+		Now = savedNow
 	}()
-	now = func() time.Time {
+	Now = func() time.Time {
 		return time.Date(1970, 1, 1, 10, 45, 10, 0, time.UTC)
 	}
 
@@ -43,11 +43,11 @@ func TestTomorrow(t *testing.T) {
 func TestFormatTaskDate(t *testing.T) {
 	r := require.New(t)
 
-	savedNow := now
+	savedNow := Now
 	defer func() {
-		now = savedNow
+		Now = savedNow
 	}()
-	now = func() time.Time {
+	Now = func() time.Time {
 		return time.Date(1970, 1, 1, 10, 45, 10, 0, time.UTC)
 	}
 

@@ -38,7 +38,7 @@ func main() {
 	}
 	err = config.LoadConfig()
 	if err != nil {
-		panic(fmt.Sprintf("Error loading conf: %s\n", err))
+		panic(fmt.Sprintf("Error loading cfg: %s\n", err))
 	}
 
 	// TODO move to embed

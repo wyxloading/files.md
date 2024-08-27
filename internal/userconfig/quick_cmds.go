@@ -24,12 +24,12 @@ func (c *Config) AddQuickCmd(cmd string) error {
 	lock.Lock()
 	defer lock.Unlock()
 
-	conf, err := c.read(c.filename)
+	cfg, err := c.read(c.filename)
 	if err != nil {
 		return fmt.Errorf("can't add quick cmd: can't read config: %w", err)
 	}
-	conf.QuickCmds = append(conf.QuickCmds, cmd)
-	err = c.write(conf)
+	cfg.QuickCmds = append(cfg.QuickCmds, cmd)
+	err = c.write(cfg)
 	if err != nil {
 		return fmt.Errorf("can't add quick cmd: can't write config: %w", err)
 	}
@@ -38,12 +38,12 @@ func (c *Config) AddQuickCmd(cmd string) error {
 }
 
 func (c *Config) QuickCmds() ([]string, error) {
-	conf, err := c.read(c.filename)
+	cfg, err := c.read(c.filename)
 	if err != nil {
 		return nil, fmt.Errorf("can't get quick cmds: can't read config: %w", err)
 	}
 
-	return conf.QuickCmds, nil
+	return cfg.QuickCmds, nil
 }
 
 func (c *Config) DelQuickCmd(cmd string) error {
@@ -51,20 +51,20 @@ func (c *Config) DelQuickCmd(cmd string) error {
 	lock.Lock()
 	defer lock.Unlock()
 
-	conf, err := c.read(c.filename)
+	cfg, err := c.read(c.filename)
 	if err != nil {
 		return fmt.Errorf("can't del quick cmd: can't read config: %w", err)
 	}
 
 	var newCmds []string
-	for _, curQuickCmd := range conf.QuickCmds {
+	for _, curQuickCmd := range cfg.QuickCmds {
 		if curQuickCmd != cmd {
 			newCmds = append(newCmds, curQuickCmd)
 		}
 	}
-	conf.QuickCmds = newCmds
+	cfg.QuickCmds = newCmds
 
-	err = c.write(conf)
+	err = c.write(cfg)
 	if err != nil {
 		return fmt.Errorf("can't del quick cmd: can't write config: %w", err)
 	}

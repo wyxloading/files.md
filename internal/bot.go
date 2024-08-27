@@ -97,7 +97,7 @@ type Bot struct {
 	tg     TGInterface
 	fs     *fs.FS
 	db     DBInterface
-	conf   *userconfig.Config
+	cfg    *userconfig.Config
 }
 
 type BotPluginInterface interface {
@@ -106,12 +106,12 @@ type BotPluginInterface interface {
 
 var now = time.Now
 
-func NewBot(userID int64, tg TGInterface, fs *fs.FS, db DBInterface, conf *userconfig.Config) *Bot {
+func NewBot(userID int64, tg TGInterface, fs *fs.FS, db DBInterface, cfg *userconfig.Config) *Bot {
 	botPlugins = append(botPlugins,
 		plugins.NewWorldClockPlugin(userID, tg),
 	)
 
-	return &Bot{userID, tg, fs, db, conf}
+	return &Bot{userID, tg, fs, db, cfg}
 }
 
 // Answer to incoming text message or command (inline queries aren't supported yet)
@@ -208,39 +208,39 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		consts.CmdShowSchedule:       b.showSchedule,
 		consts.CmdShowSettings:       b.showSettings,
 		// Button's commands (callbacks)
-		consts.CmdRenameFile:             b.showRenameFile,
-		consts.CmdShowMultilineTask:      b.showMultilineTask,
-		consts.CmdShowFile:               b.showFile,
-		consts.CmdShowChecklist:          b.showChecklist,
-		consts.CmdCompleteChecklistItem:  b.completeChecklistItem,
-		consts.CmdShowChecklistItem:      b.showChecklistItem,
-		consts.CmdShowScheduleForDay:     b.showChooseDay,
-		consts.CmdShowMoveToFile:         b.showMoveToFile,
-		consts.CmdShowMoveToChecklist:    b.showToChecklist,
-		consts.CmdMoveToDir:              b.moveToDir,
-		consts.CmdMoveToNewDir:           b.moveToNewDir,
-		consts.CmdMoveToExistingFile:     b.moveToExistingFile,
-		consts.CmdMoveToNewFile:          b.moveToNewFile,
-		consts.CmdMoveToChecklist:        b.moveToChecklist,
-		consts.CmdMoveToRead:             b.moveToRead,
-		consts.CmdMoveToWatch:            b.moveToWatch,
-		consts.CmdMoveToShop:             b.moveToShop,
-		consts.CmdMoveToNewChecklist:     b.moveToNewChecklist,
-		consts.CmdMoveToJournal:          b.moveToJournal,
-		consts.CmdMoveToLater:            b.moveToLater,
-		consts.CmdSchedule:               b.schedule,
-		consts.CmdScheduleForTmrw:        b.scheduleForTmrw,
-		consts.CmdComplete:               b.complete,
-		consts.CmdPostpone:               b.postpone,
-		consts.CmdPomodoro:               b.togglePomodoro,
-		consts.CmdShowRecurringKB:        b.showRecurringKeyboard,
-		consts.CmdShowQuickBtnsSettings:  b.showQuickBtnsSettings,
-		consts.CmdShowMoveToBtnsSettings: b.showMoveToBtnsSettings,
-		consts.CmdAddToQuickBtns:         b.addToQuickBtns,
-		consts.CmdDelFromQuickBtns:       b.delFromQuickBtns,
-		consts.CmdAddToMoveToBtns:        b.addToMoveToBtns,
-		consts.CmdDelFromMoveToBtns:      b.delFromMoveToBtns,
-		consts.CmdAddToJournalShortcut:   b.addToJournalFromShortcut,
+		consts.CmdRenameFile:                  b.showRenameFile,
+		consts.CmdShowMultilineTask:           b.showMultilineTask,
+		consts.CmdShowFile:                    b.showFile,
+		consts.CmdShowChecklist:               b.showChecklist,
+		consts.CmdCompleteChecklistItem:       b.completeChecklistItem,
+		consts.CmdShowChecklistItem:           b.showChecklistItem,
+		consts.CmdShowScheduleForDay:          b.showForADay,
+		consts.CmdShowMoveToFile:              b.showMoveToFile,
+		consts.CmdShowMoveToChecklist:         b.showToChecklist,
+		consts.CmdMoveToDir:                   b.moveToDir,
+		consts.CmdMoveToNewDir:                b.moveToNewDir,
+		consts.CmdMoveToExistingFile:          b.moveToExistingFile,
+		consts.CmdMoveToNewFile:               b.moveToNewFile,
+		consts.CmdMoveToChecklist:             b.moveToChecklist,
+		consts.CmdMoveToRead:                  b.moveToRead,
+		consts.CmdMoveToWatch:                 b.moveToWatch,
+		consts.CmdMoveToShop:                  b.moveToShop,
+		consts.CmdMoveToNewChecklist:          b.moveToNewChecklist,
+		consts.CmdMoveToJournal:               b.moveToJournal,
+		consts.CmdMoveToLater:                 b.moveToLater,
+		consts.CmdSchedule:                    b.schedule,
+		consts.CmdScheduleForTmrw:             b.scheduleForTmrw,
+		consts.CmdComplete:                    b.complete,
+		consts.CmdPostpone:                    b.postpone,
+		consts.CmdPomodoro:                    b.togglePomodoro,
+		consts.CmdShowScheduleForDayRecurring: b.showForADayRecurring,
+		consts.CmdShowQuickBtnsSettings:       b.showQuickBtnsSettings,
+		consts.CmdShowMoveToBtnsSettings:      b.showMoveToBtnsSettings,
+		consts.CmdAddToQuickBtns:              b.addToQuickBtns,
+		consts.CmdDelFromQuickBtns:            b.delFromQuickBtns,
+		consts.CmdAddToMoveToBtns:             b.addToMoveToBtns,
+		consts.CmdDelFromMoveToBtns:           b.delFromMoveToBtns,
+		consts.CmdAddToJournalShortcut:        b.addToJournalFromShortcut,
 		// Used for button-like separators
 		consts.CmdDoNothing: func(s []string) error { return nil },
 	}
@@ -656,7 +656,7 @@ func (b *Bot) showLaterTasks(params []string) error {
 	var kb tg.Keyboard
 	// This method is used for not-so-important informative purposes,
 	// so we can tolerate problematic read
-	scheduledTasks, _ := b.conf.Schedules()
+	scheduledTasks, _ := b.cfg.Schedules()
 	scheduled := sched.FilenamesAndSchedules(scheduledTasks)
 	for _, file := range files {
 		var btn tg.Btn
@@ -903,7 +903,7 @@ func (b *Bot) showStats(params []string) error {
 }
 
 func (b *Bot) showSchedule(params []string) error {
-	scheduledTasks, err := b.conf.Schedules()
+	scheduledTasks, err := b.cfg.Schedules()
 	if err != nil {
 		return fmt.Errorf("show schedule: %w", err)
 	}
@@ -1034,11 +1034,12 @@ func (b *Bot) showChecklist(params []string) error {
 
 	kb := tg.NewKeyboard(nil)
 	for _, item := range items {
+		title := i18n.Emojify(fs.UnsanitizeFilename(item.Title))
 		if item.IsMultiline {
-			title := txt.Emoji(i18n.Emoji("eyes"), i18n.Emojify(item.Title))
+			title := txt.Emoji(i18n.Emoji("eyes"), title)
 			kb.AddRow(tg.NewBtn(title, tg.NewCmd(consts.CmdShowChecklistItem, []string{dirHash, item.Hash})))
 		} else {
-			kb.AddRow(tg.NewBtn(i18n.Emojify(item.Title), tg.NewCmd(consts.CmdCompleteChecklistItem, []string{dirHash, item.Hash})))
+			kb.AddRow(tg.NewBtn(title, tg.NewCmd(consts.CmdCompleteChecklistItem, []string{dirHash, item.Hash})))
 		}
 	}
 	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
@@ -1192,7 +1193,7 @@ func (b *Bot) moveToChecklist(params []string) error {
 		return fmt.Errorf("move to checklist: %w", err)
 	}
 
-	if isMultiline && b.conf.ShouldSplitChecklist(checklist) {
+	if isMultiline && b.cfg.ShouldSplitChecklist(checklist) {
 		content, err := b.fs.Read(fs.DirToday, filename)
 		if err != nil {
 			return fmt.Errorf("move to checklist: %w", err)
@@ -1268,7 +1269,7 @@ func (b *Bot) moveToJournal(params []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to move to journal: can't unhash filename: %w", err)
 	}
-	err = journal.AddRecord(b.fs, filename, b.conf.Timezone())
+	err = journal.AddRecord(b.fs, filename, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("failed to move to journal: can't add note: %w", err)
 	}
@@ -1284,7 +1285,7 @@ func (b *Bot) addToJournalFromShortcut(params []string) error {
 	content := params[0]
 
 	// TODO change to pass text
-	err := journal.AddRecord(b.fs, content, b.conf.Timezone())
+	err := journal.AddRecord(b.fs, content, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("failed to move to journal: can't add note: %w", err)
 	}
@@ -1318,10 +1319,10 @@ func (b *Bot) complete(params []string) error {
 	}
 
 	if dir == fs.DirToday && filename == fs.FilePomodoro {
-		b.conf.AddToSchedule(filename, time.Now().Unix()+int64(b.conf.PomodoroDuration().Seconds()), "")
+		b.cfg.AddToSchedule(filename, time.Now().Unix()+int64(b.cfg.PomodoroDuration().Seconds()), "")
 	} else {
 		// We can tolerate failure of writing to journal, since that's not single source of truth
-		_ = journal.AddRecord(b.fs, fmt.Sprintf("✅ %s", fs.Title(filename)), b.conf.Timezone())
+		_ = journal.AddRecord(b.fs, fmt.Sprintf("✅ %s", fs.Title(filename)), b.cfg.Timezone())
 	}
 
 	if dir == fs.DirLater {
@@ -1406,7 +1407,7 @@ func (b *Bot) schedule(params []string) error {
 		return fmt.Errorf("schedule: can't unhash filename %s in list: %s", filenameHash, err)
 	}
 
-	b.conf.AddToSchedule(filename, scheduleTime, cron)
+	b.cfg.AddToSchedule(filename, scheduleTime, cron)
 
 	err = b.fs.Rename(fs.DirToday, filename, fs.DirLater, filename)
 	if err != nil {
@@ -1443,17 +1444,17 @@ func (b *Bot) key(key string) string {
 	return fmt.Sprintf("%s:%d", key, b.userID)
 }
 
-func (b *Bot) showChooseDay(params []string) error {
+func (b *Bot) showForADay(params []string) error {
 	filenameHash := params[0]
 
 	kb, err := b.forADayKeyboard(filenameHash)
 	if err != nil {
-		return fmt.Errorf("choose day: %w", err)
+		return fmt.Errorf("show for a day: %w", err)
 	}
 
-	err = b.show("choose your destiny", kb, tg.MarkupHTML)
+	err = b.show(i18n.Tr("Choose a day"), kb, tg.MarkupHTML)
 	if err != nil {
-		return fmt.Errorf("choose day: %w", err)
+		return fmt.Errorf("show for a day: %w", err)
 	}
 
 	return nil
@@ -1465,7 +1466,7 @@ func (b *Bot) forADayKeyboard(filenameHash string) (*tg.Keyboard, error) {
 	}
 
 	kb := tg.NewKeyboard([]tg.Row{
-		tg.NewRow(tg.NewBtn(i18n.StrRepeat, tg.NewCmd(consts.CmdShowRecurringKB, []string{filenameHash}))),
+		tg.NewRow(tg.NewBtn(i18n.StrRepeat, tg.NewCmd(consts.CmdShowScheduleForDayRecurring, []string{filenameHash}))),
 		tg.NewRow(
 			newBtn(i18n.StrMonday, "0 0 * * 1"),
 			newBtn(i18n.StrTuesday, "0 0 * * 2"),
@@ -1660,7 +1661,7 @@ func (b *Bot) togglePomodoro(params []string) error {
 
 	err = b.send(fmt.Sprintf("Pomodoro is run: you can see \"%v\" task in your %v folder. Once are ready to focus on something and start working, just complete this task."+
 		" It will get back in %v to let you know that you worked enough and deserved a break. To stop it just use /%v comand again",
-		fs.FilePomodoro, fs.DirToday, b.conf.PomodoroDuration(), consts.CmdPomodoro))
+		fs.FilePomodoro, fs.DirToday, b.cfg.PomodoroDuration(), consts.CmdPomodoro))
 	if err != nil {
 		return fmt.Errorf("toggle pomodoro: failed to show pomodoro hint message %w", err)
 	}
@@ -1668,7 +1669,7 @@ func (b *Bot) togglePomodoro(params []string) error {
 	return b.ShowTodayTasks(nil)
 }
 
-func (b *Bot) showRecurringKeyboard(params []string) error {
+func (b *Bot) showForADayRecurring(params []string) error {
 	filenameHash := params[0]
 
 	newBtn := func(name, cron string) tg.Btn {

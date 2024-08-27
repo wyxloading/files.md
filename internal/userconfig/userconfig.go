@@ -82,13 +82,13 @@ func (c *Config) CreateDefaultIfNotExists() error {
 }
 
 func (c *Config) Timezone() *time.Location {
-	conf, _ := c.read(c.filename)
+	cfg, _ := c.read(c.filename)
 
-	if conf.Timezone == "" {
+	if cfg.Timezone == "" {
 		return time.UTC
 	}
 
-	location, err := time.LoadLocation(conf.Timezone)
+	location, err := time.LoadLocation(cfg.Timezone)
 	if err != nil {
 		return time.UTC
 	}
@@ -97,9 +97,9 @@ func (c *Config) Timezone() *time.Location {
 }
 
 func (c *Config) PomodoroDuration() time.Duration {
-	conf, _ := c.read(c.filename)
+	cfg, _ := c.read(c.filename)
 
-	return time.Duration(conf.PomodoroDurationInMinutes * int64(time.Minute))
+	return time.Duration(cfg.PomodoroDurationInMinutes * int64(time.Minute))
 }
 
 func (c *Config) SetPomodoroDuration(duration time.Duration) error {
@@ -111,12 +111,12 @@ func (c *Config) SetPomodoroDuration(duration time.Duration) error {
 	lock.Lock()
 	defer lock.Unlock()
 
-	conf, err := c.read(c.filename)
+	cfg, err := c.read(c.filename)
 	if err != nil {
 		return fmt.Errorf("set pomodoro duration: can't read config: %w", err)
 	}
-	conf.PomodoroDurationInMinutes = int64(duration.Minutes())
-	err = c.write(conf)
+	cfg.PomodoroDurationInMinutes = int64(duration.Minutes())
+	err = c.write(cfg)
 	if err != nil {
 		return fmt.Errorf("set pomodoro duration: can't write config: %w", err)
 	}
@@ -125,12 +125,12 @@ func (c *Config) SetPomodoroDuration(duration time.Duration) error {
 }
 
 func (c *Config) Schedules() ([]Schedule, error) {
-	conf, err := c.read(c.filename)
+	cfg, err := c.read(c.filename)
 	if err != nil {
 		return nil, fmt.Errorf("can't get schedules: can't read config: %w", err)
 	}
 
-	schedules := conf.Schedules
+	schedules := cfg.Schedules
 	sort.Slice(schedules, func(i, j int) bool {
 		return schedules[i].ScheduledAt > schedules[j].ScheduledAt
 	})
@@ -144,12 +144,12 @@ func (c *Config) AddToSchedule(filename string, scheduleAt int64, cron string) e
 	lock.Lock()
 	defer lock.Unlock()
 
-	conf, err := c.read(c.filename)
+	cfg, err := c.read(c.filename)
 	if err != nil {
 		return fmt.Errorf("can't add to schedule: can't read config: %w", err)
 	}
-	conf.Schedules = append(conf.Schedules, Schedule{filename, scheduleAt, cron, ""})
-	err = c.write(conf)
+	cfg.Schedules = append(cfg.Schedules, Schedule{filename, scheduleAt, cron, ""})
+	err = c.write(cfg)
 	if err != nil {
 		return fmt.Errorf("can't add to schedule: can't write config: %w", err)
 	}
@@ -162,21 +162,21 @@ func (c *Config) DelFromSchedule(filename string, scheduledAt int64) error {
 	lock.Lock()
 	defer lock.Unlock()
 
-	conf, err := c.read(c.filename)
+	cfg, err := c.read(c.filename)
 	if err != nil {
 		return fmt.Errorf("can't del from schedule: can't read config: %w", err)
 	}
 
 	var newSchedules []Schedule
-	for _, schedule := range conf.Schedules {
+	for _, schedule := range cfg.Schedules {
 		if schedule.Filename == filename && schedule.ScheduledAt == scheduledAt {
 			continue
 		}
 		newSchedules = append(newSchedules, schedule)
 	}
-	conf.Schedules = newSchedules
+	cfg.Schedules = newSchedules
 
-	err = c.write(conf)
+	err = c.write(cfg)
 	if err != nil {
 		return fmt.Errorf("can't del from schedule: can't write config: %w", err)
 	}
@@ -208,17 +208,17 @@ func (c *Config) read(path string) (config, error) {
 		return defaultConfig, fmt.Errorf("config load: %w", err)
 	}
 
-	conf := config{}
-	err = json.Unmarshal([]byte(content), &conf)
+	cfg := config{}
+	err = json.Unmarshal([]byte(content), &cfg)
 	if err != nil {
 		return defaultConfig, fmt.Errorf("config load: can't unmarshal: %w", err)
 	}
 
-	return conf, nil
+	return cfg, nil
 }
 
-func (c *Config) write(conf config) error {
-	bytes, err := json.MarshalIndent(conf, "", "    ")
+func (c *Config) write(cfg config) error {
+	bytes, err := json.MarshalIndent(cfg, "", "    ")
 	if err != nil {
 		return fmt.Errorf("config save: can't marshal config: %w", err)
 	}

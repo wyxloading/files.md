@@ -11,7 +11,7 @@ import (
 	"zakirullin/stuffbot/internal/userconfig"
 )
 
-var now = func() time.Time {
+var Now = func() time.Time {
 	return time.Now()
 }
 
@@ -30,7 +30,7 @@ func BeginningOfTheDay(t time.Time) time.Time {
 }
 
 func Tomorrow() int64 {
-	tomorrow := now().AddDate(0, 0, 1)
+	tomorrow := Now().AddDate(0, 0, 1)
 
 	return BeginningOfTheDay(tomorrow).Unix()
 }
@@ -44,7 +44,7 @@ func NextExcludeToday(crn string) int64 {
 		panic(fmt.Errorf("invalid cron expression %s: %w", crn, err))
 	}
 
-	return sched.Next(now().Add(24 * time.Hour).UTC()).Unix()
+	return sched.Next(Now().Add(24 * time.Hour).UTC()).Unix()
 }
 
 func ScheduleReport(scheduledTasks []userconfig.Schedule) string {
@@ -86,7 +86,7 @@ func FilenamesAndSchedules(scheduledTasks []userconfig.Schedule) map[string]stri
 }
 
 func formatTaskDate(scheduledAt int64) string {
-	today := now().Truncate(24 * time.Hour)
+	today := Now().Truncate(24 * time.Hour)
 	taskDate := time.Unix(scheduledAt, 0).Truncate(24 * time.Hour)
 
 	diffDays := int(taskDate.Sub(today).Hours() / 24)

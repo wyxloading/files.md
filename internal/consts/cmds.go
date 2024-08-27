@@ -37,7 +37,7 @@ const (
 	CmdSchedule                    = "sc"
 	CmdScheduleForTmrw             = "sc_tmrw"
 	CmdPomodoro                    = "pomodoro"
-	CmdShowRecurringKB             = "recur_kb"
+	CmdShowScheduleForDayRecurring = "sc_day_r"
 	CmdLater                       = "later"
 	CmdShowSettings                = "settings"
 	CmdShowQuickBtnsSettings       = "c_quick_btns"

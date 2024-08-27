@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 
+	"zakirullin/stuffbot/internal/sched"
 	"zakirullin/stuffbot/internal/userconfig"
 
 	"zakirullin/stuffbot/internal/db"
@@ -723,7 +724,7 @@ func TestBotTodayLabelIcons(t *testing.T) {
 	r.NotContains(label, "🍅")
 }
 
-func makeBot(t *testing.T, conf *userconfig.Config) (*Bot, *tg.FakeTG, *require.Assertions) {
+func makeBot(t *testing.T, cfg *userconfig.Config) (*Bot, *tg.FakeTG, *require.Assertions) {
 	r := require.New(t)
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
@@ -734,7 +735,7 @@ func makeBot(t *testing.T, conf *userconfig.Config) (*Bot, *tg.FakeTG, *require.
 
 	tgram := tg.NewFakeTG()
 
-	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), conf)
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), cfg)
 	return bot, tgram, r
 }
 
@@ -1236,9 +1237,9 @@ func TestShowSchedule(t *testing.T) {
 
 	tgram := tg.NewFakeTG()
 
-	conf := fakeConfig()
-	conf.AddToSchedule("filename.md", 0, "")
-	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), conf)
+	cfg := fakeConfig()
+	cfg.AddToSchedule("filename.md", 0, "")
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), cfg)
 	err = bot.Answer(tg.NewFakeUpdCmd(-1, tg.NewCmd("schedule", nil)))
 	r.NoError(err)
 
@@ -1481,4 +1482,117 @@ func TestAddToJournalFromShortcutRu(t *testing.T) {
 	files, err := userFS.FilesAndDirs("journal")
 	r.NoError(err)
 	r.Len(files, 1)
+}
+
+func TestShowForADay(t *testing.T) {
+	r := require.New(t)
+
+	savedNow := sched.Now
+	defer func() {
+		now = savedNow
+	}()
+	sched.Now = func() time.Time {
+		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+	}
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	err = userFS.CreateDirsIfNotExist()
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+	err = bot.Answer(tg.NewFakeUpdCmd(-1, tg.NewCmd("sc_day", []string{"1c8f819d075"})))
+	r.NoError(err)
+
+	r.Equal(tg.NewKeyboard([]tg.Row{[]tg.Btn{tg.Btn{Name: "🔄️ Repeat the task", Cmd: tg.Cmd{Name: "sc_day_r", Params: []string{"1c8f819d075"}, Type: "cmd"}}}, []tg.Btn{tg.Btn{Name: "Mon", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "345600", ""}, Type: "cmd"}}, tg.Btn{Name: "Tue", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "432000", ""}, Type: "cmd"}}, tg.Btn{Name: "Wed", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "518400", ""}, Type: "cmd"}}, tg.Btn{Name: "Thu", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "604800", ""}, Type: "cmd"}}}, []tg.Btn{tg.Btn{Name: "Fri", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "691200", ""}, Type: "cmd"}}, tg.Btn{Name: "Sat", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "172800", ""}, Type: "cmd"}}, tg.Btn{Name: "Sun", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "259200", ""}, Type: "cmd"}}}, []tg.Btn{tg.Btn{Name: "1", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "2678400", ""}, Type: "cmd"}}, tg.Btn{Name: "2", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "2764800", ""}, Type: "cmd"}}, tg.Btn{Name: "3", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "172800", ""}, Type: "cmd"}}, tg.Btn{Name: "4", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "259200", ""}, Type: "cmd"}}, tg.Btn{Name: "5", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "345600", ""}, Type: "cmd"}}, tg.Btn{Name: "6", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "432000", ""}, Type: "cmd"}}, tg.Btn{Name: "7", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "518400", ""}, Type: "cmd"}}}, []tg.Btn{tg.Btn{Name: "9", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "691200", ""}, Type: "cmd"}}, tg.Btn{Name: "10", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "777600", ""}, Type: "cmd"}}, tg.Btn{Name: "11", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "864000", ""}, Type: "cmd"}}, tg.Btn{Name: "12", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "950400", ""}, Type: "cmd"}}, tg.Btn{Name: "13", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "1036800", ""}, Type: "cmd"}}, tg.Btn{Name: "14", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "1123200", ""}, Type: "cmd"}}, tg.Btn{Name: "15", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "1209600", ""}, Type: "cmd"}}, tg.Btn{Name: "16", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "1296000", ""}, Type: "cmd"}}}, []tg.Btn{tg.Btn{Name: "17", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "1382400", ""}, Type: "cmd"}}, tg.Btn{Name: "18", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "1468800", ""}, Type: "cmd"}}, tg.Btn{Name: "19", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "1555200", ""}, Type: "cmd"}}, tg.Btn{Name: "20", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "1641600", ""}, Type: "cmd"}}, tg.Btn{Name: "21", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "1728000", ""}, Type: "cmd"}}, tg.Btn{Name: "22", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "1814400", ""}, Type: "cmd"}}, tg.Btn{Name: "23", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "1900800", ""}, Type: "cmd"}}, tg.Btn{Name: "24", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "1987200", ""}, Type: "cmd"}}}, []tg.Btn{tg.Btn{Name: "25", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "2073600", ""}, Type: "cmd"}}, tg.Btn{Name: "26", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "2160000", ""}, Type: "cmd"}}, tg.Btn{Name: "27", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "2246400", ""}, Type: "cmd"}}, tg.Btn{Name: "28", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "2332800", ""}, Type: "cmd"}}, tg.Btn{Name: "29", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "2419200", ""}, Type: "cmd"}}, tg.Btn{Name: "30", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "2505600", ""}, Type: "cmd"}}, tg.Btn{Name: "31", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "2592000", ""}, Type: "cmd"}}}}), tgram.SentKeyboard)
+}
+
+func TestShowForADayRecurring(t *testing.T) {
+	r := require.New(t)
+
+	savedNow := sched.Now
+	defer func() {
+		now = savedNow
+	}()
+	sched.Now = func() time.Time {
+		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+	}
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	err = userFS.CreateDirsIfNotExist()
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+	err = bot.Answer(tg.NewFakeUpdCmd(-1, tg.NewCmd("sc_day_r", []string{"1c8f819d075"})))
+	r.NoError(err)
+
+	r.Equal(tg.NewKeyboard([]tg.Row{[]tg.Btn{tg.Btn{Name: "Weekdays", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "345600", "0 0 * * 1-5"}, Type: "cmd"}}, tg.Btn{Name: "Every day", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "172800", "0 0 * * *"}, Type: "cmd"}}}, []tg.Btn{tg.Btn{Name: "Mon", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "345600", "0 0 * * 1"}, Type: "cmd"}}, tg.Btn{Name: "Tue", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "432000", "0 0 * * 2"}, Type: "cmd"}}, tg.Btn{Name: "Wed", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "518400", "0 0 * * 3"}, Type: "cmd"}}, tg.Btn{Name: "Thu", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "604800", "0 0 * * 4"}, Type: "cmd"}}}, []tg.Btn{tg.Btn{Name: "Fri", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "691200", "0 0 * * 5"}, Type: "cmd"}}, tg.Btn{Name: "Sat", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "172800", "0 0 * * 6"}, Type: "cmd"}}, tg.Btn{Name: "Sun", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "259200", "0 0 * * 0"}, Type: "cmd"}}}, []tg.Btn{tg.Btn{Name: "1", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "2678400", "0 0 1 * *"}, Type: "cmd"}}, tg.Btn{Name: "2", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "2764800", "0 0 2 * *"}, Type: "cmd"}}, tg.Btn{Name: "3", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "172800", "0 0 3 * *"}, Type: "cmd"}}, tg.Btn{Name: "4", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "259200", "0 0 4 * *"}, Type: "cmd"}}, tg.Btn{Name: "5", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "345600", "0 0 5 * *"}, Type: "cmd"}}, tg.Btn{Name: "6", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "432000", "0 0 6 * *"}, Type: "cmd"}}, tg.Btn{Name: "7", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "518400", "0 0 7 * *"}, Type: "cmd"}}}, []tg.Btn{tg.Btn{Name: "8", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "604800", "0 0 8 * *"}, Type: "cmd"}}, tg.Btn{Name: "9", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "691200", "0 0 9 * *"}, Type: "cmd"}}, tg.Btn{Name: "10", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "777600", "0 0 10 * *"}, Type: "cmd"}}, tg.Btn{Name: "11", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "864000", "0 0 11 * *"}, Type: "cmd"}}, tg.Btn{Name: "12", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "950400", "0 0 12 * *"}, Type: "cmd"}}, tg.Btn{Name: "13", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "1036800", "0 0 13 * *"}, Type: "cmd"}}, tg.Btn{Name: "14", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "1123200", "0 0 14 * *"}, Type: "cmd"}}}, []tg.Btn{tg.Btn{Name: "15", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "1209600", "0 0 15 * *"}, Type: "cmd"}}, tg.Btn{Name: "16", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "1296000", "0 0 16 * *"}, Type: "cmd"}}, tg.Btn{Name: "17", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "1382400", "0 0 17 * *"}, Type: "cmd"}}, tg.Btn{Name: "18", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "1468800", "0 0 18 * *"}, Type: "cmd"}}, tg.Btn{Name: "19", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "1555200", "0 0 19 * *"}, Type: "cmd"}}, tg.Btn{Name: "20", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "1641600", "0 0 20 * *"}, Type: "cmd"}}, tg.Btn{Name: "21", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "1728000", "0 0 21 * *"}, Type: "cmd"}}}, []tg.Btn{tg.Btn{Name: "22", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "1814400", "0 0 22 * *"}, Type: "cmd"}}, tg.Btn{Name: "23", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "1900800", "0 0 23 * *"}, Type: "cmd"}}, tg.Btn{Name: "24", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "1987200", "0 0 24 * *"}, Type: "cmd"}}, tg.Btn{Name: "25", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "2073600", "0 0 25 * *"}, Type: "cmd"}}, tg.Btn{Name: "26", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "2160000", "0 0 26 * *"}, Type: "cmd"}}, tg.Btn{Name: "27", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "2246400", "0 0 27 * *"}, Type: "cmd"}}, tg.Btn{Name: "28", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "2332800", "0 0 28 * *"}, Type: "cmd"}}}, tg.Btn{Name: "🏠 Today", Cmd: tg.Cmd{Name: "today", Params: []string(nil), Type: "cmd"}}}), tgram.SentKeyboard)
+}
+
+func TestSchedule(t *testing.T) {
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	err = userFS.CreateDirsIfNotExist()
+	r.NoError(err)
+	err = userFS.Write("today", "Task.md", "")
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+
+	cfg := fakeConfig()
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), cfg)
+	err = bot.Answer(tg.NewFakeUpdCmd(-1, tg.NewCmd("sc", []string{"8a42", "345600", "0 0 * * 1-5"})))
+	r.NoError(err)
+
+	tasksForToday, err := userFS.FilesAndDirs("today")
+	r.NoError(err)
+	r.Empty(tasksForToday)
+
+	tasksForLater, err := userFS.FilesAndDirs("later")
+	r.NoError(err)
+	r.Len(tasksForLater, 1)
+	r.Equal("Task.md", tasksForLater[0].Name)
+
+	sc, err := cfg.Schedules()
+	r.NoError(err)
+	r.Len(sc, 1)
+	r.Equal("Task.md", sc[0].Filename)
+	r.Equal(int64(345600), sc[0].ScheduledAt)
+	r.Equal("0 0 * * 1-5", sc[0].Cron)
+}
+
+func TestScheduleNoRepeat(t *testing.T) {
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	err = userFS.CreateDirsIfNotExist()
+	r.NoError(err)
+	err = userFS.Write("today", "Task.md", "")
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+
+	cfg := fakeConfig()
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), cfg)
+	err = bot.Answer(tg.NewFakeUpdCmd(-1, tg.NewCmd("sc", []string{"8a42", "345600", ""})))
+	r.NoError(err)
+
+	tasksForToday, err := userFS.FilesAndDirs("today")
+	r.NoError(err)
+	r.Empty(tasksForToday)
+
+	tasksForLater, err := userFS.FilesAndDirs("later")
+	r.NoError(err)
+	r.Len(tasksForLater, 1)
+	r.Equal("Task.md", tasksForLater[0].Name)
+
+	sc, err := cfg.Schedules()
+	r.NoError(err)
+	r.Len(sc, 1)
+	r.Equal("Task.md", sc[0].Filename)
+	r.Equal(int64(345600), sc[0].ScheduledAt)
 }

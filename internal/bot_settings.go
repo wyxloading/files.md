@@ -37,7 +37,7 @@ func (b *Bot) showQuickBtnsSettings(params []string) error {
 	var usedCmds []string
 
 	// We iterate through hardcoded panel to preserve order of buttons in UI
-	cmds, err := b.conf.QuickCmds()
+	cmds, err := b.cfg.QuickCmds()
 	if err != nil {
 		return fmt.Errorf("can't get quick cmds: %w", err)
 	}
@@ -103,7 +103,7 @@ func (b *Bot) addToQuickBtns(params []string) error {
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
 
-	err := b.conf.AddQuickCmd(cmd)
+	err := b.cfg.AddQuickCmd(cmd)
 	if err != nil {
 		return fmt.Errorf("can't add to quick buttons: %w", err)
 	}
@@ -114,7 +114,7 @@ func (b *Bot) addToQuickBtns(params []string) error {
 func (b *Bot) delFromQuickBtns(params []string) error {
 	cmd := params[0]
 
-	_ = b.conf.DelQuickCmd(cmd)
+	_ = b.cfg.DelQuickCmd(cmd)
 
 	return b.showQuickBtnsSettings([]string{})
 }
@@ -122,7 +122,7 @@ func (b *Bot) delFromQuickBtns(params []string) error {
 func (b *Bot) quickBtns() []tg.Btn {
 	quickBtnsRow := tg.NewRow()
 	// We can tolerate missing quick btns
-	cmds, _ := b.conf.QuickCmds()
+	cmds, _ := b.cfg.QuickCmds()
 	for _, cmd := range cmds {
 		for _, btn := range userconfig.AvailableQuickBtns {
 			if btn.Cmd.Name == cmd {
@@ -149,7 +149,7 @@ func (b *Bot) showMoveToBtnsSettings(params []string) error {
 	var usedCmds []string
 
 	// We iterate through hardcoded panel to preserve order of buttons in UI
-	cmds, err := b.conf.MoveToCmds()
+	cmds, err := b.cfg.MoveToCmds()
 	if err != nil {
 		return fmt.Errorf("can't get move to cmds: %w", err)
 	}
@@ -201,7 +201,7 @@ func (b *Bot) showMoveToBtnsSettings(params []string) error {
 func (b *Bot) addToMoveToBtns(params []string) error {
 	cmd := params[0]
 
-	err := b.conf.AddMoveToCmd(cmd)
+	err := b.cfg.AddMoveToCmd(cmd)
 	if err != nil {
 		return fmt.Errorf("can't add to move to buttons: %w", err)
 	}
@@ -212,7 +212,7 @@ func (b *Bot) addToMoveToBtns(params []string) error {
 func (b *Bot) delFromMoveToBtns(params []string) error {
 	cmd := params[0]
 
-	err := b.conf.DelMoveToCmd(cmd)
+	err := b.cfg.DelMoveToCmd(cmd)
 	if err != nil {
 		return fmt.Errorf("button doesn't exist in user's prefs: %s", params[0])
 	}
@@ -223,7 +223,7 @@ func (b *Bot) delFromMoveToBtns(params []string) error {
 func (b *Bot) moveToBtns(filenameHash string) []tg.Btn {
 	moveToBtns := tg.NewRow()
 
-	cmds, err := b.conf.MoveToCmds()
+	cmds, err := b.cfg.MoveToCmds()
 	if err != nil {
 		return nil
 	}

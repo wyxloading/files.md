@@ -328,37 +328,19 @@ func (fs FS) Dirs() ([]File, error) {
 	return dirs, nil
 }
 
-// Maybe we should replace / with | and use filepath.Clean by default
-// instead of throwing an error up the stack
 // TODO test all FS' public the methods for UnsafePath traversal
 // TODO after you cover everything with the tests, we may remove this method
-// because we build our own paths
+// because we build our own paths (???)
+// TODO release remove error?
+// isSafe doesn't eval symlinks, so an attacker can create a symlink to a file
+// outside the rootPath. If we use filepath.EvalSymlinks to expand symlinks and
+// check the real path for safety - we are still prone to TOCTOU (time-of-check to time-of-use)
+// attacks due to the race condition. The only real way to prevent this is to disallow symlinks
+// at the OS level. We can do this by mounting a folder with nosymfollow flag, see README.md.
 func (fs FS) isSafe(path string) (bool, error) {
 	path = filepath.Clean(path)
 	if !strings.HasPrefix(path, fs.rootPath) {
 		return false, nil
-	}
-
-	// Not safe if we have symlink
-	exists, err := afero.Exists(fs.backend, path)
-	if err != nil {
-		return false, err
-	}
-	if exists {
-		// TODO release uncomment
-		//lstater, ok := fs.backend.(afero.Lstater)
-		//if !ok {
-		//	return false, fmt.Errorf("safety can't be checked, fs should support lstater interface: %w", err)
-		//}
-
-		//stat, _, err := lstater.LstatIfPossible(path)
-		//if err != nil {
-		//	return false, fmt.Errorf("safety can't be checked, fs should support lstat: %w", err)
-		//}
-		//// On MacOS dangling symlinks have drwxr-xr-x stats (i.e. treated as directory)
-		//if stat.Mode()&os.ModeSymlink != 0 {
-		//	return false, nil
-		//}
 	}
 
 	// Path traversal attack (filepath.Clean only cleans absolute paths from ../)

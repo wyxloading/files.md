@@ -751,9 +751,9 @@ func (b *Bot) showFiles(_ []string) error {
 	}
 
 	// Add files
-	files = fs.ExcludeConfig(fs.OnlyMDFiles(files))
+	mdFiles := fs.ExcludeConfig(fs.OnlyMDFiles(files))
 	var fileBtns []tg.Btn
-	for _, file := range files {
+	for _, file := range mdFiles {
 		cmd := tg.NewCmd(consts.CmdShowFile, []string{fs.DirRoot, fs.Hash(file.Name)})
 		btn := tg.NewBtn(fmt.Sprintf("📄 %s", fs.UnsanitizeFilename(file.Title)), cmd)
 		fileBtns = append(fileBtns, btn)
@@ -765,7 +765,7 @@ func (b *Bot) showFiles(_ []string) error {
 		kb.AddRow(row)
 	}
 	dirs := fs.OnlyNoteDirs(fs.OnlyDirs(files))
-	shouldAddSeparator := len(files) > 0 && len(dirs) > 0
+	shouldAddSeparator := len(mdFiles) > 0 && len(dirs) > 0
 	if shouldAddSeparator {
 		kb.AddRow(tg.NewBtn("-", tg.NewCmd(consts.CmdDoNothing, nil)))
 	}

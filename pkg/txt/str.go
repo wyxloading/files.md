@@ -107,7 +107,7 @@ func FirstWord(str string) string {
 	return re.FindString(str)
 }
 
-// TODO ignore html in code blocks
+// TODO add tests
 func EscapeHTML(str string) string {
 	// HTML escaping
 	var htmlEscaper = strings.NewReplacer(

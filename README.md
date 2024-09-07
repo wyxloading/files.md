@@ -17,7 +17,7 @@ Can be used as a Telegram bot or as a desktop or mobile app.
 
 ## Spin the app up 🚀
 1) Install [Go](https://go.dev/doc/install)
-2) Build the app:
+2) Run the app:
 ```bash
 $ make gui
 ```

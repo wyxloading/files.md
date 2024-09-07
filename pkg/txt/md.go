@@ -1,7 +1,7 @@
 package txt
 
 import (
-	"fmt"
+	"regexp"
 	"strings"
 	"unicode"
 )
@@ -168,63 +168,69 @@ func markdown() Parser {
 // <blockquote>Block quotation started\nBlock quotation continued\nThe last line of the block quotation</blockquote>
 // <blockquote expandable>Expandable block quotation started\nExpandable block quotation continued\nExpandable block quotation continued\nHidden by default part of the block quotation started\nExpandable block quotation continued\nThe last line of the block quotation</blockquote>
 func Html(md string) string {
-	md = EscapeHTMLInMarkdown(md)
+	mdWithoutCode, inlinePlaceholders := ReplaceWithPlaceholders(md, "`[^`]*`", "inl1ne")
+	mdWithoutCode, codePlaceholders := ReplaceWithPlaceholders(md, "(?s)```.*?```", "c0debl0ck")
+	mdWithoutCode = EscapeHTMLInMarkdown(mdWithoutCode)
 	// By this point our markdown is safe to send as HTML via Telegram.
 	// There won't be any issues like "missing closing HTML tag",
 	// for the cases when our markdown has some html tags.
 	// We try to convert as much markdown as possible to Telegram HTML.
 
+	docs := mdParser()(mdWithoutCode)
+	// TODO only return if remained is empty?
+	if len(docs) > 0 {
+		mdWithoutCode = docs[0].consumed
+	}
+	mdWithCode := RestoreFromPlaceholders(mdWithoutCode, inlinePlaceholders)
+	mdWithCode = RestoreFromPlaceholders(mdWithCode, codePlaceholders)
+
+	reInlineCode := regexp.MustCompile("`(.*?)`")
+	mdWithCode = reInlineCode.ReplaceAllString(mdWithCode, "<code>$1</code>")
+	reCodeBlock := regexp.MustCompile("(?s)```(.*?)```")
+	mdWithCode = reCodeBlock.ReplaceAllString(mdWithCode, "<pre>$1</pre>")
+
+	return mdWithCode
+}
+
+func mdParser() Parser {
 	text := markdown()
-	code := and(openTerm("`"), and(text, closeTerm("`")))
 	onlyBold := or(
-		and(openTerm("**"), and(or(code, text), closeTerm("**"))),
-		and(openTerm("__"), and(or(code, text), closeTerm("__"))),
+		and(openTerm("**"), and(text, closeTerm("**"))),
+		and(openTerm("__"), and(text, closeTerm("__"))),
 	)
 	italicNoCyclic := or(
 		and(openTerm("*"), and(oneOrMore(or(
 			onlyBold,
-			or(code, text))),
+			text)),
 			closeTerm("*"))),
 		and(openTerm("_"), and(oneOrMore(or(
 			onlyBold,
-			or(code, text))),
+			text)),
 			closeTerm("_"))),
 	)
 	onlyItalic := or(
-		and(openTerm("*"), and(or(code, text), closeTerm("*"))),
-		and(openTerm("_"), and(or(code, text), closeTerm("_"))),
+		and(openTerm("*"), and(text, closeTerm("*"))),
+		and(openTerm("_"), and(text, closeTerm("_"))),
 	)
 	boldNoCyclic := or(
 		and(openTerm("**"), and(oneOrMore(or(
 			onlyItalic,
-			or(code, text))),
+			text)),
 			closeTerm("**"))),
 		and(openTerm("__"), and(oneOrMore(or(
 			onlyItalic,
-			or(code, text))),
+			text)),
 			closeTerm("__"))),
 	)
 	italic := or(
-		and(openTerm("*"), and(oneOrMore(or(boldNoCyclic, or(code, text))), closeTerm("*"))),
-		and(openTerm("_"), and(oneOrMore(or(boldNoCyclic, or(code, text))), closeTerm("_"))),
+		and(openTerm("*"), and(oneOrMore(or(boldNoCyclic, text)), closeTerm("*"))),
+		and(openTerm("_"), and(oneOrMore(or(boldNoCyclic, text)), closeTerm("_"))),
 	)
 	bold := or(
-		and(openTerm("**"), and(oneOrMore(or(italicNoCyclic, or(text, code))), closeTerm("**"))),
-		and(openTerm("__"), and(oneOrMore(or(italicNoCyclic, or(text, code))), closeTerm("__"))),
+		and(openTerm("**"), and(oneOrMore(or(italicNoCyclic, text)), closeTerm("**"))),
+		and(openTerm("__"), and(oneOrMore(or(italicNoCyclic, text)), closeTerm("__"))),
 	)
+	span := or(bold, or(italic, text))
 
-	span := or(bold, or(italic, or(code, text)))
-	doc := oneOrMore(span)
-
-	for _, tok := range doc(md) {
-		fmt.Printf("%v\n", tok.consumed)
-	}
-
-	// TODO only return if remained is empty?
-	for _, tok := range doc(md) {
-		return tok.consumed
-	}
-
-	// If we can't consume md, return unchanged
-	return md
+	return oneOrMore(span)
 }

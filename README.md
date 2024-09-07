@@ -1,7 +1,15 @@
 <img src="https://github.com/zakirullin/files.md/raw/main/docs/go.svg" alt="Files.md Bot logo" title="Files.md Bot" align="right" height="60" />
 
 # Files.md
-An application for your personal stuff. Everything is stored locally in plain text files.  
+An application for your personal stuff:
+- ✅ Tasks  
+- 📝 Notes  
+- 🛒 Checklists  
+- 💚 Journal  
+- 🌱 Habits  
+- 🍅 Pomodoro  
+
+Everything is stored locally in plain text files.  
 Can be used as a Telegram bot or as a desktop or mobile app.
 
 [Tasks management bot showcase in Dorofeev's club](https://club.mnogosdelal.ru/post/180/)  

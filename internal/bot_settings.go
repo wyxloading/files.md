@@ -127,7 +127,7 @@ func (b *Bot) quickBtns() []tg.Btn {
 		for _, btn := range userconfig.AvailableQuickBtns {
 			if btn.Cmd.Name == cmd {
 				if btn.Cmd.Name == consts.CmdWebAppHabits {
-					habitsUrl := fmt.Sprintf("https://%s/habits_v2/%d", config.Config.HabitsHost, b.userID)
+					habitsUrl := fmt.Sprintf("https://%s/habits_v2/%d", config.BotCfg.HabitsHost, b.userID)
 					btn.Cmd.Params = []string{habitsUrl}
 				}
 				btn.Name = i18n.Emoji(btn.Name)

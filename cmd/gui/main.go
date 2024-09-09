@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 	"github.com/lmittmann/tint"
@@ -27,14 +28,13 @@ func main() {
 	logger := slog.New(tint.NewHandler(os.Stderr, opts))
 	slog.SetDefault(logger)
 
-	err := godotenv.Load()
-	if err != nil {
-		panic(fmt.Sprintf("Error loading .env file: %s\n", err))
-	}
-	err = config.LoadConfig()
+	// For GUI app we don't have required .env params
+	_ = godotenv.Load()
+	err := config.LoadGUIConfig()
 	if err != nil {
 		panic(fmt.Sprintf("Error loading cfg: %s\n", err))
 	}
+	fmt.Printf("%v\n", config.GUICfg)
 
 	// TODO move to embed
 	err = i18n.LoadLangFile("i18n/ru.json")
@@ -52,7 +52,12 @@ func main() {
 
 		userID := u.UserID()
 
-		userPath := config.Config.GUIUserStoragePath
+		userPath := config.GUICfg.GUIUserStoragePath
+		userPath, err = filepath.Abs(userPath)
+		if err != nil {
+			slog.Error("Bot error: can't get absolute path for curent dir", "err", err)
+			return err
+		}
 		userFS, err := fs.NewFS(userPath, afero.NewOsFs())
 		if err != nil {
 			slog.Error("Bot error: can't create fs", "err", err)
@@ -64,7 +69,7 @@ func main() {
 			return err
 		}
 
-		confFilename := config.Config.ConfigFilename
+		confFilename := config.GUICfg.ConfigFilename
 		userconf := userconfig.NewConfig(userFS, userID, confFilename)
 		err = userconf.CreateDefaultIfNotExists()
 		if err != nil {

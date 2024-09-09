@@ -1,5 +1,5 @@
 run:
-	go run ./cmd/tgbot
+	go run ./cmd/bot
 
 gui:
 	go run ./cmd/gui
@@ -19,7 +19,7 @@ deploy:
 	RESET='\e[0m'; \
 	printf "$${YELLOW}Building...$${RESET}\n" && \
 	make check && \
-	GOOS=linux GOARCH=amd64 go build -o bot ./cmd/tgbot && \
+	GOOS=linux GOARCH=amd64 go build -o bot ./cmd/bot && \
 	printf "$${GREEN}Build Completed$${RESET}\n" && \
 	ssh $(host) "killall bot || true" && \
 	scp bot $(host):/app/bot && printf "$${GREEN}The binary is copied on the server$${RESET}\n" && \

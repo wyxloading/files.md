@@ -151,7 +151,9 @@ func (b *Bot) Answer(u UpdInterface) error {
 
 		handler, ok := b.handlers()[cmd.Name]
 		if !ok {
-			return fmt.Errorf("no such command %s: %w", cmd.Name, errUnknownCommand)
+			// An informative message, we can ignore that
+			_, _ = b.tg.Send(b.userID, i18n.Tr("I know nothing about this command 😕"), nil, tg.MarkupHTML)
+			return b.ShowToday(nil)
 		}
 		slog.Debug("Command is called", "command", cmd.Name, "params", cmd.Params)
 		err = handler(cmd.Params)
@@ -186,8 +188,8 @@ func (b *Bot) Answer(u UpdInterface) error {
 func (b *Bot) handlers() map[string]func([]string) error {
 	handlers := map[string]func([]string) error{
 		// Direct user commands
-		consts.CmdShowStart:          b.showStart,
 		consts.CmdShowToday:          b.ShowToday,
+		consts.CmdShowStart:          b.showStart,
 		consts.CmdShowLater:          b.showLaterTasks,
 		consts.CmdShowFiles:          b.showFiles,
 		consts.CmdShowChecklists:     b.showChecklists,
@@ -213,7 +215,7 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		consts.CmdShowMoveToDirOrFile:         b.showMoveToFileOrDir,
 		consts.CmdShowMoveToChecklist:         b.showToChecklist,
 		consts.CmdMoveToDir:                   b.moveToDir,
-		consts.CmdRequestNewDir:               b.requestNewDir,
+		consts.CmdRequestNewDir:               b.requestNewDirName,
 		consts.CmdMoveToNewDir:                b.moveToNewDir,
 		consts.CmdMoveToExistingFile:          b.moveToExistingFile,
 		consts.CmdMoveToExistingNote:          b.moveToExistingNote,
@@ -285,8 +287,6 @@ func (b *Bot) extractCmd(u UpdInterface) (*tg.Cmd, error) {
 				continue
 			}
 
-			// TODO extract formatting from tg entities  (adding `recs` to journal have no effect)
-			// it doesn't work for some reason
 			text := extractMarkdown(u)
 			text = string(re.ReplaceAll([]byte(text), []byte("")))
 			text = txt.Ucfirst(strings.TrimSpace(text))
@@ -1274,7 +1274,7 @@ func (b *Bot) moveToDir(params []string) error {
 	return b.ShowToday(nil)
 }
 
-func (b *Bot) requestNewDir(params []string) error {
+func (b *Bot) requestNewDirName(params []string) error {
 	filenameHash := params[0]
 
 	err := b.showHTML(i18n.Tr("OK. Send me the name for your new dir"), nil)

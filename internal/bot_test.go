@@ -2485,7 +2485,7 @@ func TestSaveToNewDirIntegration(t *testing.T) {
 	err = bot.Answer(tg.NewFakeUpd(-1, "My dir"))
 	r.NoError(err)
 
-	r.Equal("🗂 New dir <b>my dir</b> created and your note is saved!", tgram.LastSentText)
+	r.Equal("🗂 New dir <b>my dir</b> is created and your note is saved!", tgram.LastSentText)
 
 	content, err := userFS.Read("my dir", "Text.md")
 	r.NoError(err)

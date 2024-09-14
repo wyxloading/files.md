@@ -1314,7 +1314,7 @@ func (b *Bot) moveToNewDir(params []string) error {
 		return fmt.Errorf("move to new dir: %w", err)
 	}
 
-	msg := fmt.Sprintf(i18n.Tr("🗂 New dir <b>%s</b> created and your note is saved!"), dir)
+	msg := fmt.Sprintf(i18n.Tr("🗂 New dir <b>%s</b> is created and your note is saved!"), dir)
 	// An informative message, we can ingore
 	_, _ = b.tg.Send(b.userID, msg, nil, tg.MarkupHTML)
 

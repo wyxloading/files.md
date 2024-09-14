@@ -2,6 +2,7 @@ package gui
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
 )
@@ -14,48 +15,52 @@ type entry struct {
 }
 
 func newEntry() *entry {
-	i := &entry{}
-	i.ExtendBaseWidget(i)
-	i.rowsVisible = 2
+	e := &entry{}
+	e.rowsVisible = 3
+	e.Wrapping = fyne.TextWrapBreak
+	e.Scroll = container.ScrollVerticalOnly
+	e.ExtendBaseWidget(e)
 
-	return i
+	return e
 }
 
-func (i *entry) TypedKey(key *fyne.KeyEvent) {
+func (e *entry) TypedKey(key *fyne.KeyEvent) {
 	if key.Name == fyne.KeyReturn {
-		if i.shiftHeld && !i.MultiLine {
-			i.MultiLine = true
-			i.SetMinRowsVisible(i.rowsVisible)
-			i.rowsVisible++
-		} else if i.shiftHeld {
-			i.rowsVisible++
-			i.SetMinRowsVisible(i.rowsVisible)
-		} else if !i.shiftHeld && i.MultiLine {
-			i.Resize(fyne.NewSize(i.Size().Width, i.Size().Height/2))
-			i.MultiLine = false
+		if e.shiftHeld && !e.MultiLine {
+			e.MultiLine = true
+			e.SetMinRowsVisible(e.rowsVisible)
+			e.Wrapping = fyne.TextWrapBreak
+			e.rowsVisible++
+		} else if e.shiftHeld {
+			e.rowsVisible++
+			e.SetMinRowsVisible(e.rowsVisible)
+		} else if !e.shiftHeld && e.MultiLine {
+			e.Resize(fyne.NewSize(e.Size().Width, e.Size().Height/2))
+			e.MultiLine = false
+			e.rowsVisible = 2
 		}
 
 		// User is submitting the entry
-		if !i.shiftHeld {
+		if !e.shiftHeld {
 			sendMsg()
 		}
 	}
 
-	i.Entry.TypedKey(key)
+	e.Entry.TypedKey(key)
 }
 
-func (i *entry) KeyDown(key *fyne.KeyEvent) {
+func (e *entry) KeyDown(key *fyne.KeyEvent) {
 	if key.Name == desktop.KeyShiftLeft || key.Name == desktop.KeyShiftRight {
-		i.shiftHeld = true
+		e.shiftHeld = true
 	}
 
-	i.Entry.KeyDown(key)
+	e.Entry.KeyDown(key)
 }
 
-func (i *entry) KeyUp(key *fyne.KeyEvent) {
+func (e *entry) KeyUp(key *fyne.KeyEvent) {
 	if key.Name == desktop.KeyShiftLeft || key.Name == desktop.KeyShiftRight {
-		i.shiftHeld = false
+		e.shiftHeld = false
 	}
 
-	i.Entry.KeyUp(key)
+	e.Entry.KeyUp(key)
 }

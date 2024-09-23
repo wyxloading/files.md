@@ -44,7 +44,11 @@ func NextExcludeToday(crn string) int64 {
 		panic(fmt.Errorf("invalid cron expression %s: %w", crn, err))
 	}
 
-	return sched.Next(Now().Add(24 * time.Hour).UTC()).Unix()
+	now := Now()
+	endOfDay := now.Truncate(24 * time.Hour).Add(24*time.Hour - time.Nanosecond)
+
+	// TODO release take into account user timezone
+	return sched.Next(endOfDay).Unix()
 }
 
 func ScheduleReport(scheduledTasks []userconfig.Schedule) string {

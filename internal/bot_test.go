@@ -1742,13 +1742,13 @@ func TestShowForADay(t *testing.T) {
 			{Name: "Thu", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "604800", ""}, Type: "cmd"}},
 		},
 		[]tg.Btn{
-			{Name: "Fri", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "691200", ""}, Type: "cmd"}},
+			{Name: "Fri", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "86400", ""}, Type: "cmd"}},
 			{Name: "Sat", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "172800", ""}, Type: "cmd"}},
 			{Name: "Sun", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "259200", ""}, Type: "cmd"}},
 		},
 		[]tg.Btn{
 			{Name: "1", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "2678400", ""}, Type: "cmd"}},
-			{Name: "2", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "2764800", ""}, Type: "cmd"}},
+			{Name: "2", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "86400", ""}, Type: "cmd"}},
 			{Name: "3", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "172800", ""}, Type: "cmd"}},
 			{Name: "4", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "259200", ""}, Type: "cmd"}},
 			{Name: "5", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "345600", ""}, Type: "cmd"}},
@@ -1812,20 +1812,20 @@ func TestShowForADayRecurring(t *testing.T) {
 
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		[]tg.Btn{
-			{Name: "Weekdays", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "345600", "0 0 * * 1-5"}, Type: "cmd"}},
-			{Name: "Every day", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "172800", "0 0 * * *"}, Type: "cmd"}},
+			{Name: "Weekdays", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "86400", "0 0 * * 1-5"}, Type: "cmd"}},
+			{Name: "Every day", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "86400", "0 0 * * *"}, Type: "cmd"}},
 		}, []tg.Btn{
 			{Name: "Mon", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "345600", "0 0 * * 1"}, Type: "cmd"}},
 			{Name: "Tue", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "432000", "0 0 * * 2"}, Type: "cmd"}},
 			{Name: "Wed", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "518400", "0 0 * * 3"}, Type: "cmd"}},
 			{Name: "Thu", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "604800", "0 0 * * 4"}, Type: "cmd"}},
 		}, []tg.Btn{
-			{Name: "Fri", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "691200", "0 0 * * 5"}, Type: "cmd"}},
+			{Name: "Fri", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "86400", "0 0 * * 5"}, Type: "cmd"}},
 			{Name: "Sat", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "172800", "0 0 * * 6"}, Type: "cmd"}},
 			{Name: "Sun", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "259200", "0 0 * * 0"}, Type: "cmd"}},
 		}, []tg.Btn{
 			{Name: "1", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "2678400", "0 0 1 * *"}, Type: "cmd"}},
-			{Name: "2", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "2764800", "0 0 2 * *"}, Type: "cmd"}},
+			{Name: "2", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "86400", "0 0 2 * *"}, Type: "cmd"}},
 			{Name: "3", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "172800", "0 0 3 * *"}, Type: "cmd"}},
 			{Name: "4", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "259200", "0 0 4 * *"}, Type: "cmd"}},
 			{Name: "5", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "345600", "0 0 5 * *"}, Type: "cmd"}},

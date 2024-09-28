@@ -57,7 +57,7 @@ func (c *Config) DelMoveToCmd(cmd string) error {
 		return fmt.Errorf("can't del move to cmd: can't read config: %w", err)
 	}
 
-	var newCmds []string
+	newCmds := []string{}
 	for _, curMoveToCmd := range cfg.MoveToCmds {
 		if curMoveToCmd != cmd {
 			newCmds = append(newCmds, curMoveToCmd)

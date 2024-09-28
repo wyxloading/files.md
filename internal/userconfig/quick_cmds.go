@@ -57,7 +57,7 @@ func (c *Config) DelQuickCmd(cmd string) error {
 		return fmt.Errorf("can't del quick cmd: can't read config: %w", err)
 	}
 
-	var newCmds []string
+	newCmds := []string{}
 	for _, curQuickCmd := range cfg.QuickCmds {
 		if curQuickCmd != cmd {
 			newCmds = append(newCmds, curQuickCmd)

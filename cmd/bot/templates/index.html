@@ -6,6 +6,17 @@
     <title>Files.md</title>
     <style>
         body {
+
+        }
+
+        :root {
+            --font-large: calc(1.35em + 0.55vw);
+            --font-medium: calc(1em + 0.2vw);
+            --font-normal: calc(1.5rem + 0.25vw);
+            --wrap-normal: 37em;
+        }
+
+        body {
             background-color: #FFFEF0;
             color: #100F0F;
             padding: 10px;
@@ -16,31 +27,35 @@
         }
 
         h1 {
-            font-size: 2em;
-            margin: 0.67em 0
+            font-size: var(--font-large);
+            margin-top: 1.5em;
         }
 
-        hr {
-            box-sizing: content-box;
-            height: 0;
-            overflow: visible
+        h2 {
+            font-size: var(--font-medium);
+            margin-top: 1em;
         }
-
 
         p {
-            font-size: calc(1.5rem + 0.25vw);
-            color: #100F0F
+            font-size: var(--font-normal);
+            max-width: var(--wrap-normal);
         }
 
-        details {
-            margin-top: 20px;
+        @media (max-width: 860px) {
+            :root {
+                --wrap-normal: 88vw;
+            }
+
+            body {
+                padding: 0 2vw;
+            }
         }
+
     </style>
 </head>
 <body>
 <main>
-    Files made to last
-    <article display="hidden">
+    <article>
         <heading>
             <h1>Let's be lazy</h1>
         </heading>

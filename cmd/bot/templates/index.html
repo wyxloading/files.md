@@ -12,17 +12,20 @@
             margin: 0;
             font-size: 1.4em;
             font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'IBM Plex Sans', 'Segoe UI', Helvetica, Arial, sans-serif;
+            text-rendering: optimizeLegibility;
         }
 
         h1 {
-            font-weight: 500;
             font-size: 2em;
-            font-size: calc(1.35em + 0.55vw);
-            letter-spacing: -0.02em;
-            line-height: 1.25;
-            margin-top: 1.5em;
-            margin-bottom: 0.25em;
+            margin: 0.67em 0
         }
+
+        hr {
+            box-sizing: content-box;
+            height: 0;
+            overflow: visible
+        }
+
 
         p {
             font-size: calc(1.5rem + 0.25vw);
@@ -35,31 +38,40 @@
     </style>
 </head>
 <body>
-<h1>Let's be lazy</h1>
-<p>We hate productivity and planning. We hate being organized. Relax.</p>
-<p>The only thing that matters is your calmness.</p>
-<p>Let's save your mental energy.</p>
-<p>It drains if you keep stuff in your head.</p>
-<p><strong>What stuff?</strong></p>
+<main>
+    Files made to last
+    <article display="hidden">
+        <heading>
+            <h1>Let's be lazy</h1>
+        </heading>
+        <content>
+            <p>We hate productivity and planning. We hate being organized. Relax.</p>
+            <p>The only thing that matters is your calmness.</p>
+            <p>Let's save your mental energy.</p>
+            <p>It drains if you keep stuff in your head.</p>
+            <p><strong>What stuff?</strong></p>
 
-<details>
-    <summary>Notes, when you have thoughts and ideas</summary>
-    <p>Jot down ideas to clear your mind and free up mental space.</p>
-</details>
+            <details>
+                <summary>Notes, when you have thoughts and ideas</summary>
+                <p>Jot down ideas to clear your mind and free up mental space.</p>
+            </details>
 
-<details>
-    <summary>Tasks, when there's something we have to do</summary>
-    <p>Keep track of your to-dos without cluttering your mind.</p>
-</details>
+            <details>
+                <summary>Tasks, when there's something we have to do</summary>
+                <p>Keep track of your to-dos without cluttering your mind.</p>
+            </details>
 
-<details>
-    <summary>Checklist items, when there's something to buy or read</summary>
-    <p>A simple list for what you need to get done, bought, or read.</p>
-</details>
+            <details>
+                <summary>Checklist items, when there's something to buy or read</summary>
+                <p>A simple list for what you need to get done, bought, or read.</p>
+            </details>
 
-<details>
-    <summary>Emotions, when we are stressed or acting out our patterns</summary>
-    <p>Capture your feelings to understand them and stay calm.</p>
-</details>
+            <details>
+                <summary>Emotions, when we are stressed or acting out our patterns</summary>
+                <p>Capture your feelings to understand them and stay calm.</p>
+            </details>
+        </content>
+    </article>
+</main>
 </body>
 </html>

@@ -74,15 +74,6 @@ body {
     align-self: flex-start;
 }
 
-#input-field {
-    flex: 1;
-    outline: none;
-    border-radius: 5px;
-    resize: none;
-    overflow: hidden;
-    height: auto;
-}
-
 #input-container {
     display: flex;
     position: relative;
@@ -93,13 +84,16 @@ body {
 }
 
 #input-field {
-    flex: 1;
+    resize: none;
+    outline: none;
+    border-radius: 5px;
     border: 0;
+    flex: 1;
     padding: 10px 5px 10px 5px;
     border-radius: 5px;
     max-height: 400px; /* Set a max height for the textarea */
     overflow-y: auto; /* Enable scrolling if max height is reached */
-    resize: none;
+    /*resize: none;*/
     font-size: 15px;
 }
 

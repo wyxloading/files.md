@@ -1200,7 +1200,7 @@ func (b *Bot) showFile(params []string) error {
 		return fmt.Errorf("show file: : %w", err)
 	}
 
-	md := fmt.Sprintf("%s\n%s", fs.Title(filename), content)
+	md := fmt.Sprintf("**%s**\n%s", fs.Title(filename), content)
 	err = b.showMD(md)
 	if err != nil {
 		return fmt.Errorf("show file: %w", err)

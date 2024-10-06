@@ -228,8 +228,12 @@
         input.focus();
     });
 
-    // Handle input expansion and send button state
     input.addEventListener('input', () => {
+        // When paste is happening, there could be more that one line (even not separated by \n)
+        while (input.scrollHeight > input.clientHeight && input.rows < 30) {
+            input.rows += 1;
+        }
+
         input.style.height = 'auto';
         sendButton.disabled = input.value.trim() === '';
         if (input.value.trim() === '') {

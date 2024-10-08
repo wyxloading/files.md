@@ -74,20 +74,20 @@ func MoveDueTasks(
 				slog.Error("schedule worker: can't move to today", "err", err)
 				continue
 			}
-			slog.Debug("scheduled task moved to today", schedule.Filename, "filename")
+			slog.Info("scheduled task moved to today", schedule.Filename, "filename")
 
 			bot := internal.NewBot(userID, telegram, userFS, db.NewDB(), userconf)
 			_ = bot.ShowToday(nil)
 
 			// Schedule a recurring task if cron is not empty
 			if len(schedule.Cron) != 0 {
-				scheduledAt := sched.NextExcludeToday(schedule.Cron)
-				err = userconf.AddToSchedule(schedule.Filename, scheduledAt, schedule.Cron)
+				nextScheduledAt := sched.NextExcludeToday(schedule.Cron)
+				err = userconf.AddToSchedule(schedule.Filename, nextScheduledAt, schedule.Cron)
 				if err != nil {
 					slog.Error("schedule worker: can't add to schedule", "err", err)
 					continue
 				}
-				slog.Debug("task was rescheduled", "filename", schedule.Filename, "schedule", schedule.Cron, "scheduledAt", scheduledAt)
+				slog.Info("task was rescheduled", "filename", schedule.Filename, "schedule", schedule.Cron, "scheduledAt", nextScheduledAt)
 				continue
 			}
 

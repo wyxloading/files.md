@@ -831,16 +831,9 @@ func (b *Bot) showLaterTasks(_ []string) error {
 	}
 
 	var kb tg.Keyboard
-	// This method is used for not-so-important informative purposes,
-	// so we can tolerate problematic read
-	scheduledTasks, _ := b.cfg.Schedules()
-	scheduled := sched.FilenamesAndSchedules(scheduledTasks)
 	for _, file := range files {
 		var btn tg.Btn
 		name := i18n.Emojify(fs.UnsanitizeFilename(file.Title))
-		if scheduledAt, ok := scheduled[file.Name]; ok {
-			name = fmt.Sprintf("%s [%s]", name, scheduledAt)
-		}
 		if file.IsMultiline {
 			cmd := tg.NewCmd(consts.CmdShowMultilineTask, []string{fs.DirLater, fs.Hash(file.Name)})
 			btn = tg.NewBtn(txt.Emoji(i18n.Emoji("eyes"), fs.UnsanitizeFilename(file.Title)), cmd)

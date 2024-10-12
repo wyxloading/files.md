@@ -257,8 +257,8 @@
 <div id="slider-container">
     <input type="range" id="slider" min="1" max="3" value="1" class="slider">
     <div id="slider-container-labels">
-        <span class="desktop" data-value="1">Quick</span>
-        <span class="desktop" data-value="2">Lazy</span>
+        <span class="desktop" data-value="1">Short</span>
+        <span class="desktop" data-value="2">Medium</span>
         <span class="desktop" data-value="3">Full</span>
 <!--        <span class="mobile" data-value="1">🚀</span>-->
 <!--        <span class="mobile" data-value="2">🦥</span>-->
@@ -420,11 +420,11 @@ stuff // 🧠+
             const slider = document.getElementById('slider');
 
             // Set slider and content based on the current hash
-            if (currentHash === '#quick') {
+            if (currentHash === '#short') {
                 slider.value = 1;
                 document.querySelectorAll('l2').forEach(el => el.style.display = 'none');
                 document.querySelectorAll('l3').forEach(el => el.style.display = 'none');
-            } else if (currentHash === '#lazy') {
+            } else if (currentHash === '#medium') {
                 slider.value = 2;
                 document.querySelectorAll('l2').forEach(el => el.style.display = 'inline');
                 document.querySelectorAll('l3').forEach(el => el.style.display = 'none');
@@ -463,9 +463,9 @@ stuff // 🧠+
         document.getElementById('slider').addEventListener('input', function() {
             const sliderValue = parseInt(this.value);
             if (sliderValue === 1) {
-                location.replace('#quick');
+                location.replace('#short');
             } else if (sliderValue === 2) {
-                location.replace('#lazy');
+                location.replace('#medium');
             } else if (sliderValue === 3) {
                 location.replace('#full');
             }

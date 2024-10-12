@@ -360,15 +360,15 @@ stuff // 🧠+
             const slider = document.getElementById('slider');
 
             // Set slider and content based on the current hash
-            if (currentHash === '#IDontHaveTime') {
+            if (currentHash === '#notime') {
                 slider.value = 1;
                 document.querySelectorAll('l2').forEach(el => el.style.display = 'none');
                 document.querySelectorAll('l3').forEach(el => el.style.display = 'none');
-            } else if (currentHash === '#IHaveSomeTime') {
+            } else if (currentHash === '#some') {
                 slider.value = 2;
                 document.querySelectorAll('l2').forEach(el => el.style.display = 'inline');
                 document.querySelectorAll('l3').forEach(el => el.style.display = 'none');
-            } else if (currentHash === '#LetMeReadItAll') {
+            } else if (currentHash === '#all') {
                 slider.value = 3;
                 document.querySelectorAll('l2').forEach(el => el.style.display = 'inline');
                 document.querySelectorAll('l3').forEach(el => el.style.display = 'inline');
@@ -381,11 +381,11 @@ stuff // 🧠+
         document.getElementById('slider').addEventListener('input', function() {
             const sliderValue = parseInt(this.value);
             if (sliderValue === 1) {
-                location.hash = 'IDontHaveTime';
+                location.hash = 'notime';
             } else if (sliderValue === 2) {
-                location.hash = 'IHaveSomeTime';
+                location.hash = 'some';
             } else if (sliderValue === 3) {
-                location.hash = 'LetMeReadItAll';
+                location.hash = 'all';
             }
             window.scrollTo({
                 top: 0,

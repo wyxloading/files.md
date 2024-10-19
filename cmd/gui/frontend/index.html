@@ -71,7 +71,6 @@
 
         buttons.forEach((row) => {
             if (Array.isArray(row)) {
-                // If row is an array, create a row container for buttons
                 const rowContainer = document.createElement('div');
                 rowContainer.classList.add('button-row');
 
@@ -87,7 +86,6 @@
                 });
                 buttonContainer.appendChild(rowContainer);
             } else {
-                // If it's a single button, not a row
                 const button = document.createElement('button');
                 button.innerText = row.Name;
                 button.classList.add('telegram-button'); // Add a class for styling
@@ -159,7 +157,6 @@
             commandPopup.appendChild(cmdItem);
         });
 
-        // If there are matching commands, show the popup
         if (filteredCommands.length > 0) {
             commandPopup.style.display = 'block';
         } else {
@@ -169,21 +166,17 @@
     function showCommandPopup() {
         const inputText = input.value.trim();
 
-        // Filter the commands based on the input text
         const filteredCommands = commands.filter(cmd => cmd.command.startsWith(inputText));
 
-        // Populate the popup with filtered commands
         commandPopup.innerHTML = '';
         filteredCommands.forEach((cmd, index) => {
             const cmdItem = document.createElement('div');
             cmdItem.classList.add('command-item');
             cmdItem.textContent = cmd.display;
-
-            // Set a unique id for the command item
             cmdItem.setAttribute('data-index', index);
 
             cmdItem.onclick = () => {
-                input.value = cmd.command; // Set the command input to the actual command (e.g., /today)
+                input.value = cmd.command;
                 input.focus();
                 sendMessage();
                 hideCommandPopup();
@@ -192,19 +185,16 @@
             commandPopup.appendChild(cmdItem);
         });
 
-        // If there are no matching commands, hide the popup
         if (filteredCommands.length === 0) {
             hideCommandPopup();
             return;
         }
 
-        // Focus the first command item
         const firstCommandItem = commandPopup.querySelector('.command-item');
         if (firstCommandItem) {
             firstCommandItem.classList.add('focused');
         }
 
-        // Remove 'hidden' class to make the popup visible
         commandPopup.classList.remove('hidden');
 
     }
@@ -255,7 +245,6 @@
         }
     });
 
-    // Handle shift + enter for new line, and enter for sending message
     input.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();

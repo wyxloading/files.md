@@ -4,110 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="https://files.md/favicon.ico" sizes="32x32">
+    <link rel="stylesheet" href="styles.css" type="text/css">
     <title>Files.md</title>
-    <style>
-        :root { /* Fleroki theme */
-            --color-tx: #100F0F;
-            --color-tx-faint: #B7B5AC;
-            --color-tx-muted: #6F6E69;
-            --color-tx-sel: rgba(187, 220, 206, 0.3);
-            --color-bg: #FFFCF0; /* Paper color */
-            --font-normal: 1.8rem;
-            --wrap-wide: 1000px;
-            --wrap-normal: 38em;
-            --line-height: 1.5;
-        }
-
-        @media (max-width: 860px) {
-            :root {
-                --wrap-normal: 88vw;
-                --wrap-wide: 100vw;
-            }
-        }
-
-        html {
-            box-sizing: border-box;
-            width: 100%;
-            height: 100%;
-            font-size: 64%
-        }
-
-        body {
-            margin: 0;
-            background-color: var(--color-bg);
-            color: var(--color-tx);
-            font-size: calc(1.4rem + 0.25vw);
-            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'IBM Plex Sans', 'Segoe UI', Helvetica, Arial, sans-serif;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-        }
-
-
-        heading, content {
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            max-width: var(--wrap-wide);
-            width: var(--wrap-normal);
-        }
-
-        h1 {
-            font-weight: 500;
-            font-size: calc(1.35em + 0.55vw);
-            letter-spacing: -0.02em;
-            line-height: 1.25;
-            margin-top: 1.5em;
-            margin-bottom: 0.25em
-        }
-
-        h2 {
-            font-weight: 500;
-            font-size: calc(1em + 0.2vw);
-            letter-spacing: -0.015em;
-            line-height: 1.3;
-            margin-top: 1em;
-            margin-bottom: 0.5em;
-        }
-
-        p {
-            font-size: var(--font-normal);
-            line-height: var(--line-height);
-        }
-
-        img {
-            max-width: 100%;
-            height: auto;
-            display: block; /* Optional: to remove bottom whitespace caused by inline display */
-        }
-
-        ul>li {
-            padding: 0.30rem 0
-        }
-
-        ul>li::marker {
-            color: var(--color-tx-faint);
-        }
-
-        ul>li::marker {
-            font-size: 85%
-        }
-
-        .faint {
-            color: var(--color-tx-faint)
-        }
-
-        .muted {
-            color: var(--color-tx-muted);
-        }
-
-        ::selection {
-            background: var(--color-tx-sel);
-        }
-
-        ::-moz-selection {
-            background: var(--color-tx-sel);
-        }
-    </style>
 </head>
 <body>
 <main>
@@ -121,16 +19,17 @@
             <p>Your energy drains when you keep <em>stuff</em> in your head.</p>
             <p>
                 <span class="muted">What stuff?</span>
-                <ul>
-                    <li>Thoughts and ideas</li>
-                    <li>Tasks you need to do</li>
-                    <li>Items to buy</li>
-                    <li>Emotions</li>
-                </ul>
+            <ul>
+                <li>Thoughts and ideas</li>
+                <li>Tasks you need to do</li>
+                <li>Items to buy</li>
+                <li>Emotions</li>
+            </ul>
             </p>
             <p>All that we can dump to plain text files.</p>
         </content>
     </article>
 </main>
+<script src="/index.js"></script>
 </body>
 </html>

@@ -518,7 +518,7 @@ func (b *Bot) answerFileRequest(msg string) error {
 			return b.ShowToday(nil)
 		}
 
-		content, err := b.readContent(fs.DirRoot, newFilename)
+		content, err := b.filenameAndContent(fs.DirRoot, newFilename)
 		if err != nil {
 			return fmt.Errorf("inline query: can't read file %s: %w", newFilename, err)
 		}
@@ -1404,7 +1404,7 @@ func (b *Bot) moveToExistingFile(params []string) error {
 		return fmt.Errorf("move to file: can't unhash new filename '%s': %w", fromFilenameHash, err)
 	}
 
-	content, err := b.readContent(fromDir, fromFilename)
+	content, err := b.filenameAndContent(fromDir, fromFilename)
 	if err != nil {
 		return fmt.Errorf("move to file: can't read content of '%s': %w", fromFilename, err)
 	}
@@ -1450,7 +1450,7 @@ func (b *Bot) moveToExistingNote(params []string) error {
 		return fmt.Errorf("move to existing note:: %w", err)
 	}
 
-	content, err := b.readContent(fs.DirToday, fromFilename)
+	content, err := b.filenameAndContent(fs.DirToday, fromFilename)
 	if err != nil {
 		return fmt.Errorf("move to existing note: can't read file %s: %w", fromFilename, err)
 	}
@@ -1603,7 +1603,7 @@ func (b *Bot) moveToJournal(params []string) error {
 		return fmt.Errorf("move to journal: can't unhash filename: %w", err)
 	}
 
-	content, err := b.readContent(fs.DirToday, fromFilename)
+	content, err := b.filenameAndContent(fs.DirToday, fromFilename)
 	if err != nil {
 		return fmt.Errorf("move to journal: can't read content of '%s': %w", fromFilename, err)
 	}
@@ -2244,20 +2244,22 @@ func (b *Bot) fullMode(_ []string) error {
 	return b.ShowToday(nil)
 }
 
-// If file is empty, use its title as content.
-// If file has content, add title to the beginning of the content.
-// If file has title as part of the content, don't add it again (happens when title was truncated).
+// If content is empty, use its filename as content.
+// If file has content, add filename to the beginning of the content.
+// If file has content, and filename was truncated (...), no need to add filename.
 // TODO add tests
-func (b *Bot) readContent(dir, filename string) (string, error) {
+func (b *Bot) filenameAndContent(dir, filename string) (string, error) {
 	content, err := b.fs.Read(dir, filename)
 	if err != nil {
 		return "", fmt.Errorf("can't read content of '%s': %w", filename, err)
 	}
-	filenameHasContent := !strings.HasPrefix(strings.ToLower(content), strings.ToLower(fs.Title(filename)))
+
+	title := fs.Title(filename)
+	filenameHasContent := !strings.HasPrefix(strings.ToLower(content), strings.ToLower(title))
 	if len(content) == 0 {
-		content = fs.Title(filename)
+		content = title
 	} else if filenameHasContent {
-		content = fmt.Sprintf("%s\n%s", fs.Title(filename), content)
+		content = fmt.Sprintf("%s\n%s", title, content)
 	}
 
 	return content, nil

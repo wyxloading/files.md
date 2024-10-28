@@ -1635,7 +1635,7 @@ func TestMoveToJournal(t *testing.T) {
 
 	content, err := userFS.Read("journal", files[0].Name)
 	r.NoError(err)
-	r.Equal("#### 1 January, Thursday\n`00:00` Multiline\ncontent\n", content)
+	r.Equal("#### 1 January, Thursday\n`00:00` Note\nMultiline\ncontent\n", content)
 }
 
 func TestAddToJournalFromShortcut(t *testing.T) {

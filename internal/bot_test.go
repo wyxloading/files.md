@@ -1111,7 +1111,7 @@ func TestShowToFileNoDirs(t *testing.T) {
 
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewRow(tg.NewBtn("📄 Note", tg.NewCmd("mf", []string{"345fb", "", "345fb"}))),
-		tg.NewBtn("Or choose a dir:", tg.NewCustomCmd("search", nil, "iq")),
+		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"345fbd7ab08"}))),
 	},
 	), tgram.LastSentKeyboard)
@@ -1135,7 +1135,7 @@ func TestShowMoveToFile(t *testing.T) {
 
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewRow(tg.NewBtn("📄 Note", tg.NewCmd("mf", []string{"345fb", "", "345fb"}))),
-		tg.NewBtn("Or choose a dir:", tg.NewCustomCmd("search", nil, "iq")),
+		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
 			tg.NewBtn("🗂️ Dir", tg.NewCmd("mv", []string{"73600", "", "345fbd7ab08"})),
 			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"345fbd7ab08"})),
@@ -2326,7 +2326,7 @@ func TestSaveToExistingFileIntegration(t *testing.T) {
 			tg.NewBtn("📄 Text", tg.NewCmd("mf", []string{"23200", "", "23200"})),
 			tg.NewBtn("📄 File", tg.NewCmd("mf", []string{"7595e", "", "23200"})),
 		),
-		tg.NewBtn("Or choose a dir:", tg.NewCustomCmd("search", nil, "iq")),
+		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
 			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", "", "232004794e5"})),
 			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"232004794e5"})),
@@ -2403,7 +2403,7 @@ func TestSaveToNewFileIntegration(t *testing.T) {
 		tg.NewRow(
 			tg.NewBtn("📄 Text", tg.NewCmd("mf", []string{"23200", "", "23200"})),
 		),
-		tg.NewBtn("Or choose a dir:", tg.NewCustomCmd("search", nil, "iq")),
+		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
 			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", "", "232004794e5"})),
 			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"232004794e5"})),
@@ -2480,7 +2480,7 @@ func TestSaveToNewDirIntegration(t *testing.T) {
 		tg.NewRow(
 			tg.NewBtn("📄 Text", tg.NewCmd("mf", []string{"23200", "", "23200"})),
 		),
-		tg.NewBtn("Or choose a dir:", tg.NewCustomCmd("search", nil, "iq")),
+		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
 			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", "", "232004794e5"})),
 			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"232004794e5"})),
@@ -2564,7 +2564,7 @@ func TestSaveToNewMultilineFileIntegration(t *testing.T) {
 		tg.NewRow(
 			tg.NewBtn("📄 Text", tg.NewCmd("mf", []string{"23200", "", "23200"})),
 		),
-		tg.NewBtn("Or choose a dir:", tg.NewCustomCmd("search", nil, "iq")),
+		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
 			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", "", "232004794e5"})),
 			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"232004794e5"})),
@@ -2641,7 +2641,7 @@ func TestSaveToNewCustomFileIntegration(t *testing.T) {
 		tg.NewRow(
 			tg.NewBtn("📄 Text", tg.NewCmd("mf", []string{"23200", "", "23200"})),
 		),
-		tg.NewBtn("Or choose a dir:", tg.NewCustomCmd("search", nil, "iq")),
+		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
 			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", "", "232004794e5"})),
 			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"232004794e5"})),
@@ -2721,7 +2721,7 @@ func TestSaveToRecentFileIntegration(t *testing.T) {
 			tg.NewBtn("📄 Text", tg.NewCmd("mf", []string{"23200", "", "72e56"})),
 			tg.NewBtn("📄 New text", tg.NewCmd("mf", []string{"72e56", "", "72e56"})),
 		),
-		tg.NewBtn("Or choose a dir:", tg.NewCustomCmd("search", nil, "iq")),
+		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
 			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"72e564182be"})),
 		),

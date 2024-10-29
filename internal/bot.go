@@ -1984,7 +1984,7 @@ func (b *Bot) showMoveToFileOrDir(params []string) error {
 	shouldAddSeparator := len(fileBtns) > 0
 	if shouldAddSeparator {
 		searchCMD := tg.NewCustomCmd(consts.CmdInlineQuerySearchEveryWhere, nil, tg.CmdTypeInlineQueryCurrentChat)
-		kb.AddRow(tg.NewBtn(i18n.Tr("Or choose a dir:"), searchCMD))
+		kb.AddRow(tg.NewBtn(i18n.Tr("Search"), searchCMD))
 	}
 	dirBtnsByRows := slice.Chunk(dirBtns, btnsPerRow)
 	for _, row := range dirBtnsByRows {

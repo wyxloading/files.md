@@ -1788,7 +1788,7 @@ func TestShowForADay(t *testing.T) {
 			{Name: "30", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "2505600", ""}, Type: "cmd"}},
 			{Name: "31", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f819d075", "2592000", ""}, Type: "cmd"}},
 		},
-		tg.Btn{Name: "➡️ Move to Today", Cmd: tg.Cmd{Name: "today", Params: []string(nil), Type: "cmd"}},
+		tg.Btn{Name: "➡️ Move to today", Cmd: tg.Cmd{Name: "today", Params: []string(nil), Type: "cmd"}},
 	}), tgram.LastSentKeyboard)
 }
 
@@ -1859,7 +1859,7 @@ func TestShowForADayRecurring(t *testing.T) {
 			{Name: "26", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "2160000", "0 0 26 * *"}, Type: "cmd"}},
 			{Name: "27", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "2246400", "0 0 27 * *"}, Type: "cmd"}},
 			{Name: "28", Cmd: tg.Cmd{Name: "sc", Params: []string{"1c8f", "2332800", "0 0 28 * *"}, Type: "cmd"}},
-		}, tg.Btn{Name: "➡️ Move to Today", Cmd: tg.Cmd{Name: "today", Params: []string(nil), Type: "cmd"}},
+		}, tg.Btn{Name: "➡️ Move to today", Cmd: tg.Cmd{Name: "today", Params: []string(nil), Type: "cmd"}},
 	}), tgram.LastSentKeyboard)
 }
 

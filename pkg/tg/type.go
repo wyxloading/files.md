@@ -70,3 +70,7 @@ func NewKeyboard(rows []Row) *Keyboard {
 func (k *Keyboard) AddRow(r Row) {
 	k.Btns = append(k.Btns, r)
 }
+
+func (k *Keyboard) PrependRow(r Row) {
+	k.Btns = append([]Row{r}, k.Btns...)
+}

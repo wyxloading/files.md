@@ -652,9 +652,6 @@ func (b *Bot) showHTML(validHTML string, kb *tg.Keyboard) error {
 func (b *Bot) showMD(probablyInvalidMD string, kb *tg.Keyboard) error {
 	probablyInvalidMD, _, links := txt.ExtractTextImgsLinks(probablyInvalidMD)
 
-	if kb == nil {
-		kb = tg.NewKeyboard(nil)
-	}
 	for label, link := range links {
 		dir := fs.DirRoot
 		link = strings.TrimSpace(link)
@@ -666,9 +663,8 @@ func (b *Bot) showMD(probablyInvalidMD string, kb *tg.Keyboard) error {
 		link += fs.FileExt
 
 		cmd := tg.NewCmd(consts.CmdShowFile, []string{fs.Hash(dir), fs.Hash(link)})
-		kb.AddRow(tg.NewRow(tg.NewBtn(txt.Ucfirst(label), cmd)))
+		kb.PrependRow(tg.NewRow(tg.NewBtn(txt.Ucfirst(label), cmd)))
 	}
-	kb.AddRow(tg.NewRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil))))
 
 	mid, hasLastKeyboard := b.db.LastKeyboardMsgID(b.userID)
 	textChunks := txt.SplitTextIntoChunks(probablyInvalidMD, maxMsgLength)
@@ -1188,7 +1184,7 @@ func (b *Bot) showMultilineTask(params []string) error {
 	moveToLaterBtn = tg.NewBtn(btnLabel, tg.NewCmd(consts.CmdMoveToExistingDir, []string{toDir, dir, filenameHash}))
 
 	moveBtn := tg.NewBtn(
-		txt.Emoji(i18n.Emoji("right arrow"), b.tr("Move")),
+		txt.Emoji(i18n.Emoji("right arrow"), b.tr("Move to")),
 		tg.NewCmd(consts.CmdShowMoveTo, []string{filenameHash}),
 	)
 
@@ -1234,8 +1230,9 @@ func (b *Bot) showFile(params []string) error {
 		return fmt.Errorf("show file: : %w", err)
 	}
 
+	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil))})
 	md := fmt.Sprintf("**%s**\n%s", fs.Title(filename), content)
-	err = b.showMD(md, nil)
+	err = b.showMD(md, kb)
 	if err != nil {
 		return fmt.Errorf("show file: %w", err)
 	}

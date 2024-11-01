@@ -1232,7 +1232,7 @@ func TestShowMDLongMessageAttachKeyboardToTheLast(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.showMD(strings.Repeat("a", 4094)+"\nabc", nil)
+	err = bot.showMD(strings.Repeat("a", 4094)+"\nabc", tg.NewKeyboard([]tg.Row{tg.NewBtn("btn", tg.NewCmd("cmd", nil))}))
 	r.NoError(err)
 
 	r.Len(tgram.SentTexts, 2)

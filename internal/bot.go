@@ -683,7 +683,7 @@ func (b *Bot) showMD(probablyInvalidMD string, kb *tg.Keyboard) error {
 		if len(images) > 0 {
 			// We tolerate errors with the image gallery for now, text is more important
 			imgMid, imgErr := b.tg.SendImages(b.userID, images)
-			fmt.Printf("imgMid: %d, imgErr: %v\n", imgMid, imgErr):
+			fmt.Printf("imgMid: %d, imgErr: %v\n", imgMid, imgErr)
 			if imgErr == nil {
 				b.db.SetImageMsgID(b.userID, imgMid)
 			}

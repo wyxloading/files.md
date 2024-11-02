@@ -1888,15 +1888,20 @@ func (b *Bot) delAllKeyboards() {
 }
 
 func (b *Bot) delAllImages() {
+	fmt.Printf("invoking\n")
 	mid, hasImageSent := b.db.ImageMsgID(b.userID)
 	if !hasImageSent {
 		return
 	}
+	fmt.Printf("has img to delete\n")
 
 	b.db.DelImageMsgID(b.userID)
 	// If we fail to del - user would get a bunch
 	// of keyboards in one chat, which is messy but not critical
-	_ = b.tg.Del(b.userID, mid)
+	err := b.tg.Del(b.userID, mid)
+	if err != nil {
+		fmt.Printf("can't delete image: %v", err)
+	}
 }
 
 func (b *Bot) showToADay(params []string) error {

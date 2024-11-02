@@ -43,7 +43,7 @@ func (tg *TG) Send(userID int64, text string, kb *Keyboard, markup string) (int,
 	return resp.MessageID, nil
 }
 
-func (tg *TG) SendImages(userID int64, text string, images []string) (int, error) {
+func (tg *TG) SendImages(userID int64, images []string) (int, error) {
 	var files []interface{}
 	for _, img := range images {
 		files = append(files, tgbotapi.NewInputMediaPhoto(tgbotapi.FileID(img)))

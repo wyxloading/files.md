@@ -74,7 +74,7 @@ type Update interface {
 // Chat provides a simple interface to chat API like Telegram
 type Chat interface {
 	Send(userID int64, text string, kb *tg.Keyboard, markup string) (int, error)
-	SendImages(userID int64, text string, images []string) (int, error)
+	SendImages(userID int64, images []string) (int, error)
 	Edit(userID int64, msgID int, text string, kb *tg.Keyboard, markup string) error
 	Del(userID int64, msgID int) error
 	AnswerCallbackQuery(queryID string, text string) error
@@ -470,7 +470,7 @@ func (b *Bot) answerSearch(u Update) error {
 	queryID, _ := u.InlineQueryID()
 	nextOffset := strconv.Itoa(u.InlineQueryOffset() + maxInlineResults)
 	err = b.tg.AnswerInlineQuery(queryID, results, inlineResultsCacheTime, nextOffset)
-	// FakeTG library has a bug of unmarshalling sent result, we'll mute that temporarely
+	// FakeTG library has a bug of unmarshalling sent result, we'll mute that temporarily
 	if err != nil && !strings.HasSuffix(err.Error(), "Go value of type tgbotapi.Message") {
 		return fmt.Errorf("inline reply: %w", err)
 	}
@@ -680,8 +680,8 @@ func (b *Bot) showMD(probablyInvalidMD string, kb *tg.Keyboard) error {
 		// Sending a gallery of images if there are any
 		if len(images) > 0 {
 			// We tolerate errors with the image gallery for now, text is more important
-			imgMid, err := b.tg.SendImages(b.userID, "", images)
-			if err != nil {
+			imgMid, err := b.tg.SendImages(b.userID, images)
+			if err == nil {
 				b.db.SetImageMsgID(b.userID, imgMid)
 			}
 		}

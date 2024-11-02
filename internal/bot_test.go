@@ -1949,7 +1949,7 @@ func TestInlineRequestTask(t *testing.T) {
 	err = bot.Answer(upd)
 	r.NoError(err)
 
-	r.Equal("<b>Task</b>\nTask content", tgram.LastSentText)
+	r.Equal("<b>Task</b>\n\nTask content", tgram.LastSentText)
 }
 
 func TestInlineRequestFile(t *testing.T) {
@@ -1971,7 +1971,7 @@ func TestInlineRequestFile(t *testing.T) {
 	err = bot.Answer(upd)
 	r.NoError(err)
 
-	r.Equal("<b>File</b>\nFile content", tgram.LastSentText)
+	r.Equal("<b>File</b>\n\nFile content", tgram.LastSentText)
 }
 
 func TestInlineRequestFileOutsideTheDirectory(t *testing.T) {
@@ -2207,7 +2207,7 @@ func TestShowFileEscapesHTML(t *testing.T) {
 
 	err = bot.showFile([]string{"", "File.md"})
 	r.NoError(err)
-	r.Equal("<b>File</b>\n&lt;b&gt;bold<i>italic</i>", tgram.LastSentText)
+	r.Equal("<b>File</b>\n\n&lt;b&gt;bold<i>italic</i>", tgram.LastSentText)
 }
 
 func TestSaveToNewTaskIntegration(t *testing.T) {

@@ -1244,7 +1244,7 @@ func (b *Bot) showFile(params []string) error {
 	}
 
 	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil))})
-	md := fmt.Sprintf("**%s**\n%s", fs.Title(filename), content)
+	md := fmt.Sprintf("**%s**\n\n%s", fs.Title(filename), content)
 	err = b.showMD(md, kb)
 	if err != nil {
 		return fmt.Errorf("show file: %w", err)

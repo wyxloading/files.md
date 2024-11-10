@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="https://files.md/favicon.ico" sizes="32x32">
     <link href="normalize.css" rel="stylesheet">
-    <link href="styles.css" rel="stylesheet">
+    <link href="editor.css" rel="stylesheet">
     <title>files.md</title>
     <script src="./lib/tree.js"></script>
     <script src="./zettel.js"></script>
@@ -31,11 +31,13 @@
     <link href="https://fonts.googleapis.com/css?family=Material+Icons&display=swap" rel="stylesheet"/>
 </head>
 <body>
-<div id="files"></div>
-<div id="editor-container"><textarea id="editor"></textarea></div>
+<div id="editor">
+<div id="editor-files"></div>
+<div id="editor-content"><textarea id="editor-textarea"></textarea></div>
 <ninja-keys placeholder="Quick panel" class="dark" openHotkey="cmd+m" noAutoLoadMdIcons="true" hideBreadcrumbs="true">
     <slot name="footer"></slot>
 </ninja-keys>
+</div>
 
 <script>
 
@@ -46,7 +48,7 @@
     //     lineNumbers: false,
     // });
     // HyperMD.switchToNormal(editor);
-    var editor = HyperMD.fromTextArea(document.getElementById("editor"), {
+    var editor = HyperMD.fromTextArea(document.getElementById("editor-textarea"), {
         mode: "hypermd",
         lineNumbers: false,
         extraKeys: {
@@ -79,7 +81,7 @@
             fileNode = new TreeNode(file, {expanded: false});
             fileNode.on('click', function (n, node) {
                 if (node.parent.toString() === 'journal') {
-                    document.getElementById('editor-container').innerHTML = marked.parse(zettel[node.parent.toString()][node.toString()]);
+                    document.getElementById('editor-content').innerHTML = marked.parse(zettel[node.parent.toString()][node.toString()]);
                 } else {
                     editor.getDoc().setValue(zettel[node.parent.toString()][node.toString()]);
                     editor.focus();
@@ -91,7 +93,7 @@
         root.addChild(dirNode);
     }
 
-    var tree = new TreeView(root, "#files", {
+    var tree = new TreeView(root, "#editor-files", {
         show_root: false,
         leaf_icon: ' ',
         parent_icon: '<i class="fas fa-folder"></i>'

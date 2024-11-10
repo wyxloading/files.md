@@ -1,0 +1,100 @@
+:root { /* Flexoki theme */
+    --color-tx: #100F0F;
+    --color-tx-hover: #24837b;
+    --color-tx-muted: #6F6E69;
+    --color-tx-faint: #B7B5AC;
+    --color-tx-sel: rgba(187, 220, 206, 0.3);
+    --color-bg: #FFFCF0; /* Paper color */
+    --color-bg-alt: #F2F0E6;
+    --color-bg-active: #E0DED5;
+    --color-code-keyword: #1F5EA5;
+    --color-code-op: #BC5215;
+    --color-bg-code: #f2f0e5;
+    --color-ui: #E6E4D9;
+    --font-smaller: 1.3rem;
+    --font: -apple-system, BlinkMacSystemFont, 'Inter', 'IBM Plex Sans', 'Segoe UI', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    --font-mono: ui-monospace, SFMono-Regular, "Cascadia Code", "IBM Plex Mono",
+    "Roboto Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Monaco,
+    "Consolas", "Source Code Pro", monospace;
+
+    --wide-width: 800px;
+    --normal-width: 800px;
+    --line-height: 1.5;
+}
+
+
+@media (min-width: 1441px) {
+    .container {
+        --wide-width: 1000px;
+    }
+}
+
+
+html {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    font-size: 64%
+}
+
+body {
+    margin: 0;
+    background-color: var(--color-bg);
+    color: var(--color-tx);
+    font-size: 1.7rem;
+    font-size: calc(1.5rem + 0.2vw);
+    font-family: var(--font);
+    text-rendering: optimizeLegibility;
+}
+
+#editor {
+    display: flex;
+    height: 100vh; /* Full viewport height */
+}
+
+#editor-files {
+    width: 300px;
+    overflow: auto;
+    height: 100%;
+    background: var(--color-bg-alt);
+    color: #878787;
+    border-right: 1px solid #E6E4DA;
+}
+
+#editor-content {
+    box-sizing: border-box;
+    overflow: auto;
+    max-width: var(--wide-width);
+    width: var(--normal-width);
+    margin: 0 auto;
+    flex-grow: 1;
+    padding: 2em 0;
+}
+
+
+#editor-content table, th, td {
+    border-collapse: collapse;
+    border: 1px solid #878787;
+}
+
+td {
+    text-align: center;
+}
+
+th {
+    padding: 3px;
+}
+
+td {
+    padding: 2px;
+}
+
+a {
+    color: var(--color-tx);
+    text-decoration: underline;
+}
+
+a:hover {
+    color: var(--color-tx-hover);
+}

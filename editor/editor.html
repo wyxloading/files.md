@@ -32,7 +32,7 @@
 </head>
 <body>
 <div id="editor">
-<div id="editor-files"></div>
+<div id="editor-sidebar"></div>
 <div id="editor-content"><textarea id="editor-textarea"></textarea></div>
 <ninja-keys placeholder="Quick panel" class="dark" openHotkey="cmd+m" noAutoLoadMdIcons="true" hideBreadcrumbs="true">
     <slot name="footer"></slot>
@@ -62,11 +62,11 @@
     editor.hmdResolveURL = function(w) {
     }
     editor.on("inputRead", function (cm, change) {
-        console.log(change);
         if (change.text.length === 1 && change.text[0] === '[') editor.showHint()
     })
     editor.hmdReadLink = function(path, t) {
         path = path.replace('[', '').replace(']', '');
+        path = path.split('|')[0]
         let parts = path.split('/');
         editor.getDoc().setValue(zettel[parts[0]][parts[1] + '.md']);
         setTimeout(function () {
@@ -75,30 +75,34 @@
         }, 0);
     }
 
-    var root = new TreeNode("zettel"); // Create the root-node
-    for (dir in zettel) {
-        var dirNode = new TreeNode(dir, {expanded: false});
-        for (file in zettel[dir]) {
-            fileNode = new TreeNode(file, {expanded: false});
-            fileNode.on('click', function (n, node) {
-                if (node.parent.toString() === 'journal') {
-                    document.getElementById('editor-content').innerHTML = marked.parse(zettel[node.parent.toString()][node.toString()]);
-                } else {
-                    editor.getDoc().setValue(zettel[node.parent.toString()][node.toString()]);
-                    editor.focus();
-                    editor.setCursor(editor.lineCount(), 0);
-                }
-            });
-            dirNode.addChild(fileNode);
+    function buildSidebar() {
+        var root = new TreeNode("zettel"); // Create the root-node
+        for (dir in zettel) {
+            var dirNode = new TreeNode(dir, {expanded: false});
+            for (file in zettel[dir]) {
+                fileNode = new TreeNode(file, {expanded: false});
+                fileNode.on('click', function (n, node) {
+                    if (node.parent.toString() === 'journal') {
+                        document.getElementById('editor-content').innerHTML = marked.parse(zettel[node.parent.toString()][node.toString()]);
+                    } else {
+                        editor.getDoc().setValue(zettel[node.parent.toString()][node.toString()]);
+                        editor.focus();
+                        editor.setCursor(editor.lineCount(), 0);
+                    }
+                });
+                dirNode.addChild(fileNode);
+            }
+            root.addChild(dirNode);
         }
-        root.addChild(dirNode);
+
+        var tree = new TreeView(root, "#editor-sidebar", {
+            show_root: false,
+            leaf_icon: ' ',
+            parent_icon: '<i class="fas fa-folder"></i>'
+        });
     }
 
-    var tree = new TreeView(root, "#editor-files", {
-        show_root: false,
-        leaf_icon: ' ',
-        parent_icon: '<i class="fas fa-folder"></i>'
-    });
+    buildSidebar()
 </script>
 
 <script>
@@ -148,7 +152,37 @@
     ];
     const ninja = document.querySelector("ninja-keys");
     ninja.data = hotkeys;
-</script>
 
+
+    // Open directory function
+    async function openDirectory() {
+        const directoryHandle = await window.showDirectoryPicker();
+        zettel = {};  // Reset the zettel structure
+        await loadDirectory(directoryHandle);
+        buildSidebar();
+    }
+
+    // Recursively load directory and parse .md files
+    async function loadDirectory(directoryHandle, path = "") {
+        for await (const entry of directoryHandle.values()) {
+            if (entry.kind === 'directory') {
+                zettel[entry.name] = {};
+                await loadDirectory(entry, `${path}${entry.name}/`);
+            } else if (entry.kind === 'file' && entry.name.endsWith('.md')) {
+                const fileContent = await readFile(entry);
+                const folder = path.split('/').filter(Boolean).join('/');
+                if (!zettel[folder]) zettel[folder] = {};
+                zettel[folder][entry.name] = fileContent;
+            }
+        }
+    }
+
+    // Read file content
+    async function readFile(fileHandle) {
+        const file = await fileHandle.getFile();
+        return await file.text();
+    }
+</script>
+<button onclick="openDirectory()">Open Zettel Directory</button>
 </body>
 </html>

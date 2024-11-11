@@ -1,0 +1,15 @@
+{
+  "name": "Files.md",
+  "short_name": "Files.md",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFCF0",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    }
+  ]
+}

@@ -93,7 +93,7 @@
         path = path.replace('[', '').replace(']', '');
         let parts = path.split('/');
 
-        await showFile(parts[0], parts[1] + '.md', true);
+        await showFile(parts[0], parts[1] + '.md');
     };
     editor.on("inputRead", async function (cm, change) {
         if (change.text.length === 1 && change.text[0] === '[') editor.showHint()
@@ -263,13 +263,13 @@
         const randomFile = allFiles[Math.floor(Math.random() * allFiles.length)];
 
         try {
-            await showFile(randomFile.folder, randomFile.file, false);
+            await showFile(randomFile.folder, randomFile.file);
         } catch (error) {
             console.error("Failed to open random file:", error);
         }
     }
 
-    async function showFile(folder, filename, setCursor = false) {
+    async function showFile(folder, filename) {
         filename = filename.normalize("NFC");
         const fileData = zettel[folder][filename];
         const file = await fileData.handle.getFile();
@@ -283,15 +283,20 @@
         editor.currentFile = filename;
         editor.getDoc().setValue(content);
 
-        if (setCursor) {
-            if (editor.lineCount() > 1) {
-                const chars = editor.getLine(1).length
-                editor.setCursor({ line: 1, ch: chars });
-            } else {
-                const chars = editor.getLine(0).length
-                editor.setCursor({ line: 0, ch: chars });
+        const lastLine = editor.lastLine();
+        let targetLine = lastLine;
+        for (let i = lastLine; i >= 0; i--) {
+            const lineContent = editor.getLine(i).trim();
+            if (!lineContent.startsWith("[[") && !lineContent.endsWith("]]")) {
+                targetLine = i;
+                break;
             }
         }
+        const targetChar = editor.getLine(targetLine).length;
+        editor.setCursor({ line: targetLine, ch: targetChar });
+        editor.scrollTo(null, 0);
+        editor.setCursor({ line: targetLine, ch: targetChar });
+        editor.focus();
     }
 
     async function saveFile() {

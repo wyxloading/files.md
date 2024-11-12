@@ -62,7 +62,7 @@
 
             Object.keys(zettel[folder]).forEach(filename => {
                 const emojiKey = `${filename.replace(/\.md$/, "").replace(/\.[^/.]+$/, "")}`;
-                const filePath = `${filename}](${folder}/${filename})`;
+                const filePath = `${filename.replace(/\.md$/, "")}](${folder}/${filename})`;
                 emojiDict[emojiKey] = filePath;
             });
         });
@@ -77,7 +77,8 @@
             "Shift-Space": "autocomplete",
         },
         hintOptions: {
-            hint: CompleteEmoji.createHintFunc()
+            hint: CompleteEmoji.createHintFunc(),
+            closeCharacters: /$^/
         },
         hmdFoldEmoji: {
             myEmoji: createAutocompleteDict

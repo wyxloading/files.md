@@ -41,12 +41,18 @@ html {
 
 body {
     margin: 0;
-    background-color: var(--color-bg);
+    background-color: var(--color-bg-alt);
     color: var(--color-tx);
     font-size: 1.7rem;
     font-size: calc(1.5rem + 0.2vw);
     font-family: var(--font);
     text-rendering: optimizeLegibility;
+}
+
+.CodeMirror-wrap {
+    border-radius: 10px;
+    background-color: var(--color-bg);
+    border-left: 1px solid var(--color-border);
 }
 
 #editor {
@@ -61,7 +67,6 @@ body {
     height: 100%;
     background: var(--color-bg-alt);
     color: #878787;
-    border-right: 1px solid var(--color-border);
     font-size: calc(1.5rem);
     padding-left: 5px;
 }

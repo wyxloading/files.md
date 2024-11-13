@@ -634,7 +634,6 @@ func (b *Bot) restoreMsg(dir, filename string) (string, error) {
 	nonTruncatedTitle := strings.TrimRight(title, "...")
 	sanitizedContent := strings.ToLower(fs.SanitizeFilename(msg))
 	contentHasNoTitle := !strings.HasPrefix(sanitizedContent, strings.ToLower(nonTruncatedTitle))
-	// TODO add tests
 	hasNoImg := !txt.HasImage(msg)
 	if len(msg) == 0 {
 		return title, nil

@@ -154,3 +154,9 @@ func ExtractTextImgsLinks(text string) (txt string, images []string, links map[s
 
 	return strings.TrimSpace(text), images, links
 }
+
+func HasImage(msg string) bool {
+	imgRegexp := regexp.MustCompile(`!\[.*?\]\(.*?tg_([^.]+)\..*?\)`)
+
+	return imgRegexp.MatchString(msg)
+}

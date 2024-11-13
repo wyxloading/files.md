@@ -622,8 +622,8 @@ func (b *Bot) extractTitleAndContent(msg string) (string, string, error) {
 // If content is empty, use its filename as content.
 // If file has content, add filename to the beginning of the content.
 // If file has content, and filename was truncated (...), no need to add filename.
-// If file has image and caption underneath it, no need to add title
-// TODO add tests
+// If file has image and caption underneath it, no need to add title.
+// The ugliest method so far.
 func (b *Bot) restoreMsg(dir, filename string) (string, error) {
 	msg, err := b.fs.Read(dir, filename)
 	if err != nil {
@@ -634,10 +634,11 @@ func (b *Bot) restoreMsg(dir, filename string) (string, error) {
 	nonTruncatedTitle := strings.TrimRight(title, "...")
 	sanitizedContent := strings.ToLower(fs.SanitizeFilename(msg))
 	contentHasNoTitle := !strings.HasPrefix(sanitizedContent, strings.ToLower(nonTruncatedTitle))
-	imageHasNoCaption := !strings.HasSuffix(sanitizedContent, strings.ToLower(nonTruncatedTitle))
+	// TODO add tests
+	hasNoImg := !txt.HasImage(msg)
 	if len(msg) == 0 {
 		return title, nil
-	} else if contentHasNoTitle && imageHasNoCaption {
+	} else if contentHasNoTitle && hasNoImg {
 		return fmt.Sprintf("%s\n%s", title, msg), nil
 	}
 

@@ -3040,3 +3040,134 @@ func TestRestoreMsg_WithImageSanitizedFilename(t *testing.T) {
 	r.NoError(err)
 	r.Equal(content, msg)
 }
+
+func TestSaveFromImage_NewFile(t *testing.T) {
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+
+	upd := tg.NewUpd(-1, "")
+	upd.PhotoID = "PHOTO_ID"
+	upd.PhotoCaption = "New Image"
+
+	err = bot.saveFromImage(upd)
+	r.NoError(err)
+
+	files, err := bot.fs.FilesAndDirs("today")
+	r.NoError(err)
+	r.Len(files, 1)
+	r.Equal("New Image.md", files[0].Name)
+
+	content, err := bot.fs.Read("today", "New Image.md")
+	r.NoError(err)
+	r.Equal("![center|400](img/tg_PHOTO_ID)\nNew Image", content)
+}
+
+func TestSaveFromImage_LongCaption(t *testing.T) {
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+
+	upd := tg.NewUpd(-1, "")
+	upd.PhotoID = "PHOTO_ID"
+	upd.PhotoCaption = strings.Repeat("a", 101)
+
+	err = bot.saveFromImage(upd)
+	r.NoError(err)
+
+	filename := fmt.Sprintf("A%s....md", strings.Repeat("a", 99))
+	content, err := bot.fs.Read("today", filename)
+	r.NoError(err)
+	r.Equal(fmt.Sprintf("![center|400](img/tg_PHOTO_ID)\nA%s", strings.Repeat("a", 100)), content)
+}
+
+func TestSaveFromImage_MultilineCaption(t *testing.T) {
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+
+	upd := tg.NewUpd(-1, "")
+	upd.PhotoID = "PHOTO_ID"
+	upd.PhotoCaption = "abc\ndef"
+
+	err = bot.saveFromImage(upd)
+	r.NoError(err)
+
+	filename := fmt.Sprintf("Abc.md")
+	content, err := bot.fs.Read("today", filename)
+	r.NoError(err)
+	r.Equal("![center|400](img/tg_PHOTO_ID)\nAbc\ndef", content)
+}
+
+func TestSaveFromImage_ReplyToExistingFile(t *testing.T) {
+	r := require.New(t)
+
+	// Setup in-memory filesystem and add an existing file
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+	err = userFS.Write("today", "Existing file.md", "Existing content")
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+	database := db.NewFakeDB()
+	database.SetDirByMsgID(-1, 255, "today")
+	database.SetFilenameByMsgID(-1, 255, "Existing file.md")
+	bot := NewBot(-1, tgram, userFS, database, fakeConfig())
+
+	upd := tg.NewUpd(-1, "")
+	upd.PhotoID = "PHOTO_ID"
+	upd.PhotoCaption = "Image Caption"
+	upd.ReplyToMessageID = 255
+
+	err = bot.saveFromImage(upd)
+	r.NoError(err)
+
+	content, err := bot.fs.Read("today", "Existing file.md")
+	r.NoError(err)
+	r.Equal("#### 14 November, Thursday\n![center|400](img/tg_PHOTO_ID)\nImage Caption\nExisting content", content)
+}
+
+func TestSaveFromImage_EmptyCaption(t *testing.T) {
+	r := require.New(t)
+
+	savedNow := now
+	defer func() {
+		now = savedNow
+	}()
+	now = func() time.Time {
+		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+	}
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+
+	upd := tg.NewUpd(-1, "")
+	upd.PhotoID = "PHOTO_ID"
+
+	err = bot.saveFromImage(upd)
+	r.NoError(err)
+
+	files, err := bot.fs.FilesAndDirs("today")
+	r.NoError(err)
+	r.Len(files, 1)
+	r.Equal("Img 01.01.70 00:00.md", files[0].Name)
+
+	content, err := bot.fs.Read("today", "Img 01.01.70 00:00.md")
+	r.NoError(err)
+	r.Equal("![center|400](img/tg_PHOTO_ID)", content)
+}

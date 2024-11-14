@@ -388,6 +388,7 @@ func (b *Bot) saveFromImage(u Update) error {
 
 	// Creating a new file
 	title := strings.TrimSpace(u.Caption())
+	title = strings.SplitN(title, "\n", 2)[0]
 	if len(title) > maxTitleLength {
 		title = txt.Substr(title, 0, maxTitleLength) + "..."
 	}

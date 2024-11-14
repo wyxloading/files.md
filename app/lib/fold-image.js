@@ -57,7 +57,7 @@
                     img.classList.add("hmd-image-error");
                     marker.changed();
                 }, false);
-                // img.addEventListener('click', function () { return fold_1.breakMark(cm, marker); }, false);
+                // CUSTOMIZED img.addEventListener('click', function () { return fold_1.breakMark(cm, marker); }, false);
                 img.className = "hmd-image hmd-image-loading";
                 img.src = url;
                 img.title = title;

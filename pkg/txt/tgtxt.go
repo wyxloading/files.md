@@ -120,7 +120,7 @@ func ExtractTextImgsLinks(text string) (txt string, images []string, links map[s
 				content := matches[1]
 				parts := strings.SplitN(content, "|", 2)
 				linkPath := parts[0]
-				linkLabel := filepath.Base(linkPath)
+				linkLabel := strings.TrimSuffix(filepath.Base(linkPath), ".md")
 				links[linkLabel] = linkPath
 			}
 		} else if wikiLinkRegexp.MatchString(trimmedLine) && wikiLinkRegexp.FindString(trimmedLine) == trimmedLine {
@@ -129,7 +129,7 @@ func ExtractTextImgsLinks(text string) (txt string, images []string, links map[s
 				content := matches[1]
 				parts := strings.SplitN(content, "|", 2)
 				linkPath := parts[0]
-				linkLabel := filepath.Base(linkPath)
+				linkLabel := strings.TrimSuffix(filepath.Base(linkPath), ".md")
 				links[linkLabel] = linkPath
 			}
 		} else {
@@ -155,7 +155,7 @@ func ExtractTextImgsLinks(text string) (txt string, images []string, links map[s
 			content := matches[1]
 			parts := strings.SplitN(content, "|", 2)
 			linkPath := parts[0]
-			linkLabel := filepath.Base(linkPath)
+			linkLabel := strings.TrimSuffix(filepath.Base(linkPath), ".md")
 			links[linkLabel] = linkPath
 
 			return "`" + linkLabel + "`"
@@ -168,7 +168,7 @@ func ExtractTextImgsLinks(text string) (txt string, images []string, links map[s
 			content := matches[1]
 			parts := strings.SplitN(content, "|", 2)
 			linkPath := parts[0]
-			linkLabel := filepath.Base(linkPath)
+			linkLabel := strings.TrimSuffix(filepath.Base(linkPath), ".md")
 			links[linkLabel] = linkPath
 
 			return "`" + linkLabel + "`"

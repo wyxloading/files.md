@@ -190,9 +190,9 @@ func TestExtractTextImgsLinks_WithSingleLink(t *testing.T) {
 
 	resultText, images, links := ExtractTextImgsLinks(text)
 
-	require.Equal(t, "Check this link: `document.md`.", resultText)
+	require.Equal(t, "Check this link: `document`.", resultText)
 	require.Empty(t, images)
-	require.Equal(t, map[string]string{"document.md": "/path/to/document.md"}, links)
+	require.Equal(t, map[string]string{"document": "/path/to/document.md"}, links)
 }
 
 func TestExtractTextImgsLinks_WithImageAndLink(t *testing.T) {
@@ -200,9 +200,9 @@ func TestExtractTextImgsLinks_WithImageAndLink(t *testing.T) {
 
 	resultText, images, links := ExtractTextImgsLinks(text)
 
-	require.Equal(t, "Here is an image: 🖼 and a link: `doc.md`.", resultText)
+	require.Equal(t, "Here is an image: 🖼 and a link: `doc`.", resultText)
 	require.Equal(t, []string{"image"}, images)
-	require.Equal(t, map[string]string{"doc.md": "/path/to/doc.md"}, links)
+	require.Equal(t, map[string]string{"doc": "/path/to/doc.md"}, links)
 }
 
 func TestExtractTextImgsLinks_WithMultipleLinks(t *testing.T) {
@@ -210,11 +210,11 @@ func TestExtractTextImgsLinks_WithMultipleLinks(t *testing.T) {
 
 	resultText, images, links := ExtractTextImgsLinks(text)
 
-	require.Equal(t, "Multiple links: `doc1.md`, `doc2.md`.", resultText)
+	require.Equal(t, "Multiple links: `doc1`, `doc2`.", resultText)
 	require.Empty(t, images)
 	require.Equal(t, map[string]string{
-		"doc1.md": "/path/to/doc1.md",
-		"doc2.md": "/path/to/doc2.md",
+		"doc1": "/path/to/doc1.md",
+		"doc2": "/path/to/doc2.md",
 	}, links)
 }
 
@@ -226,7 +226,7 @@ func TestExtractTextImgsLinks_WithBottomLink(t *testing.T) {
 
 	require.Equal(t, "Text with a bottom link.", resultText)
 	require.Empty(t, images)
-	require.Equal(t, map[string]string{"doc.md": "/path/to/doc.md"}, links)
+	require.Equal(t, map[string]string{"doc": "/path/to/doc.md"}, links)
 }
 
 func TestExtractTextImgsLinks_WithNestedLinksAndImages(t *testing.T) {
@@ -237,8 +237,8 @@ func TestExtractTextImgsLinks_WithNestedLinksAndImages(t *testing.T) {
 	require.Equal(t, "Complex example with image and links:\n🖼", resultText)
 	require.Equal(t, []string{"image"}, images)
 	require.Equal(t, map[string]string{
-		"doc1.md": "/path/to/doc1.md",
-		"doc2.md": "/path/to/doc2.md",
+		"doc1": "/path/to/doc1.md",
+		"doc2": "/path/to/doc2.md",
 	}, links)
 }
 

@@ -106,17 +106,15 @@ func ExtractTextImgsLinks(text string) (txt string, images []string, links map[s
 
 	imgRegexp := regexp.MustCompile(`!\[.*?\]\(.*?tg_([^.]+)\..*?\)`)
 	linkRegexp := regexp.MustCompile(`\[.*?\]\((.+?)\)`)
+	wikiLinkRegexp := regexp.MustCompile(`\[\[(.+?)\]\]`)
 
-	// Eat bottom links
+	// Eat links from lines containing only links
 	text = NormNewLines(text)
 	lines := strings.Split(text, "\n")
 	var processedLines []string
 	for _, line := range lines {
-		// If the line contains only a link reference, ignore it for now
 		trimmedLine := strings.TrimSpace(line)
-		if !linkRegexp.MatchString(trimmedLine) || trimmedLine != linkRegexp.FindString(line) {
-			processedLines = append(processedLines, line)
-		} else {
+		if linkRegexp.MatchString(trimmedLine) && linkRegexp.FindString(trimmedLine) == trimmedLine {
 			matches := linkRegexp.FindStringSubmatch(line)
 			if len(matches) == 2 {
 				content := matches[1]
@@ -125,6 +123,17 @@ func ExtractTextImgsLinks(text string) (txt string, images []string, links map[s
 				linkLabel := filepath.Base(linkPath)
 				links[linkLabel] = linkPath
 			}
+		} else if wikiLinkRegexp.MatchString(trimmedLine) && wikiLinkRegexp.FindString(trimmedLine) == trimmedLine {
+			matches := wikiLinkRegexp.FindStringSubmatch(line)
+			if len(matches) == 2 {
+				content := matches[1]
+				parts := strings.SplitN(content, "|", 2)
+				linkPath := parts[0]
+				linkLabel := filepath.Base(linkPath)
+				links[linkLabel] = linkPath
+			}
+		} else {
+			processedLines = append(processedLines, line)
 		}
 	}
 	text = strings.Join(processedLines, "\n")
@@ -142,6 +151,19 @@ func ExtractTextImgsLinks(text string) (txt string, images []string, links map[s
 	// Process inline links
 	text = linkRegexp.ReplaceAllStringFunc(text, func(match string) string {
 		matches := linkRegexp.FindStringSubmatch(match)
+		if len(matches) == 2 {
+			content := matches[1]
+			parts := strings.SplitN(content, "|", 2)
+			linkPath := parts[0]
+			linkLabel := filepath.Base(linkPath)
+			links[linkLabel] = linkPath
+
+			return "`" + linkLabel + "`"
+		}
+		return match
+	})
+	text = wikiLinkRegexp.ReplaceAllStringFunc(text, func(match string) string {
+		matches := wikiLinkRegexp.FindStringSubmatch(match)
 		if len(matches) == 2 {
 			content := matches[1]
 			parts := strings.SplitN(content, "|", 2)

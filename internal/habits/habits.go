@@ -33,8 +33,6 @@ var (
 
 // Habits returns Habit name => [day1 => 1, day2 => 0, ..., day365 => 0]
 func Habits(userFS *fs.FS, year int) (map[string]Year, error) {
-	filename := fmt.Sprintf("%d Habits.md", year)
-
 	existingHabits, err := userFS.FilesAndDirs(fs.DirHabits)
 	if err != nil {
 		return nil, fmt.Errorf("habits: can't read existing habits: %w", err)
@@ -45,6 +43,7 @@ func Habits(userFS *fs.FS, year int) (map[string]Year, error) {
 		habits[existingHabit.Title] = make(Year)
 	}
 
+	filename := fmt.Sprintf("%d Habits.md", year)
 	insightsExist, err := userFS.Exists(fs.DirInsights, filename)
 	if err != nil {
 		return nil, fmt.Errorf("habits: can't check whether the file insightsExist: %w", err)

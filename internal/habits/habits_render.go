@@ -20,7 +20,7 @@ func Render(userID int64, userFS *fs.FS) ([]byte, error) {
 		return nil, fmt.Errorf("can't parse habits template: %w", err)
 	}
 
-	habits, err := LastWeekHabits(userFS)
+	habits, err := Habits(userFS, 2024)
 	if err != nil {
 		return nil, fmt.Errorf("can't render habit: %w", err)
 	}

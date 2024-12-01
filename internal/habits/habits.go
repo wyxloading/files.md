@@ -141,10 +141,11 @@ func Habits(userFS *fs.FS, year int) (map[string]Year, error) {
 	return habits, nil
 }
 
+// LastWeekHabits returns habits with the year days falling in the last week
 func LastWeekHabits(userFS *fs.FS) (map[string]Year, error) {
 	habitsForYear, err := Habits(userFS, now().Year())
 	if err != nil {
-		return nil, fmt.Errorf("can't get habits for last week: %w", err)
+		return nil, fmt.Errorf("last week habits: can't get habits: %w", err)
 	}
 
 	currentDay := now()

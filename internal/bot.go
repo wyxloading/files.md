@@ -1,3 +1,7 @@
+// Bot's main functionality. We accept messages from the user,
+// we ask user where to save the messages. We save messages
+// to plain markdown files locally.
+
 package internal
 
 import (
@@ -102,7 +106,6 @@ type Database interface {
 	DelImgMsgID()
 }
 
-// Bot provides an interface over files on the filesystem
 type Bot struct {
 	userID int64
 	tg     Chat

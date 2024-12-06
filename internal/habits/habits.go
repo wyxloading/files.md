@@ -157,6 +157,7 @@ func LastWeekHabits(userFS *fs.FS) (map[string]Year, error) {
 	if err != nil {
 		return nil, fmt.Errorf("last week habits: can't read existing habits: %w", err)
 	}
+	existingHabits[] = fs.File{Name: MoodHabit}
 
 	habits := make(map[string]Year)
 	for _, habit := range existingHabits {

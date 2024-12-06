@@ -242,6 +242,7 @@ async function loadDirectory(dirHandle, path = "", depth = 1) {
         } else if (entry.kind === 'file' && filename.endsWith('.png') ||
             filename.endsWith('.jpg') ||
             filename.endsWith('.jpeg') ||
+            filename.endsWith('.webp') ||
             filename.endsWith('.gif') ||
             filename.endsWith('.md') ||
             filename.endsWith('.txt')

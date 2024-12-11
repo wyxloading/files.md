@@ -3439,10 +3439,19 @@ func FuzzSaveFromTextMsg(f *testing.F) {
 			return
 		}
 
+		// fs.sanitizeName will strip away \0 characters as they're not allowed in filenames
+		if strings.Contains(input, "\x00") {
+			fmt.Println("Skipping string with null character")
+			return
+		}
+
 		r := require.New(t)
 
-		userFS, err := fs.NewFS("/", afero.NewMemMapFs())
-		_ = userFS.CreateDirsIfNotExist()
+		memfs := afero.NewMemMapFs()
+		_ = memfs.Mkdir("/user", 0o755)
+		userFS, err := fs.NewFS("/user", memfs)
+		r.NoError(err)
+		err = userFS.CreateDirsIfNotExist()
 		r.NoError(err)
 
 		tgram := tg.NewFakeTG()
@@ -3450,8 +3459,9 @@ func FuzzSaveFromTextMsg(f *testing.F) {
 		bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
 		err = bot.Answer(tg.NewUpd(-1, input))
 		if err != nil {
+			trimmedInput := strings.TrimSpace(input)
 			if strings.Contains(err.Error(), "unsafe path") &&
-				(strings.TrimSpace(input) == "." || strings.HasPrefix(input, "..")) {
+				(trimmedInput == "." || strings.HasPrefix(trimmedInput, "..")) {
 				t.Logf("Expected error for unsafe path %q: %v", input, err)
 				return
 			}

@@ -43,6 +43,8 @@ async function init(el) {
             const newFile = await newFiles[dir]?.[file].handle.getFile();
             if (newFile) {
                 let newContent = await newFile.text();
+                // TODO dirty hack, we replace links on the fly
+                newContent = newContent.replace(/\[\[(.+?)\|.*?\]\]/g, '[[$1]]');
                 if (getCurrentContent() !== newContent) {
                     console.log("File was modified, reloading...");
                     await showFile(dir, file, false);

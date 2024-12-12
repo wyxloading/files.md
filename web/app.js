@@ -56,6 +56,7 @@ async function init(el) {
                 if (currentContent !== newContent) {
                     console.log("File was modified, reloading...");
                     await showFile(dir, file, false);
+                    scrollToEnd();
                 }
             }
 
@@ -313,21 +314,25 @@ async function showFile(dir, filename, saveToHistory = true) {
     // Images and other heavy stuff won't be loaded
     // P.S. Is it try after we set infite loading?
     setTimeout(() => {
-        const lastLine = editor.lastLine();
-        let targetLine = lastLine;
-        for (let i = lastLine; i >= 0; i--) {
-            const lineContent = editor.getLine(i).trim();
-            if (!lineContent.startsWith("[") && (!lineContent.endsWith("]") || !lineContent.endsWith(")"))) {
-                targetLine = i;
-                break;
-            }
-        }
-        const targetChar = editor.getLine(targetLine).length;
-        editor.setCursor({line: targetLine, ch: targetChar});
-        editor.scrollTo(null, 0);
-        // TODO only focus if there's no quick dialogue
-        editor.focus();
+        scrollToEnd();
     }, 100);
+}
+
+function scrollToEnd() {
+    const lastLine = editor.lastLine();
+    let targetLine = lastLine;
+    for (let i = lastLine; i >= 0; i--) {
+        const lineContent = editor.getLine(i).trim();
+        if (!lineContent.startsWith("[") && (!lineContent.endsWith("]") || !lineContent.endsWith(")"))) {
+            targetLine = i;
+            break;
+        }
+    }
+    const targetChar = editor.getLine(targetLine).length;
+    editor.setCursor({line: targetLine, ch: targetChar});
+    editor.scrollTo(null, 0);
+    // TODO only focus if there's no quick dialogue
+    editor.focus();
 }
 
 function updateFocusedItem(resultsList) {

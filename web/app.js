@@ -43,8 +43,8 @@ async function init(el) {
                 const currentFileData = files[currentDir]?.[currentFile];
                 const newFileData = newFiles[currentDir]?.[currentFile];
 
-                if (currentFileData && newFileData) {
-                    if (newFileData.content !== currentFileData.content) {
+                if (newFileData.lastModified > currentFileData.lastModified) {
+                    if (newFileData.lastModified > currentFileData.lastModified) {
                         console.log("File was modified, reloading...");
                         await showFile(currentDir, currentFile, false);
                     }

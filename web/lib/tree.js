@@ -588,8 +588,8 @@ function TreePath(root, node){
 const TreeUtil = {
 	default_leaf_icon: "<span>&#128441;</span>",
 	default_parent_icon: "<span>&#128449;</span>",
-	default_open_icon: "<svg class=\"tree-icon\"  width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:bx=\"https://boxy-svg.com\"><defs><bx:export><bx:file format=\"svg\"/></bx:export></defs><path d=\"M 2.553 8 L 11.808 17.865 L 21.062 8\" style=\"\"/></svg>",
-	default_close_icon: "<svg class=\"tree-icon\"  width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:bx=\"https://boxy-svg.com\"><defs><bx:export><bx:file format=\"svg\"/></bx:export></defs><path d=\"M 2.553 8 L 11.808 17.865 L 21.062 8\" transform=\"rotate(-90 12 12)\" style=\"\"/></svg>",
+	default_open_icon: "<svg width=\"15\" height=\"15\" viewBox=\"0 -2 24 24\" xmlns=\"http://www.w3.org/2000/svg\" fill-rule=\"evenodd\" clip-rule=\"evenodd\"><path d=\"M0 2h8l3 3h10v4h3l-4 13h-20v-20zm22.646 8h-17.907l-3.385 11h17.907l3.385-11zm-2.646-1v-3h-9.414l-3-3h-6.586v15.75l3-9.75h16z\"/></svg>",
+	default_close_icon: "<svg width=\"15\" height=\"15\" viewBox=\"0 -2 24 24\" xmlns=\"http://www.w3.org/2000/svg\" fill-rule=\"evenodd\" clip-rule=\"evenodd\"><path d=\"M11 5h13v17h-24v-20h8l3 3zm-10-2v18h22v-15h-12.414l-3-3h-6.586z\"/></svg>",
 
 	isDOM: function(obj){
 		try {

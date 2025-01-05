@@ -17,8 +17,8 @@
 // }
 let files= [];
 const supportedFileTypes = ['md', 'txt', 'png', 'jpg', 'jpeg', 'webp', 'gif',];
-const nonTextDirs = ['img'];
 const systemDirs = ["img", "archive", "_read_", "_watch_", "_shop_", "today", "later", "journal", "habits", "triggers", "places"];
+const nonTextDirs = ['img'];
 
 // HyperMD/Codemirror editor
 let editor = null;

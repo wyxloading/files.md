@@ -254,9 +254,3 @@ func emojiForStatus(habitName string, day time.Time, status int) string {
 
 	return habitSkipped
 }
-
-// func dayOfYearToTime(dayOfYear int, year int) time.Time {
-// 	startOfYear := time.Date(year, time.January, 1, 0, 0, 0, 0, time.UTC)
-
-// 	return startOfYear.AddDate(0, 0, dayOfYear-1)
-// }

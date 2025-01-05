@@ -18,9 +18,11 @@
 	overflow:hidden;
 	text-overflow: ellipsis;
 
+	padding: 2px 4px;
 	cursor: pointer;
-	padding: 4px 5px;
-	display: block;
+	display: flex;
+	gap: 4px;
+	align-items: center;
 	border-radius: 2px;
 
 	-webkit-touch-callout: none;
@@ -32,7 +34,7 @@
 
 	text-align: left;
 
-	font-size: 1em;
+	font-size: 1.1em;
 }
 
 .tj_container li span.tj_description:hover{
@@ -41,6 +43,11 @@
 
 .tj_container li span.tj_mod_icon {
 	display: inline-block;
+	padding: -9px 0 0 0 !important;
+}
+
+.tj_mod_icon {
+	padding-right: 5px;
 }
 
 .tj_container li span.tj_icon {

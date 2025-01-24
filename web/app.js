@@ -37,6 +37,7 @@ async function init(el) {
         document.getElementById('welcome').style.display = 'block';
         files = defaultFiles;
         buildSidebar();
+        await showFile("", "My amazing project.md");
         return;
     }
 

@@ -16,8 +16,8 @@ let defaultFiles = {
         },
     },
     "": {
-        "Welcome.md": {
-            "content": "<div id=\"welcome\" style=\"display: none; justify-content: center;align-items: center; height: 100vh; flex-direction: column\"><div><p>100% local, we don't have access to your files</p></div><div><button onClick=\"openDir()\" id=\"openDirectory\">Open directory with *.md files</button></div></div>"
+        "My amazing project.md": {
+            "content": "You can dump project related thoughts here"
         }
     }
 }

@@ -63,7 +63,7 @@ async function init(el) {
         if (saveQueue.length === 0) {
             newContent = newContent.replace(/\[\[(.+?)\|.*?\]\]/g, '[[$1]]');
             if (currentContent !== newContent) {
-                console.log("File was modified, reloading...");
+                console.log(currentContent, newContent, "File was modified, reloading...");
                 await showFile(dir, file, false);
             }
         }
@@ -657,7 +657,7 @@ async function saveFile() {
 
 function getCurrentContent() {
     let content = editor.getValue();
-    const header = editor.currentFile.replace('.md', '').replace(/^\w/, (c) => c.toUpperCase());
+    const header = editor.currentFile.replace(/\.md$/, '').replace(/^\w/, (c) => c.toUpperCase());
     content = content.trimStart();
     if (content.startsWith(`# ${header}`)) {
         content = content.slice(`# ${header}`.length).trimStart();

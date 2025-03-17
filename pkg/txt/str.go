@@ -51,6 +51,15 @@ func Emoji(emoji, str string) string {
 		return str
 	}
 
+	// Custom for George :)
+	str = strings.TrimPrefix(str, "WRK ")
+	str = strings.TrimPrefix(str, "UA ")
+	str = strings.TrimPrefix(str, "US ")
+	str = strings.TrimPrefix(str, "CY ")
+	str = strings.TrimPrefix(str, "HOB ")
+	str = strings.TrimPrefix(str, "SRB ")
+	str = strings.TrimPrefix(str, "PL ")
+
 	return fmt.Sprintf("%s %s", emoji, str)
 }
 

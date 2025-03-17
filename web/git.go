@@ -28,7 +28,7 @@ func CORSMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func main() {
+func main2() {
 	// Get git handler to serve a directory of repos
 	git := githttp.New("/tmp/repo")
 

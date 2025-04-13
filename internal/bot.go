@@ -2351,7 +2351,7 @@ func (b *Bot) addToFile(dir, filename, content string) error {
 		return fmt.Errorf("add to file: can't get doc content of '%s': %w", filename, err)
 	}
 
-	header := fmt.Sprintf("#### %d %s, %s", now().Day(), now().Format("January"), now().Weekday())
+	header := fmt.Sprintf("#### %d %s %d, %s", now().Day(), now().Format("January"), now().Year(), now().Weekday())
 	newContent := txt.InsertTextAfterHeader(existingContent, header, content)
 
 	err = b.fs.Write(dir, filename, newContent)

@@ -1288,7 +1288,7 @@ func TestMoveToExistingFile(t *testing.T) {
 
 	content, err := userFS.Read("", "Existing file.md")
 	r.NoError(err)
-	r.Equal("#### 11 August, Sunday\nNew file", content)
+	r.Equal("#### 11 August 2024, Sunday\nNew file", content)
 }
 
 func TestMoveToExistingFileExistingRecord(t *testing.T) {
@@ -1319,7 +1319,7 @@ func TestMoveToExistingFileExistingRecord(t *testing.T) {
 
 	content, err := userFS.Read("", "Existing file.md")
 	r.NoError(err)
-	r.Equal("#### 11 August, Sunday\nNew file\n### 11.08.2024 Sunday\nContent", content)
+	r.Equal("#### 11 August 2024, Sunday\nNew file\n### 11.08.2024 Sunday\nContent", content)
 }
 
 func TestShowMoveTo(t *testing.T) {
@@ -2343,7 +2343,7 @@ func TestSaveToExistingFileIntegration(t *testing.T) {
 
 	content, err := userFS.Read("", "File.md")
 	r.NoError(err)
-	r.Equal("#### 1 January, Thursday\nText\nFile content", content)
+	r.Equal("#### 1 January 1970, Thursday\nText\nFile content", content)
 
 	r.Nil(database.InputExpectation())
 	keybdMsgID, ok := database.LastKeyboardMsgID()
@@ -2737,7 +2737,7 @@ func TestSaveToRecentFileIntegration(t *testing.T) {
 
 	content, err := userFS.Read("", "Text.md")
 	r.NoError(err)
-	r.Equal("#### 1 January, Thursday\nNew text\nText", content)
+	r.Equal("#### 1 January 1970, Thursday\nNew text\nText", content)
 
 	recentCMD, ok := database.RecentCommand()
 	r.Equal("mf", recentCMD)
@@ -3375,7 +3375,7 @@ func TestMoveToExistingNote_Success(t *testing.T) {
 
 	content, err := userFS.Read("notes", "ExistingNote.md")
 	r.NoError(err)
-	r.Equal("#### 1 January, Thursday\nTask content\nExisting content", content)
+	r.Equal("#### 1 January 1970, Thursday\nTask content\nExisting content", content)
 
 	_, err = userFS.Read("today", "Task.md")
 	r.Error(err)

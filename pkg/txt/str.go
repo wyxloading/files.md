@@ -64,8 +64,8 @@ func Emoji(emoji, str string) string {
 }
 
 func NormNewLines(text string) string {
-	text = strings.Replace(text, "\r\n", "\n", -1)
-	return strings.Replace(text, "\n\r", "\n", -1)
+	text = strings.Replace(text, "\r\n", "\n", -1) // replace Windows line endings
+	return strings.Replace(text, "\r", "\n", -1)   // replace remaining Mac line endings
 }
 
 // SplitTextIntoChunks splits the text into chunks less than or equal to maxLen.

@@ -2,7 +2,7 @@
 // The purpose of this file is to collapse a few consecutive incoming messages
 // into one file. This is useful when a user forwards a few messages to the bot.
 //
-// 1) For a single message the flow is the same, no changes are made, as this was a requirement for me.
+// 1) For a single message the flow is the same, no changes are made.
 // 2) For any additional messages, we check the time of the last message.
 // 3) If it was less than or equal to 1 second ago, we collapse it with the first message in the batch.
 // 4) A batch is a sequence of messages with a distance of no more than 1 second between them.

@@ -84,7 +84,7 @@ func main() {
 	infolog := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	// Main bot loop.
-	// Loop through updates from Telegram and process them in separate per-user goroutines.
+	// Loop through updates from Telegram and process them sequentially in separate per-user goroutine.
 	userChannels := make(map[int64]chan tgbotapi.Update)
 	tgConfig := tgbotapi.NewUpdate(0)
 	tgConfig.Timeout = 60 // TODO release, check if it's enough

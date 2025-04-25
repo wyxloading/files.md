@@ -399,10 +399,24 @@ func (b *Bot) saveFromRegularMsg(u Update) error {
 	return b.showMoveTo([]string{fs.Hash(filename)})
 }
 
+// TODO test collapsing from both regular messages and images
 func (b *Bot) saveFromImage(u Update) error {
 	content, err := b.saveImage(u)
 	if err != nil {
 		return fmt.Errorf("save from image: %w", err)
+	}
+
+	// Collapse a few consecutive messages into one, see bot_forwards.go
+	msgTime, updateHasTime := u.Time()
+	if updateHasTime {
+		filename, shouldCollapse := collapseToMsg(b.userID, msgTime)
+		if shouldCollapse {
+			err := b.createOrAdd(fs.DirToday, filename, content)
+			if err != nil {
+				return fmt.Errorf("save collapsed: %w", err)
+			}
+			return nil
+		}
 	}
 
 	// Adding to an existing file
@@ -425,6 +439,11 @@ func (b *Bot) saveFromImage(u Update) error {
 	err = b.createOrAdd(fs.DirToday, filename, content)
 	if err != nil {
 		return fmt.Errorf("save from image: %w", err)
+	}
+
+	if updateHasTime {
+		setFirstMsgFilename(b.userID, filename, msgTime)
+		setFirstMsgTime(b.userID, msgTime)
 	}
 
 	if b.cfg.JournalOnlyMode() {

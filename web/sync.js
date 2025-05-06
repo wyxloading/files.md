@@ -125,9 +125,9 @@ async function syncWithServer() {
             let serverHash = hash(content);
             if (clientHash !== serverHash) {
                 console.log("Hashes do not match, writing file...");
-                // const writable = await fileHandle.createWritable();
-                // await writable.write(content);
-                // await writable.close();
+                const writable = await fileHandle.createWritable();
+                await writable.write(content);
+                await writable.close();
             } else {
                 console.log("Hashes match, no need to write file.");
             }

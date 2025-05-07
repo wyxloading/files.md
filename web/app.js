@@ -1,24 +1,3 @@
-// Files structure:
-// {
-//   "dir": [
-//     {
-//       "filename": [
-//         {
-//           content: "File content here...",
-//           lastModified: <timestamp>,
-//           handle: <file handle>,
-//           imageUrl: <image url if any>
-//         },
-//         ...
-//       ]
-//     },
-//     ...
-//   ]
-// }
-let files= [];
-const supportedFileTypes = ['md', 'txt', 'png', 'jpg', 'jpeg', 'webp', 'gif',];
-const systemDirs = ["img", "archive", "_read_", "_watch_", "_shop_", "today", "later", "journal", "habits", "triggers", "places"];
-
 // HyperMD/Codemirror editor
 let editor = null;
 let focusedItemIndex = -1;
@@ -50,9 +29,12 @@ async function init(el) {
         document.getElementById('welcome').style.display = 'block';
     }
 
-    files = await loadFiles(savedDirectoryHandle);
-    await initFilesMetadata();
-    await syncWithServer();
+    // Track time to load
+    const startTime = performance.now();
+    files = await loadLocalFiles(savedDirectoryHandle);
+    const endTime = performance.now();
+    console.log(`Files loaded in ${endTime - startTime} ms`);
+    // await syncWithServer();
 
     changesPollingInterval = setInterval(async function() {
         // Check if current file has been modified
@@ -599,92 +581,10 @@ async function openDir() {
     let dirHandle = await window.showDirectoryPicker();
     document.getElementById('welcome').style.display = 'none';
     await saveDirectoryHandle(dirHandle);
-    files = await loadFiles(dirHandle)
+    files = await loadLocalFiles(dirHandle)
+    console.log(files);
     buildSidebar();
     await showRandomFile();
-}
-
-// Returns files in flattened structure:
-// {
-//   "dir": {
-//      ...
-//   },
-//   "dir/dir2": {
-//      ...
-//   },
-// }
-// The code is quite messy. We have to make lots of optimizations,
-// otherwise it's going to be slow even with 5K files.
-async function loadFiles(dirHandle) {
-    let newFiles = {};
-
-    async function loadDir(dirHandle, path = "", depth = 1) {
-        const entries = [];
-        for await (const entry of dirHandle.values()) {
-            entries.push(entry);
-        }
-        entries.sort((a, b) => a.name.localeCompare(b.name));
-
-        for (const entry of entries) {
-            const filename = entry.name.normalize("NFC");
-            if (entry.kind === 'directory') {
-                if (filename.startsWith('.')) continue;
-
-                if (depth < 5) {
-                    const dir = `${path}${filename}/`;
-                    newFiles[filename] = {};
-                    await loadDir(entry, dir, depth + 1);
-                }
-            } else if (entry.kind === 'file' && supportedFileTypes.includes(filename.split('.').pop())) {
-                const dir = path.replace(/\/+$/, '');
-                if (!newFiles[dir]) newFiles[dir] = {};
-
-                // Don't load the file if already exists
-                // We're going to lose lastModified for existing files, but
-                // we can sacrifice it, as the operation is slow
-                if (files?.[dir]?.[filename] !== undefined) {
-                    newFiles[dir][filename] = files[dir][filename];
-                    continue;
-                }
-
-                newFiles[dir][filename] = {handle: entry};
-                if (dir !== 'archive') {
-                    // This operation is slow, so we don't run it on archived files
-                    let file = await entry.getFile();
-                    newFiles[dir][filename].lastModified = file.lastModified;
-                }
-                if (dir === 'img') {
-                    newFiles[dir][filename].imageUrl = await getImageUrl(entry);
-                }
-            }
-        }
-    }
-    await loadDir(dirHandle);
-
-    // Remove empty dirs
-    for (const dir in newFiles) {
-        if (Object.keys(newFiles[dir]).length === 0) {
-            delete newFiles[dir];
-        }
-    }
-
-    return newFiles;
-}
-
-async function saveFile() {
-    const dir = editor.currentDir;
-    const filename = editor.currentFile;
-    const fileData = files[dir][filename];
-    if (fileData && fileData.handle) {
-        let content = getCurrentContent();
-        const writable = await fileData.handle.createWritable();
-        await writable.write(content);
-        await writable.close(); // Buffer is flushed on disk at this moment, it could be interrupted by the event pool, so maintain a flag
-    } else {
-        if (fileData.handle) {
-            alert(`Cannot save ${filename}. No file handle found.`);
-        }
-    }
 }
 
 function getCurrentContent() {
@@ -764,7 +664,7 @@ document.addEventListener('mousedown', (event) => {
 // Reload files once the app gains focus
 window.addEventListener("focus", async () => {
     const savedDirectoryHandle = await getSavedDirectoryHandle();
-    files = await loadFiles(savedDirectoryHandle);
+    files = await loadLocalFiles(savedDirectoryHandle);
     console.log("Files loaded");
     syncWithServer()
     console.log("Sync completed");

@@ -1,12 +1,131 @@
+// Files structure:
+// {
+//   "dir": [
+//     {
+//       "filename": [
+//         {
+//           content: "File content here...",
+//           lastModified: <timestamp>,
+//           handle: <file handle>,
+//           imageUrl: <image url if any>
+//         },
+//         ...
+//       ]
+//     },
+//     ...
+//   ]
+// }
+let files= [];
+const supportedFileTypes = ['md', 'txt', 'png', 'jpg', 'jpeg', 'webp', 'gif',];
+const systemDirs = ["img", "archive", "_read_", "_watch_", "_shop_", "today", "later", "journal", "habits", "triggers", "places"];
+
 let filesMetadata = {files: {}, timestamps: {}};
 const SYNC_STORAGE_KEY = 'files';
 
-async function initFilesMetadata() {
+// Returns files in flattened structure:
+// {
+//   "dir": {
+//      ...
+//   },
+//   "dir/dir2": {
+//      ...
+//   },
+// }
+// The code is quite messy. We have to make lots of optimizations,
+// otherwise it's going to be slow even with 5K files.
+async function loadLocalFiles(dirHandle) {
+    let newFiles = {};
+
+    async function loadDir(dirHandle, path = "", depth = 1) {
+        // Get all entries first
+        const entries = [];
+        for await (const entry of dirHandle.values()) {
+            entries.push(entry);
+        }
+        entries.sort((a, b) => a.name.localeCompare(b.name));
+
+        // Process files and create directory promises
+        const dirPromises = [];
+
+        for (const entry of entries) {
+            const filename = entry.name.normalize("NFC");
+
+            if (entry.kind === 'directory') {
+                if (filename.startsWith('.') || depth >= 5) continue;
+
+                const dir = `${path}${filename}/`;
+                newFiles[filename] = {};
+                // Instead of awaiting, collect promises to process later
+                dirPromises.push({ handle: entry, dir, depth: depth + 1 });
+
+            } else if (entry.kind === 'file' && supportedFileTypes.includes(filename.split('.').pop())) {
+                const dir = path.replace(/\/+$/, '');
+                if (!newFiles[dir]) newFiles[dir] = {};
+
+                // Skip if file already exists
+                if (files?.[dir]?.[filename] !== undefined) {
+                    newFiles[dir][filename] = files[dir][filename];
+                    continue;
+                }
+
+                newFiles[dir][filename] = {handle: entry};
+
+                // Process file in parallel (collect promises)
+                if (dir !== 'archive') {
+                    // Create promise for file processing
+                    entry.getFile().then(file => {
+                        newFiles[dir][filename].lastModified = file.lastModified;
+                    });
+                }
+
+                if (dir === 'img') {
+                    // Process image in parallel
+                    getImageUrl(entry).then(imageUrl => {
+                        newFiles[dir][filename].imageUrl = imageUrl;
+                    });
+                }
+            }
+        }
+
+        // Process subdirectories in parallel
+        await Promise.all(dirPromises.map(({ handle, dir, depth }) =>
+            loadDir(handle, dir, depth)
+        ));
+    }
+    await loadDir(dirHandle);
+
+    // Remove empty dirs
+    for (const dir in newFiles) {
+        if (Object.keys(newFiles[dir]).length === 0) {
+            delete newFiles[dir];
+        }
+    }
+
+    // Load metadata
     const savedStates = localStorage.getItem(SYNC_STORAGE_KEY);
     if (savedStates) {
         filesMetadata = JSON.parse(savedStates);
     }
+
+    return newFiles;
 }
+
+async function saveFile() {
+    const dir = editor.currentDir;
+    const filename = editor.currentFile;
+    const fileData = files[dir][filename];
+    if (fileData && fileData.handle) {
+        let content = getCurrentContent();
+        const writable = await fileData.handle.createWritable();
+        await writable.write(content);
+        await writable.close(); // Buffer is flushed on disk at this moment, it could be interrupted by the event pool, so maintain a flag
+    } else {
+        if (fileData.handle) {
+            alert(`Cannot save ${filename}. No file handle found.`);
+        }
+    }
+}
+
 
 function saveFilesMetadata() {
     localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify(filesMetadata));

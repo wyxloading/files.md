@@ -1,3 +1,8 @@
+const saverInterval = 50; // ms
+const loaderInterval = 3000; // ms
+
+let saveQueue = [];
+
 // Files structure:
 // {
 //   "dir": [
@@ -259,3 +264,8 @@ function hash(str) {
     }
     return hash;
 }
+
+window.addEventListener('beforeunload', function () {
+    clearInterval(window.loader);
+    clearInterval(window.saver);
+});

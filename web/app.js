@@ -2,10 +2,6 @@
 let editor = null;
 let focusedItemIndex = -1;
 
-let saveQueue = [];
-let queueWorkerInterval;
-let changesPollingInterval;
-
 // Normalize text to use only \n as line endings
 function norm(text) {
     return text.replace(/\r\n|\r/g, "\n");
@@ -35,7 +31,7 @@ async function init(el) {
     console.log(`Files loaded in ${performance.now() - startTime}ms`);
     await syncWithServer();
 
-    changesPollingInterval = setInterval(async function() {
+    window.loader = setInterval(async function() {
         // Check if current file has been modified
         let dir = editor.currentDir;
         let file = editor.currentFile;
@@ -50,7 +46,7 @@ async function init(el) {
                 await showFile(dir, file, false);
             }
         }
-    }, 3000)
+    }, loaderInterval)
     buildSidebar();
     await showRandomFile();
 }
@@ -533,14 +529,6 @@ window.addEventListener('popstate', (event) => {
     }
 });
 
-window.addEventListener('beforeunload', function () {
-    clearInterval(changesPollingInterval);
-    clearInterval(queueWorkerInterval);
-    clearInterval(changesPollingInterval);
-    clearInterval(queueWorkerInterval);
-    clearInterval(syncInterval);
-});
-
 document.getElementById('search').addEventListener('keydown', (event) => {
     const resultsList = document.getElementById('search-results').querySelectorAll('li');
 
@@ -635,7 +623,7 @@ async function getSavedDirectoryHandle() {
 
 // Worker to process the saving queue
 let isProcessing = false;
-queueWorkerInterval = setInterval(async function processSaveQueue() {
+window.saver = setInterval(async function processSaveQueue() {
     if (isProcessing) return;
     if (saveQueue.length === 0) return;
 
@@ -650,7 +638,7 @@ queueWorkerInterval = setInterval(async function processSaveQueue() {
     }
 
     isProcessing = false;
-}, 50);
+}, saverInterval);
 
 document.addEventListener('mousedown', (event) => {
     const goToFile = document.getElementById('search');

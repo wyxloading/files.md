@@ -146,24 +146,32 @@ async function syncAllWithServer() {
         server = await response.json();
     } catch (error) {
         console.error("Network error occurred:", error.message);
+        isSyncing = false;
         return;
     }
 
-    // Write files received from the server
-    for (const fileInfo of server.files) {
-        const {path, content, lastModified} = fileInfo;
-        // If it is current file, skip, because we sync it separately
-        if (path === `${editor.currentDir}/${editor.currentFile}`) {
-            console.log("Skip current " + path);
-            continue;
-        }
+    // TODO more fine-graned try-catch?
+    try {
+        // Write files received from the server
+        for (const fileInfo of server.files) {
+            const {path, content, lastModified} = fileInfo;
+            // If it is current file, skip, because we sync it separately
+            if (path === `${editor.currentDir}/${editor.currentFile}`) {
+                console.log("Skip current " + path);
+                continue;
+            }
 
-        console.log("Syncing " + path);
-        await saveTextFile(path, content)
-        setMetadata(path, content, lastModified);
+            // todo try-catch?
+            console.log("Syncing " + path);
+            await saveTextFile(path, content)
+            setMetadata(path, content, lastModified);
+        }
+        filesMetadata['timestamps'] = server.timestamps;
+        saveMetadata();
+    } catch(error) {
+        console.error("Can't sync: ", error.message)
     }
-    filesMetadata['timestamps'] = server.timestamps;
-    saveMetadata();
+
     console.log("Sync completed in " + (performance.now() - startTime) + "ms");
 
     isSyncing = false;

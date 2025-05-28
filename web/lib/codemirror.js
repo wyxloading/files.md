@@ -3289,9 +3289,49 @@
             botLeft = !docLTR && openEnd && last ? leftSide : toPos.left;
             botRight = !docLTR ? rightSide : wrapX(to, dir, "after");
           }
-          add(topLeft, fromPos.top, topRight - topLeft, fromPos.bottom);
-          if (fromPos.bottom < toPos.top) { add(leftSide, fromPos.bottom, null, toPos.top); }
-          add(botLeft, toPos.top, botRight - botLeft, toPos.bottom);
+
+          // // Draw first line of selection
+          let firstLine = cm.lineAtHeight(fromPos.top, "div")
+          let firstVisualLine = getVisualLines(cm, firstLine)[0];
+          let firstLineRight = wrapXObj(cm, lineObj, firstVisualLine.startChar, dir, "before");
+          let firstLineLeft = wrapXObj(cm, lineObj, firstVisualLine.endChar, dir, "after");
+          drawRect(fromPos.left, fromPos.top, (firstLineRight - firstLineLeft) - topLeft, fromPos.bottom);
+
+          let areThereInBetweenLines = fromPos.bottom < toPos.top
+          if (areThereInBetweenLines) {
+            // Get the logical line range for the middle section
+            let startLine = cm.lineAtHeight(fromPos.bottom, "div");
+            let endLine = cm.lineAtHeight(toPos.top, "div");
+
+            // Loop through ALL lines in the range, not just endLine
+            for (let lineNo = startLine; lineNo <= endLine; lineNo++) {
+              let lineObj = getLine(cm.doc, lineNo);
+              let visualLines = getVisualLines(cm, lineNo);
+              visualLines.forEach(visualLine => {
+                // Get coordinates for this visual line segment
+                let segmentStartCoords = charCoords(cm, Pos(lineNo, visualLine.startChar), "div");
+
+                let left = wrapXObj(cm, lineObj, visualLine.startChar, dir, "before");
+                let right = wrapXObj(cm, lineObj, visualLine.endChar, dir, "after");
+
+                // Only draw segments that are within our vertical selection range
+                if (segmentStartCoords.bottom > fromPos.bottom && segmentStartCoords.top < toPos.top) {
+                  let width = left - right;
+                  drawRect(right, segmentStartCoords.top, width, segmentStartCoords.top + cm.defaultTextHeight());
+                }
+              });
+            }
+          }
+
+          // Draw last line of selection
+          let lastLine = cm.lineAtHeight(toPos.top, "div")
+          let lastVisualLine = getVisualLines(cm, lastLine).pop();
+          let lastLineLeft = wrapXObj(cm, lineObj, lastVisualLine.endChar, dir, "after");
+          drawRect(lastLineLeft, toPos.top, toPos.right - lastLineLeft, toPos.bottom);
+          
+          // add(topLeft, fromPos.top, topRight - topLeft, fromPos.bottom);
+          // if (fromPos.bottom < toPos.top) { add(leftSide, fromPos.bottom, null, toPos.top); }
+          // add(botLeft, toPos.top, botRight - botLeft, toPos.bottom);
         }
 
         if (!start || cmpCoords(fromPos, start) < 0) { start = fromPos; }

@@ -3240,7 +3240,7 @@
     var rightSide = Math.max(display.sizerWidth, displayWidth(cm) - display.sizer.offsetLeft) - padding.right;
     var docLTR = doc.direction == "ltr";
 
-    function add(left, top, width, bottom) {
+    function drawRect(left, top, width, bottom) {
       if (top < 0) { top = 0; }
       top = Math.round(top);
       bottom = Math.round(bottom);
@@ -3303,24 +3303,64 @@
     }
 
     var sFrom = range.from(), sTo = range.to();
-    if (sFrom.line == sTo.line) {
+    if (sFrom.line === sTo.line) { // Single line selection
       drawForLine(sFrom.line, sFrom.ch, sTo.ch);
     } else {
-      var fromLine = getLine(doc, sFrom.line), toLine = getLine(doc, sTo.line);
-      var singleVLine = visualLine(fromLine) == visualLine(toLine);
-      var leftEnd = drawForLine(sFrom.line, sFrom.ch, singleVLine ? fromLine.text.length + 1 : null).end;
-      var rightStart = drawForLine(sTo.line, singleVLine ? 0 : null, sTo.ch).start;
-      if (singleVLine) {
+      let fromLine = getLine(doc, sFrom.line);
+      let toLine = getLine(doc, sTo.line);
+      let isCollapsed = visualLine(fromLine) === visualLine(toLine);
+      // The ending coordinates of the selection on the first line
+      let leftEnd = drawForLine(sFrom.line, sFrom.ch, isCollapsed ? fromLine.text.length + 1 : null).end;
+      // The starting coordinates of the selection on the last line
+      let rightStart = drawForLine(sTo.line, isCollapsed ? 0 : null, sTo.ch).start;
+      if (isCollapsed) {
         if (leftEnd.top < rightStart.top - 2) {
-          add(leftEnd.right, leftEnd.top, null, leftEnd.bottom);
-          add(leftSide, rightStart.top, rightStart.left, rightStart.bottom);
+          drawRect(leftEnd.right, leftEnd.top, null, leftEnd.bottom);
+          drawRect(leftSide, rightStart.top, rightStart.left, rightStart.bottom);
         } else {
-          add(leftEnd.right, leftEnd.top, rightStart.left - leftEnd.right, leftEnd.bottom);
+          drawRect(leftEnd.right, leftEnd.top, rightStart.left - leftEnd.right, leftEnd.bottom);
         }
       }
-      if (leftEnd.bottom < rightStart.top)
-        { add(leftSide, leftEnd.bottom, null, rightStart.top); }
+
+      let hasLinesInBetween = leftEnd.bottom < rightStart.top;
+      if (hasLinesInBetween) {
+        // console.log(sFrom, sTo);
+        let startLine = sFrom.line;
+        let endLine = sTo.line;
+        // start and end lines are handled already, so we exclude them
+        for (let lineNum = startLine + 1; lineNum <= endLine - 1; lineNum++) {
+          let line = getLine(doc, lineNum);
+          let visualLines = getVisualLines(cm, lineNum);
+          visualLines.forEach(visualLine => {
+            let firstCharPos = charCoords(cm, Pos(lineNum, visualLine.startChar), "div");
+            // console.log(firstCharPos);
+            // TODO we only support LTR here
+            let left = wrapXObj(cm, line, visualLine.startChar, 'ltr', "before");
+            let right = wrapXObj(cm, line, visualLine.endChar, 'ltr', "after");
+            let width = left - right;
+            drawRect(leftSide, firstCharPos.top, width, firstCharPos.bottom);
+          });
+        }
+      }
     }
+    // if (sFrom.line == sTo.line) {
+    //   drawForLine(sFrom.line, sFrom.ch, sTo.ch);
+    // } else {
+    //   var fromLine = getLine(doc, sFrom.line), toLine = getLine(doc, sTo.line);
+    //   var singleVLine = visualLine(fromLine) == visualLine(toLine);
+    //   var leftEnd = drawForLine(sFrom.line, sFrom.ch, singleVLine ? fromLine.text.length + 1 : null).end;
+    //   var rightStart = drawForLine(sTo.line, singleVLine ? 0 : null, sTo.ch).start;
+    //   if (singleVLine) {
+    //     if (leftEnd.top < rightStart.top - 2) {
+    //       add(leftEnd.right, leftEnd.top, null, leftEnd.bottom);
+    //       add(leftSide, rightStart.top, rightStart.left, rightStart.bottom);
+    //     } else {
+    //       add(leftEnd.right, leftEnd.top, rightStart.left - leftEnd.right, leftEnd.bottom);
+    //     }
+    //   }
+    //   if (leftEnd.bottom < rightStart.top)
+    //     { add(leftSide, leftEnd.bottom, null, rightStart.top); }
+    // }
 
     output.appendChild(fragment);
   }

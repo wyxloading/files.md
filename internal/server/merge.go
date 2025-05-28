@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -86,7 +85,6 @@ func backtrack(lines1, lines2 []string, lcsLength [][]int, i, j int) []string {
 // #### 23 May, Friday 🤸‍🍽💪💧🚶‍♂️
 func mergeEmojisInJournalHeaders(lines []string) []string {
 	var mergedLines []string
-
 	groups := groupConsecutiveHeaders(lines)
 	for _, group := range groups {
 		if len(group) == 1 {
@@ -143,7 +141,6 @@ func unique(s string) string {
 	graphemes := uniseg.NewGraphemes(s)
 	for graphemes.Next() {
 		g := graphemes.Str()
-		fmt.Println(g)
 		if !strings.Contains(uniq, g) {
 			uniq += g
 		}

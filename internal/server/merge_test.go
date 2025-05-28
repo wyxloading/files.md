@@ -99,9 +99,9 @@ func TestJournal(t *testing.T) {
 func TestMergeHeaders(t *testing.T) {
 	r := require.New(t)
 
-	headers := []string{"#### 23 May, Friday 🤸‍🍽💪💧", "#### 23 May, Friday 🤸‍🍽💪", "#### 23 May, Friday 🤸‍"}
+	headers := []string{"#### 23 May, Friday 🤸‍♂️🍽💪💧", "#### 23 May, Friday 🤸‍♂️🍽💪", "#### 23 May, Friday 🤸‍♂️"}
 	merged := mergeEmojisInJournalHeaders(headers)
-	r.Equal([]string{"#### 23 May, Friday 🤸‍🍽💪💧"}, merged)
+	r.Equal([]string{"#### 23 May, Friday 🤸‍♂️🍽💪💧"}, merged)
 }
 
 func TestMergeHeadersReversed(t *testing.T) {
@@ -115,9 +115,9 @@ func TestMergeHeadersReversed(t *testing.T) {
 func TestMergeHeadersWithDifferentEmojis(t *testing.T) {
 	r := require.New(t)
 
-	headers := []string{"#### 23 May, Friday 🤸‍🍽💪💧", "#### 23 May, Friday 🤸‍🍽💪📵🚶‍♂️"}
+	headers := []string{"#### 23 May, Friday 🤸‍♂️‍🍽💪💧", "#### 23 May, Friday  🤸‍♂️🍽💪📵🚶‍♂️"}
 	merged := mergeEmojisInJournalHeaders(headers)
-	r.Equal([]string{"#### 23 May, Friday 🤸‍🍽💪💧📵🚶‍♂️"}, merged)
+	r.Equal([]string{"#### 23 May, Friday 🤸‍♂️‍🍽💪💧📵🚶‍♂️"}, merged)
 }
 
 func TestMergeHeadersNoEmoji(t *testing.T) {

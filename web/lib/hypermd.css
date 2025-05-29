@@ -879,9 +879,10 @@
     padding-bottom: 0.25em;
 }
 
-.cm-s-hypermd-light pre.HyperMD-header:not(:first-child) {
-    padding-top: 1em !important; /* Applies padding only to elements except the first */
-}
+/*CHANGED*/
+/*.cm-s-hypermd-light pre.HyperMD-header:not(:first-child) {*/
+/*    padding-top: 1em !important; !* Applies padding only to elements except the first *!*/
+/*}*/
 .cm-s-hypermd-light pre.HyperMD-header > span > span:first-child {
     margin-left: 0 !important;
 }

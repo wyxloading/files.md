@@ -58,5 +58,10 @@
     vertical-align: baseline;
     padding: 1px 3px !important;
     font-size: 87% !important;
-    /*line-height: 1.3286 !important;*/
+}
+
+.cm-s-hypermd-light span.cm-formatting-list-ol {
+    line-height: 1.8;
+    color: var(--color-tx-faint);
+    vertical-align: baseline;
 }

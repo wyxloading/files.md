@@ -7,9 +7,9 @@ let debug = {dir: "", file: "Sim.md"};
 async function init(el) {
     initEditor(el);
 
-    const savedDirectoryHandle = await getRootDirHandle();
-    const userHasOpenedDirectory = savedDirectoryHandle instanceof FileSystemDirectoryHandle;
-    if (!userHasOpenedDirectory) {
+    const savedDirHandle = await getRootDirHandle();
+    const hasSavedDir = savedDirHandle instanceof FileSystemDirectoryHandle;
+    if (!hasSavedDir) {
         document.getElementById('welcome').style.display = 'block';
         files = defaultFiles;
         buildSidebar();
@@ -17,7 +17,7 @@ async function init(el) {
         return;
     }
 
-    const permission = await savedDirectoryHandle.queryPermission({mode: 'read'});
+    const permission = await savedDirHandle.queryPermission({mode: 'read'});
     if (permission !== 'granted') {
         document.getElementById('welcome').style.display = 'block';
     }
@@ -109,7 +109,7 @@ function initEditor(el) {
             if (item.kind === "file" && item.type.startsWith("image/")) {
                 const file = item.getAsFile();
                 const fileName = `${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
-                await saveImageToDirectory(file, fileName);
+                // await saveImageToDirectory(file, fileName);
 
                 const markdownImageSyntax = `![](img/${fileName})`;
                 editor.replaceSelection(markdownImageSyntax);

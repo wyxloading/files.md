@@ -261,13 +261,14 @@ async function showRandomFile() {
 }
 
 async function showFile(dir, filename, saveToHistory = true) {
+    console.log(editor.getCursor());
     filename = filename.normalize("NFC");
     const fileData = files[dir][filename];
 
     // Check if we're loading the same file and save cursor position
     let cursorPos = null;
     if (editor.currentDir === dir && editor.currentFile === filename) {
-        cursorPos = editor.getCursor();
+        // cursorPos = editor.getCursor();
     }
 
     const header = filename.replace(/\.md$/, "").replace(/^\w/, (c) => c.toUpperCase());
@@ -301,10 +302,11 @@ async function showFile(dir, filename, saveToHistory = true) {
             editor.focus();
         }, 300);
     } else {
-        const viewport = editor.getViewport();
-        const totalLines = editor.lineCount();
-        let docFitInOneScreen = viewport.to >= totalLines
-        if (!docFitInOneScreen) {
+        // Focus last line if we have short content
+        const cmScroller = document.querySelector('.CodeMirror-scroll')
+        const hasVerticalScroll = cmScroller.scrollHeight > cmScroller.clientHeight
+        console.log("VERTICAL", hasVerticalScroll);
+        if (hasVerticalScroll) {
             return;
         }
 

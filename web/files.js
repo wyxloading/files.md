@@ -120,6 +120,7 @@ async function loadLocalFiles(rootDirHandle) {
 }
 
 async function syncAllWithServer() {
+    return;
     if (debug) {
         return;
     }

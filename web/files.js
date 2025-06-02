@@ -548,9 +548,10 @@ async function syncCurrentFile() {
     isSyncingCurrent = true;
 
 
+   let contentWasModifiedLocally = false;
     try {
         const path = `${editor.currentDir}/${editor.currentFile}`;
-        const contentWasModifiedLocally = !await isContentEqual(path, getCurrentContent());
+        contentWasModifiedLocally = !await isContentEqual(path, getCurrentContent());
     } catch (error) {
         console.error("Error checking content equality:", error);
         isSyncingCurrent = false;

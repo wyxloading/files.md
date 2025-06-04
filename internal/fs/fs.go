@@ -256,7 +256,9 @@ func (fs FS) Rename(oldDir, oldFilename, newDir, newFilename string) error {
 	ctime, err := fs.Ctime(newDir, newFilename)
 	// Nothing terrible will happen if we don't log a rename. The client would just have duplicate files.
 	if err == nil {
-		OnRename(ctime, path.Join(oldDir, oldFilename), path.Join(newDir, newFilename))
+		absOldPath := path.Join(fs.RootPath, oldDir, oldFilename)
+		absNewPath := path.Join(fs.RootPath, newDir, newFilename)
+		OnRename(ctime, absOldPath, absNewPath)
 	}
 
 	return nil

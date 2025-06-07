@@ -397,6 +397,9 @@ async function collectModifiedAndDeletedFiles() {
             if  (/[<>:"|?*\\/\x00-\x1F\x7F]/.test(file)) {
                 continue;
             }
+            if (editor.currentDir === dir && editor.currentFile === file) {
+                continue;
+            }
             if (!existingFiles[toPath(dir, file)]) {
                 console.log(dir, file);
                 console.log("DELETED " + toPath(dir, file));

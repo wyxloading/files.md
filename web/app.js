@@ -353,7 +353,7 @@ function openSearchModal() {
     loadRecentFiles();
 }
 
-function openSearchModal() {
+function openMoveModal() {
     document.getElementById('move').style.display = 'block';
     const inputField = document.getElementById('move-input');
     inputField.focus();
@@ -361,11 +361,11 @@ function openSearchModal() {
     focusedItemIndex = -1;
     const goToFileResults = document.getElementById('move-results');
     goToFileResults.innerHTML = '';
-    loadRecentFiles();
+    showMoveResults(getMoveDestinations());
 }
 
 function isModifierKey(event) {
-    return event.metaKey || event.ctrlKey;
+    return event.metaKey || event.ctrlKey || event.altKey;
 }
 
 window.addEventListener('keydown', (event) => {
@@ -379,11 +379,11 @@ window.addEventListener('keydown', (event) => {
     if (isModifierKey(event) && event.key === 'm') {
         event.preventDefault();
         event.stopPropagation();
-        document.getElementById('search-input').value = ''
-        openSearchModal();
+        document.getElementById('move-input').value = ''
+        openMoveModal();
     }
 
-    if (isModifierKey(key) && event.key === 'k') {
+    if (isModifierKey(event) && event.key === 'k') {
         event.preventDefault();
         document.getElementById('search-input').value = ''
         openSearchModal();
@@ -413,6 +413,23 @@ function loadRecentFiles() {
         .slice(0, 8);
 
     showSearchResults(results);
+}
+
+function getMoveDestinations() {
+    let dirs = ["/"];
+    for (const dir of Object.keys(files)) {
+        if (dir === '' || dir === 'img') {
+            continue;
+        }
+        dirs.push(dir);
+    }
+
+    // Place _read_ etc in the end
+    dirs.sort((a, b) => {
+        return a.includes('_') - b.includes('_') || a.localeCompare(b);
+    });
+
+    return dirs;
 }
 
 function search() {
@@ -477,6 +494,19 @@ function search() {
     showSearchResults(results);
 }
 
+function suggestMove() {
+    const search = document.getElementById('move-input').value.toLowerCase();
+    if (search.trim() === '') {
+        showMoveResults(getMoveDestinations());
+        return;
+    }
+
+    let dirs = getMoveDestinations();
+    dirs = dirs.filter(dir => dir.toLowerCase().startsWith(search));
+
+    showMoveResults(dirs);
+}
+
 function showSearchResults(results) {
     const list = document.getElementById('search-results');
     results.forEach(({dir, filename}, index) => {
@@ -505,24 +535,20 @@ function showSearchResults(results) {
     updateFocusedItem(list.querySelectorAll('li'));
 }
 
-function showMoveResults(results) {
+function showMoveResults(dirs) {
     const list = document.getElementById('move-results');
-    results.forEach(({dir, filename}, index) => {
+    list.innerHTML = '';
+    dirs.forEach((dir, index) => {
         const listItem = document.createElement('li');
-        let title = filename.replace(/\.md$/, "")
-        if (dir !== '') {
-            listItem.textContent = `${dir}/${title}`;
-        } else {
-            listItem.textContent = title;
-        }
-        listItem.setAttribute('data-path', `${dir}/${filename}`);
+        listItem.textContent = dir;
+        listItem.setAttribute('data-path', `$dir`);
         listItem.setAttribute('data-index', index);
         listItem.onclick = () => {
-            showFile(dir, filename);
+            // showFile(dir, filename);
             closeSearchModal();
         };
         listItem.onmouseenter = () => {
-            document.querySelectorAll('#search-results li').forEach(li => li.classList.remove('focused'));
+            document.querySelectorAll('#move-results li').forEach(li => li.classList.remove('focused'));
             listItem.classList.add('focused');
             focusedItemIndex = index;
         };
@@ -533,19 +559,24 @@ function showMoveResults(results) {
     updateFocusedItem(list.querySelectorAll('li'));
 }
 
-function closeGoToFile() {
+function closeSearch() {
     document.getElementById('search').style.display = 'none';
+}
+
+function closeMove() {
+    document.getElementById('move').style.display = 'none';
 }
 
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
-        closeGoToFile();
+        closeSearch();
+        closeMove();
     }
 });
 
 // Toggle focus mode
 document.addEventListener('keydown', function (event) {
-    if ((event.altKey || event.metaKey) && event.key === 'Enter') {
+    if (isModifierKey(event) && event.key === 'Enter') {
         event.preventDefault();
         const sidebar = document.getElementById('sidebar');
         if (sidebar.style.display === 'none') {

@@ -685,12 +685,28 @@ async function openDir() {
 
 function getCurrentContent() {
     let content = editor.getValue();
-    const header = editor.currentFile.replace(/\.md$/, '').replace(/^\w/, (c) => c.toUpperCase());
-    if (content.startsWith(`# ${header}`)) {
-        content = content.slice(`# ${header}\n`.length);
+    const header = toHeader(editor.currentFile);
+    if (content.startsWith(`${header}`)) {
+        content = content.slice(`${header}\n`.length);
     }
 
     return content;
+}
+
+function toHeader(filename) {
+    const title = ucfirst(filename.replace(/\.md$/, ''));
+    return `# ${title}`;
+}
+
+function fromHeader(header) {
+    if (header.startsWith('# ')) {
+        return header.slice(2).trim() + '.md';
+    }
+    return header.trim() + '.md';
+}
+
+function ucfirst(val) {
+    return String(val).charAt(0).toUpperCase() + String(val).slice(1);
 }
 
 async function getImageUrl(fileHandle) {

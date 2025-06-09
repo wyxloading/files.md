@@ -179,7 +179,6 @@ async function syncTextsWithServer() {
                 if (shouldRemoveOldFile) {
                     const oldPath = server.renames[path];
                     await removeFile(oldPath);
-                    removeMetadata(oldPath);
                 }
                 saveMetadata();
             } catch (error) {
@@ -198,6 +197,10 @@ async function syncTextsWithServer() {
 }
 
 async function syncFileWithServer(dir, filename) {
+    if (localStorage.getItem('token') === null) {
+        return;
+    }
+
     const path = toPath(dir, filename);
     let file = await (await getFileHandle(path)).getFile();
     // TODO we might only need to send content when modifying
@@ -569,6 +572,8 @@ async function removeFile(path) {
         return;
     }
     await fileHandle.remove()
+    removeMetadata(path);
+    saveMetadata()
     console.log(`File ${path} removed successfully.`);
 }
 
@@ -621,12 +626,9 @@ function getUserId() {
 // 2) Sync it with the server
 // TODO add hash of last read file comparison, merge on conflict (in which scenarious in can happen tho?)
 async function syncCurrentFile() {
-    if (localStorage.getItem('token') === null) {
-        return;
-    }
-    if (debug) {
-        return;
-    }
+    // if (debug) {
+    //     return;
+    // }
 
     if (editor.currentFile === undefined) {
         return
@@ -655,11 +657,30 @@ async function syncCurrentFile() {
     }
     isSyncingCurrent = true;
 
+    // Track if filename was changed
+    // TODO track if no first line?
+    const firstLine = editor.getValue().split('\n')[0];
+    if (firstLine !== toHeader(editor.currentFile)) {
+        console.log(firstLine, toHeader(editor.currentFile));
+        console.log('SEEMS to be renamed!');
+        const newFilename = fromHeader(firstLine);
+        await removeFile(`${editor.currentDir}/${editor.currentFile}`);
+        console.log('Removed', `${editor.currentDir}/${editor.currentFile}`);
+        editor.currentFile = newFilename;
+
+        const path = `${editor.currentDir}/${editor.currentFile}`;
+        const content = getCurrentContent();
+        await saveTextFile(path, content);
+        setMetadata(path, content, 0);
+        saveMetadata();
+        console.log('Created', `${editor.currentDir}/${editor.currentFile}`);
+    }
 
    let contentWasModifiedLocally = false;
     try {
         const path = `${editor.currentDir}/${editor.currentFile}`;
         contentWasModifiedLocally = !await isContentEqual(path, getCurrentContent());
+        console.log(getCurrentContent());
     } catch (error) {
         console.error("Error checking content equality:", error);
         isSyncingCurrent = false;

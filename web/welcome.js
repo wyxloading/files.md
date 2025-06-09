@@ -20,13 +20,13 @@ let defaultFiles = {
     },
     "": {
         "Welcome.md": {
-            "content": "Only essential features. No distractions.\n\nYou don't need a feature-rich tool or a fancy template to be successful at taking notes.\n\nYou can insert your own links by typing `[`.\n\n[Markdown Guide](Markdown Guide.md)\n[Hotkeys](Hotkeys.md)\n[Why links](Links.md)"
+            "content": "Only essential features. No distractions.\n\nYou don't need a feature-rich tool or a fancy template to be successful at taking notes.\n\nYou can insert your own links by typing `[`.\n\n[Markdown Guide](Markdown Guide.md)\n[Hotkeys](Hotkeys.md)\n[Why using links](Links.md)"
         },
         "Links.md": {
             "content": "Links are important\n" +
                 "\n" +
                 "Relations among ideas are far more important than the ideas themselves.\n" +
-                "Learning is making meaningful connections."
+                "Learning is making meaningful connections.\n\n[Markdown Guide](/Markdown Guide.md)"
         },
         "Markdown Guide.md": {
             "content": "#### Headers\n" +
@@ -55,6 +55,7 @@ let defaultFiles = {
                 "*Caption: This is a sample image with alt text*\n\n" +
                 "#### Links\n" +
                 "You can insert your own links by typing `[`.\n\n" +
+                "[Why using links](Links.md)\n" +
                 "[Welcome](/Welcome.md)\n" +
                 "[My amazing project](/My amazing project.md)"
         },

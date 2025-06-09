@@ -19,16 +19,18 @@ let defaultFiles = {
         },
     },
     "": {
-        "Welcome.md": {
-            "content": "Only essential features. No distractions.\n\nTo be successful at taking notes, you don't need a feature-rich tool or a fancy template.\n\n[Markdown Guide](Markdown Guide.md)\n[Hotkeys](Hotkeys.md)\n[Why using links](Links.md)"
+        "🪴 Welcome.md": {
+            "content": "Only essential features. No distractions.\n\n" +
+            "You don't need fancy tools to take notes...\n\n"
+            + "[📝 Markdown Guide](/📝 Markdown Guide.md)\n[⚡️ Hotkeys](⚡️ Hotkeys.md)\n[🔗 Why using links](🔗 Links.md)"
         },
-        "Links.md": {
+        "🔗 Links.md": {
             "content": "Links are important\n" +
                 "\n" +
                 "Relations among ideas are far more important than the ideas themselves.\n" +
-                "Learning is making meaningful connections.\n\n[Markdown Guide](/Markdown Guide.md)"
+                "Learning is making meaningful connections.\n\n[📝 Markdown Guide](/📝 Markdown Guide.md)"
         },
-        "Markdown Guide.md": {
+        "📝 Markdown Guide.md": {
             "content": "#### Headers\n" +
                 "Use `#` for headers. More `#` symbols create smaller headers.\n" +
                 "\n" +
@@ -55,11 +57,11 @@ let defaultFiles = {
                 "*Caption: This is a sample image with alt text*\n\n" +
                 "#### Links\n" +
                 "You can insert your own links by typing `[`.\n\n" +
-                "[Why using links](Links.md)\n" +
-                "[Welcome](/Welcome.md)\n" +
-                "[My amazing project](/My amazing project.md)"
+                "[🔗 Why using links](/🔗 Links.md)\n" +
+                "[🪴 Welcome](/🪴 Welcome.md)\n" +
+                "[💭 My thoughts](/💭 My thoughts.md)"
         },
-        "Hotkeys.md": {
+        "⚡️ Hotkeys.md": {
             "content":
                 "#### File Navigation\n" +
                 "\n" +
@@ -85,10 +87,10 @@ let defaultFiles = {
                 "| -------- | -------- |\n" +
                 "| `[` | Trigger file link autocomplete |\n" +
                 "\n" +
-                "[Welcome](/Welcome.md)\n" +
-                "[Markdown Guide](/Markdown Guide.md)",
+                "[🪴 Welcome](/🪴 Welcome.md)\n" +
+                "[📝 Markdown Guide](/📝 Markdown Guide.md)",
         },
-        "My amazing project.md": {
+        "💭 My thoughts.md": {
             "content": "You can dump project related thoughts here"
         }
     }

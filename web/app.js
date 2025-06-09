@@ -15,7 +15,7 @@ async function init(el) {
         document.getElementById('new-folder').style.display = 'none';
         files = defaultFiles;
         buildSidebar();
-        await openFile("", "Welcome.md");
+        await openFile("", "🪴 Welcome.md");
         return;
     }
 

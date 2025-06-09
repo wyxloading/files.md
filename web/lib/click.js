@@ -28,10 +28,12 @@
                     text = text.slice(0, -2); // remove [] of [foot][]
                 type = "footref";
             }
-            // PATCHED add meta key
+            // PATCHED add meta key, open only regular links
             else if ((info.ctrlKey || info.altKey || info.metaKey) && url) {
-                // PATCHED, I believe we don't need it?
-                // window.open(url, "_blank");
+                var token = cm.getTokenAt(pos);
+                if (token.type === "url") {
+                    window.open(url, "_blank");
+                }
             }
         }
         if (type === 'todo') {

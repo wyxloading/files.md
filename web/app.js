@@ -10,8 +10,9 @@ async function init(el) {
     const savedDirHandle = await getRootDirHandle();
     const hasSavedDir = savedDirHandle instanceof FileSystemDirectoryHandle;
     if (!hasSavedDir) {
-        document.getElementById('welcome').style.display = 'block';
-        document.getElementById('sidebar-toolbar').style.display = 'none';
+        document.getElementById('open-folder').style.display = 'inline';
+        document.getElementById('new-file').style.display = 'none';
+        document.getElementById('new-folder').style.display = 'none';
         files = defaultFiles;
         buildSidebar();
         await openFile("", "Welcome.md");
@@ -20,17 +21,14 @@ async function init(el) {
 
     const permission = await savedDirHandle.queryPermission({mode: 'read'});
     if (permission !== 'granted') {
-        document.getElementById('welcome').style.display = 'block';
-        document.getElementById('sidebar-toolbar').style.display = 'block';
+        document.getElementById('open-dir').style.display = 'inline';
+        document.getElementById('new-file').style.display = 'none';
+        document.getElementById('new-folder').style.display = 'none';
     }
 
     await initFiles();
     buildSidebar();
     await showRandomFile();
-}
-
-function isWelcome() {
-
 }
 
 function initEditor(el) {
@@ -681,7 +679,9 @@ function excludeDirs(excludedDirs) {
 
 async function openDir() {
     let dirHandle = await window.showDirectoryPicker();
-    document.getElementById('welcome').style.display = 'none';
+    document.getElementById('open-folder').style.display = 'none';
+    document.getElementById('new-file').style.display = 'inline';
+    document.getElementById('new-folder').style.display = 'inline';
     await saveDirectoryHandle(dirHandle);
     files = await loadLocalFiles(dirHandle)
     buildSidebar();

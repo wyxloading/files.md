@@ -364,3 +364,8 @@ a:hover {
 #sidebar ul {
     margin-top: 0;
 }
+
+#open-folder {
+    display: none;
+    padding: 8px;
+}

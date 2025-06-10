@@ -572,7 +572,7 @@ async function removeFile(path) {
         return;
     }
     await fileHandle.remove()
-    removeMetadata(path);
+    removeMetadataAndMemoryMapping(path);
     saveMetadata()
     console.log(`File ${path} removed successfully.`);
 }
@@ -603,7 +603,7 @@ function setMetadata(path, content, lastModified) {
     };
 }
 
-function removeMetadata(path) {
+function removeMetadataAndMemoryMapping(path) {
     const parts = path.split('/');
     const filename = parts.pop();
     const dir = parts.join('/');
@@ -611,6 +611,7 @@ function removeMetadata(path) {
     if (filesMetadata.files?.[dir]?.[filename]) {
         delete filesMetadata.files[dir][filename];
     }
+    delete files[dir][filename];
 }
 
 function saveMetadata() {
@@ -662,12 +663,10 @@ async function syncCurrentFile() {
     const firstLine = editor.getValue().split('\n')[0];
     if (firstLine !== toHeader(editor.currentFile)) {
         console.log(firstLine, toHeader(editor.currentFile));
-        console.log('SEEMS to be renamed!');
         const newFilename = fromHeader(firstLine);
         await removeFile(`${editor.currentDir}/${editor.currentFile}`);
         console.log('Removed', `${editor.currentDir}/${editor.currentFile}`);
         // Way to verbose, to we want to mess with it like this?
-        files[editor.currentDir][editor.currentFile] = undefined;
         files[editor.currentDir][newFilename] = {
             content: getCurrentContent(),
             lastModified: 0,
@@ -681,6 +680,7 @@ async function syncCurrentFile() {
         setMetadata(path, content, 0);
         saveMetadata();
         console.log('Created', `${editor.currentDir}/${editor.currentFile}`);
+        await buildSidebar();
     }
 
     let contentWasModifiedLocally = false;

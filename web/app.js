@@ -427,6 +427,7 @@ function isModifierKey(event) {
     return event.metaKey || event.ctrlKey || event.altKey;
 }
 
+// Hotkeys
 window.addEventListener('keydown', async (event) => {
     if (isModifierKey(event) && event.key === 'p') {
         event.preventDefault();
@@ -440,6 +441,19 @@ window.addEventListener('keydown', async (event) => {
         event.stopPropagation();
         document.getElementById('move-input').value = ''
         openMoveModal();
+    }
+
+    if (isModifierKey(event) && event.key === 'd') {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        let path = toPath(editor.currentDir, editor.currentFile);
+        editor.currentDir = undefined;
+        editor.currentFile = undefined;
+        await removeFile(path);
+        await showRandomFile();
+        await buildSidebar();
     }
 
     if (isModifierKey(event) && event.key === 'k') {

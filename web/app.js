@@ -295,7 +295,10 @@ async function showRandomFile() {
         return;
     }
 
+    console.log(allFiles);
+
     const randomFile = allFiles[Math.floor(Math.random() * allFiles.length)];
+    console.log(randomFile);
 
     try {
         await openFile(randomFile.dir, randomFile.file);

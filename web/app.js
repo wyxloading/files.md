@@ -25,17 +25,33 @@ async function init(el) {
         document.getElementById('new-file').style.display = 'none';
     }
 
-    await initFiles();
+    const rootDirHandle = await getRootDirHandle();
+
+    let perf = performance.now();
+    files = await loadLocalFiles(rootDirHandle);
+    console.log(`Files loaded in ${performance.now() - perf}ms`);
+
+    perf = performance.now();
     buildSidebar();
+    console.log(`Sidebar built in: ${(performance.now() - perf).toFixed(3)} milliseconds`);
+
+    perf = performance.now();
     await showRandomFile();
+    console.log(`Random file opened in: ${(performance.now() - perf).toFixed(3)} milliseconds`);
+
+    perf = performance.now();
+    await syncTextsWithServer();
+    await syncMediaFilesWithServer();
+    console.log(`Files initialized in: ${(performance.now() - perf).toFixed(3)} milliseconds`);
 }
 
 function initEditor(el) {
     editor = HyperMD.fromTextArea(el, {
         dragDrop: false,
+        // viewportMargin: Infinity,
         mode: {
             name: "hypermd",
-            math: false, // disable $syntax$
+            math: false, // disable $math syntax$
         },
         lineNumbers: false,
         extraKeys: {
@@ -121,7 +137,6 @@ function initEditor(el) {
         }
     })
 
-    editor.setOption("viewportMargin", Infinity);
     initAutoscroll(editor);
 
     editor.on("paste", async (_, event) => {
@@ -294,8 +309,6 @@ async function showRandomFile() {
         console.error("No files found to open.");
         return;
     }
-
-    console.log(allFiles);
 
     const randomFile = allFiles[Math.floor(Math.random() * allFiles.length)];
     console.log(randomFile);

@@ -210,7 +210,7 @@ a:hover {
 }
 
 .cm-inline-code {
-    background: var(--color-bg-alt) !important;
+    background: var(--color-inline-code-bg) !important;
     color: var(--color-inline-code) !important;
     font-family: var(--font-mono) !important;
     font-size: var(--font-smaller) !important;

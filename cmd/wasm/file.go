@@ -3,17 +3,18 @@ package main
 import (
 	"io/fs"
 	"os"
+	"time"
 )
 
 type File struct {
 	name    string
 	size    int64
 	mode    fs.FileMode
-	modTime int64
+	modTime int
 	isDir   bool
 }
 
-func NewFile(name string, modTime int64, isDir bool) *File {
+func NewFile(name string, modTime int, isDir bool) *File {
 	return &File{
 		name:    name,
 		modTime: modTime,
@@ -33,8 +34,8 @@ func (f *File) Mode() os.FileMode {
 	return f.mode
 }
 
-func (f *File) ModTime() int64 {
-	return f.modTime
+func (f *File) ModTime() time.Time {
+	return time.Unix(int64(f.modTime), 0)
 }
 
 func (f *File) IsDir() bool {

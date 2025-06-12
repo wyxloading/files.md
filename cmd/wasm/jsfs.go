@@ -165,5 +165,43 @@ func exists(_ afero.Fs, path string) (bool, error) {
 }
 
 func readDir(backend afero.Fs, path string) ([]os.FileInfo, error) {
-	return nil, nil
+	resultChan := make(chan js.Value, 1)
+	errorChan := make(chan error, 1)
+
+	callAsync("readDir", func(result js.Value, err error) {
+		if err != nil {
+			errorChan <- err
+			return
+		}
+		resultChan <- result
+	}, path)
+
+	select {
+	case result := <-resultChan:
+		sendToJS(fmt.Sprintf("%v", result))
+		return jsArrayToFileInfo(result), nil
+	case err := <-errorChan:
+		return nil, err
+	}
+}
+
+func jsArrayToFileInfo(jsArray js.Value) []os.FileInfo {
+	var fileInfos []os.FileInfo
+
+	// Get array length
+	length := jsArray.Get("length").Int()
+
+	for i := 0; i < length; i++ {
+		jsObj := jsArray.Index(i)
+
+		name := jsObj.Get("name").String()
+		isDir := jsObj.Get("isDir").Bool()
+		modTimeJS := jsObj.Get("modTime").Int()
+
+		fileInfo := NewFile(name, modTimeJS, isDir)
+
+		fileInfos = append(fileInfos, fileInfo)
+	}
+
+	return fileInfos
 }

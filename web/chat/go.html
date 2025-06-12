@@ -113,6 +113,46 @@
         }
     }
 
+    async function readDir(args) {
+        let path = args[0];
+        const dirs = path.split('/');
+        let currentDirHandle = await getRootDirHandle();
+        if (currentDirHandle === undefined) {
+            console.error('PLS open dir');
+            return [];
+        }
+
+        // Navigate to the target directory
+        for (const dirName of dirs) {
+            if (dirName) {
+                currentDirHandle = await currentDirHandle.getDirectoryHandle(dirName, {create: false});
+            }
+        }
+
+        const entries = [];
+
+        for await (const [name, handle] of currentDirHandle.entries()) {
+            if (handle.kind === 'directory') {
+                // For directories
+                entries.push({
+                    name: name,
+                    isDir: true,
+                    modTime: null // File System Access API doesn't provide modTime for directories
+                });
+            } else if (handle.kind === 'file') {
+                // For files
+                const file = await handle.getFile();
+                entries.push({
+                    name: name,
+                    isDir: false,
+                    modTime: file.lastModified // Returns timestamp in milliseconds
+                });
+            }
+        }
+
+        return entries;
+    }
+
     async function mkdir(args) {
         let path = args[0];
         console.log(path);
@@ -138,11 +178,11 @@
 
     function receive(val) {
         console.log(val);
+        document.getElementById('response').innerText = val;
     }
 
 </script>
 <script type="module">
-
     const go = new Go();
     const wasmFile = await fetch("main.wasm");
     const wasmModule = await WebAssembly.instantiateStreaming(wasmFile, go.importObject);
@@ -151,6 +191,7 @@
 </script>
 <script src="wasm_exec.js"></script>
 <button onclick="openDir()">open</button>
+<div id="response"></div>
 </body>
 </html>
 

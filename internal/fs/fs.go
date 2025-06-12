@@ -25,6 +25,9 @@ import (
 
 var (
 	NewUserFS = newUserFS
+	Exists    = exists
+	ReadFile  = readFile
+
 	LogRename = func(time int64, oldPath, newPath string) {} // callback that can be used to track renames
 
 	errUnsafePath   = errors.New("unsafe path, possible security issue")
@@ -83,7 +86,7 @@ func newUserFS(userID int64) (*FS, error) {
 }
 
 func NewFS(absRootPath string, backend afero.Fs) (*FS, error) {
-	exists, err := afero.Exists(backend, absRootPath)
+	exists, err := Exists(backend, absRootPath)
 	if err != nil {
 		return nil, fmt.Errorf("new fs: %w", err)
 	}
@@ -115,7 +118,7 @@ func (fs FS) CreateDirsIfNotExist() error {
 		DirInsights,
 	} {
 		userPath := path.Join(fs.RootPath, dir)
-		exists, err := afero.Exists(fs.backend, userPath)
+		exists, err := Exists(fs.backend, userPath)
 		if err != nil {
 			return fmt.Errorf("create default dirs: %w", err)
 		}
@@ -141,7 +144,7 @@ func (fs FS) Exists(dir, filename string) (bool, error) {
 		return false, fmt.Errorf("exists: unsafe path '%s': %w", filePath, errUnsafePath)
 	}
 
-	exists, err := afero.Exists(fs.backend, filePath)
+	exists, err := Exists(fs.backend, filePath)
 	if err != nil {
 		return false, fmt.Errorf("exists: can't check whether the file '%s'/'%s' exists: %w", dir, filename, err)
 	}
@@ -159,7 +162,7 @@ func (fs FS) Read(dir, filename string) (string, error) {
 		return "", fmt.Errorf("fs read: unsafe filePath '%s': %w", filePath, errUnsafePath)
 	}
 
-	content, err := afero.ReadFile(fs.backend, filePath)
+	content, err := ReadFile(fs.backend, filePath)
 	if err != nil {
 		return "", fmt.Errorf("fs read: can't read file '%s': %w", filePath, err)
 	}
@@ -570,4 +573,12 @@ func (fs FS) Ctimes() (map[string]int64, error) {
 	}
 
 	return timestamps, nil
+}
+
+func exists(backend afero.Fs, path string) (bool, error) {
+	return afero.Exists(backend, path)
+}
+
+func readFile(backend afero.Fs, path string) ([]byte, error) {
+	return afero.ReadFile(backend, path)
 }

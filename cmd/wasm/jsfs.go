@@ -163,3 +163,7 @@ func exists(_ afero.Fs, path string) (bool, error) {
 		return false, err
 	}
 }
+
+func readDir(backend afero.Fs, path string) ([]os.FileInfo, error) {
+	return nil, nil
+}

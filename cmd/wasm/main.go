@@ -46,6 +46,7 @@ func main() {
 	fs.Exists = exists
 	fs.ReadFile = readFile
 	fs.WriteFile = writeFile
+	fs.ReadDir = readDir
 	initBot()
 	js.Global().Set("reply", js.FuncOf(Reply))
 
@@ -85,7 +86,7 @@ func sendDueResponsesToJS() {
 	chat.Messages = nil
 	chat.EditedMessages = nil
 
-	sendToJS(r)
+	sendToJS(fmt.Sprintf("%v", r))
 }
 
 func sendToJS(vals ...any) {

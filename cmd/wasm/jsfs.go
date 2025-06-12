@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"syscall/js"
 	"time"
@@ -19,11 +20,45 @@ func (fs *JSFS) Create(name string) (afero.File, error) {
 }
 
 func (fs *JSFS) Mkdir(name string, perm os.FileMode) error {
-	return nil
+	resultChan := make(chan struct{}, 1)
+	errorChan := make(chan error, 1)
+
+	callAsync("mkdir", func(result js.Value, err error) {
+		if err != nil {
+			errorChan <- err
+			return
+		}
+		resultChan <- struct{}{}
+	}, name)
+
+	select {
+	case result := <-resultChan:
+		sendToJS(fmt.Sprintf("%v", result))
+		return nil
+	case err := <-errorChan:
+		return err
+	}
 }
 
 func (fs *JSFS) MkdirAll(path string, perm os.FileMode) error {
-	return nil
+	resultChan := make(chan struct{}, 1)
+	errorChan := make(chan error, 1)
+
+	callAsync("mkdirAll", func(result js.Value, err error) {
+		if err != nil {
+			errorChan <- err
+			return
+		}
+		resultChan <- struct{}{}
+	}, path)
+
+	select {
+	case result := <-resultChan:
+		sendToJS(fmt.Sprintf("%v", result))
+		return nil
+	case err := <-errorChan:
+		return err
+	}
 }
 
 func (fs *JSFS) Open(name string) (afero.File, error) {
@@ -84,6 +119,27 @@ func readFile(_ afero.Fs, path string) ([]byte, error) {
 		return []byte(result), nil
 	case err := <-errorChan:
 		return nil, err
+	}
+}
+
+func writeFile(_ afero.Fs, path string, data []byte, perm os.FileMode) error {
+	resultChan := make(chan struct{}, 1)
+	errorChan := make(chan error, 1)
+
+	callAsync("read", func(result js.Value, err error) {
+		if err != nil {
+			errorChan <- err
+			return
+		}
+		resultChan <- struct{}{}
+	}, path)
+
+	select {
+	case result := <-resultChan:
+		sendToJS(result)
+		return nil
+	case err := <-errorChan:
+		return err
 	}
 }
 

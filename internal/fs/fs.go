@@ -27,6 +27,7 @@ var (
 	NewUserFS = newUserFS
 	Exists    = exists
 	ReadFile  = readFile
+	WriteFile = writeFile
 	ReadDir   = readDir
 
 	LogRename = func(time int64, oldPath, newPath string) {} // callback that can be used to track renames
@@ -190,7 +191,7 @@ func (fs FS) Write(dir, filename, content string) error {
 	}
 
 	// Append mode for forwards?
-	if err := afero.WriteFile(fs.backend, filePath, []byte(content), 0o644); err != nil {
+	if err := WriteFile(fs.backend, filePath, []byte(content), 0o644); err != nil {
 		return fmt.Errorf("fs write to '%s/%s': %w", dir, filename, err)
 	}
 
@@ -581,6 +582,10 @@ func exists(backend afero.Fs, path string) (bool, error) {
 
 func readFile(backend afero.Fs, path string) ([]byte, error) {
 	return afero.ReadFile(backend, path)
+}
+
+func writeFile(backend afero.Fs, path string, data []byte, perm os.FileMode) error {
+	return afero.WriteFile(backend, path, data, perm)
 }
 
 func readDir(backend afero.Fs, path string) ([]os.FileInfo, error) {

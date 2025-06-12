@@ -21,6 +21,9 @@
     async function openDir() {
         let dirHandle = await window.showDirectoryPicker();
         await saveDirectoryHandle(dirHandle);
+        await dirHandle.getFileHandle('test.txt', {
+            create: true
+        });
     }
 
     async function getRootDirHandle() {
@@ -41,15 +44,34 @@
         await store.put(directoryHandle, 'savedDirectoryHandle');
     }
 
-    async function read(path) {
+    async function read(args) {
+        let path = args[0];
         const root = await getRootDirHandle();
         if (root === undefined) {
             console.error("please open dir");
         }
-        let fileHandle = await root.getFileHandle('file.md');
+        let fileHandle = await root.getFileHandle('path');
         let file = await fileHandle.getFile();
 
         return await file.text();
+    }
+
+    async function write(args) {
+        let path = args[0];
+        let content = args[1];
+
+        const root = await getRootDirHandle();
+        if (root === undefined) {
+            console.error("please open dir");
+        }
+        let fileHandle = await root.getFileHandle('path');
+        if (fileHandle === null) {
+            throw new Error("Invalid file name");
+        }
+
+        const writable = await fileHandle.createWritable();
+        await writable.write(content);
+        await writable.close();
     }
 
     async function exists(args) {
@@ -67,9 +89,38 @@
             await root.getFileHandle(path);
             return true;
         } catch (error) {
+            if (error.name === 'NotFoundError') {
+                return false
+            }
+            // TODO better way to handle dirs
+            if (error.name === 'TypeMismatchError') {
+                return true;
+            }
+            console.log("EXISTS:", error, "PATH: ", path);
+            throw error
+        }
+    }
+
+    async function mkdir(args) {
+        let path = args[0];
+        console.log(path);
+        try {
+            let currentDirHandle = await getRootDirHandle();
+            await currentDirHandle.getDirectoryHandle(path, {create: true});
+        } catch (error) {
             console.log(error);
-            // TODO Naive implementation, add error
-            return false;
+            throw error;
+        }
+    }
+
+    async function mkdirAll(args) {
+        let path = args[0]
+        const dirs = path.split('/');
+        let currentDirHandle = await getRootDirHandle();
+        for (const dirName of dirs) {
+            if (dirName) {
+               await mkdir([path])
+            }
         }
     }
 

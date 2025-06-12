@@ -6,7 +6,6 @@ import (
 	"runtime/debug"
 	"syscall/js"
 
-	"zakirullin/stuffbot/config"
 	"zakirullin/stuffbot/internal"
 	"zakirullin/stuffbot/internal/db"
 	"zakirullin/stuffbot/internal/fs"
@@ -46,6 +45,7 @@ func Reply(_ js.Value, args []js.Value) interface{} {
 func main() {
 	fs.Exists = exists
 	fs.ReadFile = readFile
+	fs.WriteFile = writeFile
 	initBot()
 	js.Global().Set("reply", js.FuncOf(Reply))
 
@@ -128,13 +128,12 @@ func initBot() {
 		if err != nil {
 			sendToJS(fmt.Sprintf("Bot error: can't create fs: %v", err))
 		}
-		return
 		err = userFS.CreateDirsIfNotExist()
 		if err != nil {
-			sendToJS("Bot error: can't create user dirs", "err")
+			sendToJS(fmt.Sprintf("Bot error: can't create user dirs: %v", err))
 		}
 
-		confFilename := config.GUICfg.ConfigFilename
+		confFilename := "config.json"
 		userconf := userconfig.NewConfig(userFS, userID, confFilename)
 		err = userconf.CreateDefaultIfNotExists()
 		if err != nil {

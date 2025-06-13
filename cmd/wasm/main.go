@@ -47,6 +47,7 @@ func Reply(_ js.Value, args []js.Value) any {
 }
 
 func ReplyCmd(_ js.Value, args []js.Value) any {
+	fmt.Println("CMD", args[0].String())
 	var cmd *tg.Cmd
 	err := json.Unmarshal([]byte(args[0].String()), &cmd)
 	if err != nil {

@@ -5,13 +5,15 @@ function sendMessage() {
     addMessage(msg, 'user');
 
     if (msg.startsWith('/')) {
-        replyCmd(msg);
+        let cmd = {
+            n: msg.substring(1),
+            t: "cmd"
+        }
+        replyCmd(JSON.stringify(cmd));
     } else {
-        (async () => {
-            reply(msg);
+        reply(msg);
             // let update = await window.newUpdate(msg, null)
             // processResponse(await window.send(update));
-        })();
     }
 
     input.value = '';
@@ -21,8 +23,7 @@ function sendMessage() {
 }
 
 async function sendCommand(command) {
-    // let update = await window.newUpdate('', await window.newCmd(command.substring(1), null));
-    // processResponse(await window.send(update));
+    replyCmd(command);
 }
 
 function processResponse(response) {
@@ -111,36 +112,6 @@ const commands = [
     {command: '/settings', display: '⚙️ Settings'},
     {command: '/help', display: '📕 Help'}
 ];
-
-// function showCommandPopup() {
-//     const inputText = input.value.trim();
-//
-//     // Filter the commands based on the input text
-//     const filteredCommands = commands.filter(cmd => cmd.command.startsWith(inputText));
-//
-//     // Populate the popup with filtered commands
-//     commandPopup.innerHTML = '';
-//     filteredCommands.forEach((cmd) => {
-//         const cmdItem = document.createElement('div');
-//         cmdItem.classList.add('command-item');
-//         cmdItem.textContent = cmd.display;
-//
-//         cmdItem.onclick = () => {
-//             input.value = cmd.command; // Set the command input to the actual command (e.g., /today)
-//             input.focus();
-//             sendMessage();
-//             hideCommandPopup();
-//         };
-//
-//         commandPopup.appendChild(cmdItem);
-//     });
-//
-//     if (filteredCommands.length > 0) {
-//         commandPopup.style.display = 'block';
-//     } else {
-//         hideCommandPopup();
-//     }
-// }
 
 function showCommandPopup() {
     const inputText = input.value.trim();

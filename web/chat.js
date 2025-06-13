@@ -269,7 +269,7 @@ window.addEventListener("focus", async () => {
 
 function initDB() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open('chat', 1);
+        const request = indexedDB.open('files', 1);
         request.onerror = () => reject(request.error);
         request.onsuccess = () => resolve(request.result);
         request.onupgradeneeded = () => {

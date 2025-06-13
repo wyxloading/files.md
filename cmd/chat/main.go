@@ -167,6 +167,13 @@ func (a *App) Send(update Update) Response {
 	return r
 }
 
+func (a *App) NewUpdate(message string, cmd *tg.Cmd) Update {
+	return Update{
+		Message: message,
+		Command: cmd,
+	}
+}
+
 func (a *App) NewCmd(name string, params []string) tg.Cmd {
 	return tg.NewCmd(name, params)
 }

@@ -31,7 +31,7 @@ type Response struct {
 	Messages []tg.Message
 }
 
-func Reply(_ js.Value, args []js.Value) interface{} {
+func Reply(_ js.Value, args []js.Value) any {
 	//callAsync("hi", func(result js.Value, err error) {
 	//	if err != nil {
 	//		sendToJS(fmt.Sprintf("Error: %v\n", err))
@@ -46,6 +46,18 @@ func Reply(_ js.Value, args []js.Value) interface{} {
 	return nil
 }
 
+func ReplyCmd(_ js.Value, args []js.Value) any {
+	var cmd *tg.Cmd
+	err := json.Unmarshal([]byte(args[0].String()), &cmd)
+	if err != nil {
+		fmt.Println("ERROR:", err)
+	}
+	upd := tg.NewUpdCmd(-1, *cmd)
+	go reply(upd)
+
+	return nil
+}
+
 func main() {
 	fs.Exists = exists
 	fs.ReadFile = readFile
@@ -53,6 +65,7 @@ func main() {
 	fs.ReadDir = readDir
 	initBot()
 	js.Global().Set("reply", js.FuncOf(Reply))
+	js.Global().Set("replyCmd", js.FuncOf(ReplyCmd))
 
 	select {}
 }
@@ -178,3 +191,10 @@ func initBot() {
 //
 //	return r
 //}
+
+func newUpdate(message string, cmd *tg.Cmd) Update {
+	return Update{
+		Message: message,
+		Command: cmd,
+	}
+}

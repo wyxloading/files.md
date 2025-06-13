@@ -5,11 +5,12 @@ function sendMessage() {
     addMessage(msg, 'user');
 
     if (msg.startsWith('/')) {
-        sendCommand(msg);
+        replyCmd(msg);
     } else {
         (async () => {
-            let update = await window.newUpdate(msg, null)
-            processResponse(await window.send(update));
+            reply(msg);
+            // let update = await window.newUpdate(msg, null)
+            // processResponse(await window.send(update));
         })();
     }
 
@@ -54,8 +55,9 @@ function attachKeyboard(buttons) {
                 button.innerText = btn.Name;
                 button.classList.add('telegram-button'); // Add a class for styling
                 button.onclick = async () => {
-                    let update = await window.newUpdate('', btn.Cmd)
-                    processResponse(await window.send(update));
+                    // let update = await window.newUpdate('', btn.Cmd)
+                    // processResponse(await window.send(update));
+                    replyCmd(JSON.stringify(btn.Cmd))
                 };
                 rowContainer.appendChild(button);
             });
@@ -65,8 +67,9 @@ function attachKeyboard(buttons) {
             button.innerText = row.Name;
             button.classList.add('telegram-button'); // Add a class for styling
             button.onclick = async () => {
-                let update = await window.newUpdate('', row.Cmd)
-                processResponse(await window.send(update));
+                replyCmd(JSON.stringify(row.Cmd))
+                // let update = await window.newUpdate('', row.Cmd)
+                // processResponse(await window.send(update));
             };
             buttonContainer.appendChild(button);
         }
@@ -439,5 +442,4 @@ async function mkdirAll(args) {
 function receive(val) {
     processResponse(val)
     console.log(val);
-    // document.getElementById('response').innerText = val;
 }

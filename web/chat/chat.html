@@ -34,6 +34,9 @@
     const wasmModule = await WebAssembly.instantiateStreaming(wasmFile, go.importObject);
     go.run(wasmModule.instance);
     console.log(reply('1718218800'));
+
+    window.reply = reply
+    window.replyCmd = replyCmd
 </script>
 <!--<button onclick="openDir()">open</button>-->
 </body>

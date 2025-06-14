@@ -563,6 +563,19 @@ input.addEventListener('paste', async (event) => {
 
                 const fileElement = createFileElement(fileName, isImage, markdownText);
                 loadingSpan.parentNode.replaceChild(fileElement, loadingSpan);
+
+                // Place cursor on next line after the inserted element
+                if (isImage) {
+                    const newLine = document.createElement('br');
+                    fileElement.parentNode.insertBefore(newLine, fileElement.nextSibling);
+
+                    // Set cursor after the line break
+                    const range = document.createRange();
+                    range.setStartAfter(newLine);
+                    range.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
             } else {
                 loadingSpan.textContent = '❌';
                 loadingSpan.style.color = 'red';

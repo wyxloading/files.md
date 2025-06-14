@@ -274,7 +274,11 @@ async function syncMedia() {
             let file = await fileHandle.getFile();
             const arrayBuffer = await file.arrayBuffer();
             const uint8Array = new Uint8Array(arrayBuffer);
-            const base64String = btoa(String.fromCharCode.apply(null, uint8Array));
+            let binaryString = '';
+            for (let i = 0; i < uint8Array.length; i++) {
+                binaryString += String.fromCharCode(uint8Array[i]);
+            }
+            const base64String = btoa(binaryString);
 
             const response = await fetch('https://api.files.md/syncMedia', {
                 method: 'POST',
@@ -283,6 +287,7 @@ async function syncMedia() {
                     'Authorization': localStorage.getItem('token')
                 },
                 body: JSON.stringify({
+                    userId: getUserId(),
                     path: mediaFile,
                     data: base64String,
                 })

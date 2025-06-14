@@ -55,9 +55,7 @@ const (
 
 	FileExt = ".md"
 
-	minSearchSimilarity  = 70
-	escapedForwardSlash  = "{|}"
-	escapedBackwardSlash = "{||}"
+	minSearchSimilarity = 70
 )
 
 // FS allows us to manipulate user files. We can use different

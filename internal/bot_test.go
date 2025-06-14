@@ -91,9 +91,9 @@ func TestSaveFromTextMsgWithSanitize(t *testing.T) {
 	r.NoError(err)
 
 	r.Len(tasks, 1)
-	r.Equal("New task{|}.md", tasks[0].Name)
+	r.Equal("New task／.md", tasks[0].Name)
 
-	content, err := bot.fs.Read("today", "New task{|}.md")
+	content, err := bot.fs.Read("today", "New task／.md")
 	r.NoError(err)
 	r.Equal("New task/", content)
 
@@ -102,7 +102,7 @@ func TestSaveFromTextMsgWithSanitize(t *testing.T) {
 
 	r.Equal("<b>1</b> left"+wideSpacer, tgram.LastEditedText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
-		tg.NewBtn("👀 New task/", tg.NewCmd("task", []string{"today", "cd59b9e6546"})),
+		tg.NewBtn("👀 New task/", tg.NewCmd("task", []string{"today", "24e70ffbf48"})),
 	},
 	), tgram.LastEditedKeyboard)
 }
@@ -358,10 +358,10 @@ func TestSaveFromPhotoWithSanitizedCaption(t *testing.T) {
 	r.NoError(err)
 
 	r.Len(files, 1)
-	r.Equal("Caption{|}.md", files[0].Name)
+	r.Equal("Caption／.md", files[0].Name)
 	r.True(files[0].IsMultiline)
 
-	content, err := bot.fs.Read("today", "Caption{|}.md")
+	content, err := bot.fs.Read("today", "Caption／.md")
 	r.NoError(err)
 	r.Equal("![center|400](media/tg_PHOTO_ID)\nCaption/", content)
 }
@@ -392,10 +392,12 @@ func TestSaveFromPhotoWithoutCaption(t *testing.T) {
 	r.NoError(err)
 
 	r.Len(files, 1)
-	r.Equal("Img 11.08.24 09:54.md", files[0].Name)
+	// Be aware that it's not regular ꞉
+	r.Equal("Img 11.08.24 09꞉54.md", files[0].Name)
 	r.True(files[0].IsMultiline)
 
-	content, err := bot.fs.Read("today", "Img 11.08.24 09:54.md")
+	// Be aware that it's not regular ꞉
+	content, err := bot.fs.Read("today", "Img 11.08.24 09꞉54.md")
 	r.NoError(err)
 	r.Equal("![center|400](media/tg_PHOTO_ID)", content)
 }
@@ -2998,7 +3000,7 @@ func TestRestoreMsg_ContentWithSanitizedTitle(t *testing.T) {
 
 	bot := NewBot(-1, nil, userFS, nil, nil)
 
-	filename := "Task{|}Slash.md"
+	filename := "Task／Slash.md"
 	content := "Task/Slash\nDetails about the task"
 	err = userFS.Write("today", filename, content)
 	r.NoError(err)
@@ -3034,7 +3036,7 @@ func TestRestoreMsg_WithImageSanitizedFilename(t *testing.T) {
 
 	bot := NewBot(-1, nil, userFS, nil, nil)
 
-	filename := "Caption{|}File"
+	filename := "Caption／File"
 	content := "![img](tg_url.jpg)\nCaption/File"
 	err = userFS.Write("today", filename, content)
 	r.NoError(err)
@@ -3176,9 +3178,9 @@ func TestSaveFromImage_EmptyCaption(t *testing.T) {
 	files, err := bot.fs.FilesAndDirs("today")
 	r.NoError(err)
 	r.Len(files, 1)
-	r.Equal("Img 01.01.70 00:00.md", files[0].Name)
+	r.Equal("Img 01.01.70 00꞉00.md", files[0].Name)
 
-	content, err := bot.fs.Read("today", "Img 01.01.70 00:00.md")
+	content, err := bot.fs.Read("today", "Img 01.01.70 00꞉00.md")
 	r.NoError(err)
 	r.Equal("![center|400](media/tg_PHOTO_ID)", content)
 }
@@ -3335,7 +3337,7 @@ func TestExtractTitleAndContent_TitleNeedsSanitization(t *testing.T) {
 
 	title, content, err := bot.extractTitleAndContent(msg)
 	r.NoError(err)
-	r.Equal("Invalid{|}Title?Name", title)
+	r.Equal("Invalid／Title？Name", title)
 	r.Equal("Invalid/Title?Name\nContent here", content)
 }
 

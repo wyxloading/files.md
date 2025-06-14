@@ -416,17 +416,17 @@ func TestSanitizeFilename(t *testing.T) {
 	r := require.New(t)
 
 	r.Equal("ab", SanitizeFilename("a\x00b"))
-	r.Equal("a{|}b", SanitizeFilename("a/b"))
-	r.Equal("a{||}b", SanitizeFilename("a\\b"))
-	r.Equal("a{|}b{||}", SanitizeFilename("\x00a\x00/b\\"))
+	r.Equal("a／b", SanitizeFilename("a/b"))
+	r.Equal("a＼b", SanitizeFilename("a\\b"))
+	r.Equal("a／b＼", SanitizeFilename("\x00a\x00/b\\"))
 }
 
 func TestUnsanitizeFilename(t *testing.T) {
 	r := require.New(t)
 
-	r.Equal("a/b", UnsanitizeFilename("a{|}b"))
-	r.Equal("a\\b", UnsanitizeFilename("a{||}b"))
-	r.Equal("a/b\\", UnsanitizeFilename("a{|}b{||}"))
+	r.Equal("a/b", UnsanitizeFilename("a／b"))
+	r.Equal("a\\b", UnsanitizeFilename("a＼b"))
+	r.Equal("a/b\\", UnsanitizeFilename("a／b＼"))
 }
 
 func TestExists(t *testing.T) {
@@ -597,7 +597,7 @@ func TestSanitizeAndUnsanitizeFilename(t *testing.T) {
 	r := require.New(t)
 
 	sanitized := SanitizeFilename("test/file:name\\with/special\\chars")
-	r.Equal("test{|}file:name{||}with{|}special{||}chars", sanitized)
+	r.Equal("test／file꞉name＼with／special＼chars", sanitized)
 
 	unsanitized := UnsanitizeFilename(sanitized)
 	r.Equal("test/file:name\\with/special\\chars", unsanitized)

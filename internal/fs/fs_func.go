@@ -12,23 +12,41 @@ import (
 	"zakirullin/stuffbot/pkg/txt"
 )
 
+// ForbiddenChars hold replacements for characters
+// not allowed in some envs like Windows, PWA apps.
+// Under Linux and other Unix-related systems,
+// there are only two characters that cannot
+// appear in the name of a file or directory,
+// and those are NUL '\0' and slash '/'.
+var ForbiddenChars = map[string]string{
+	"\x00": "",
+	"<":    "＜",
+	">":    "＞",
+	":":    "꞉",
+	"\"":   "″",
+	"|":    "⼁",
+	"/":    "／",
+	"\\":   "＼",
+	"?":    "？",
+	"*":    "﹡",
+}
+
 func SanitizeFilename(filename string) string {
-	// Under Linux and other Unix-related systems,
-	// there are only two characters that cannot
-	// appear in the name of a file or directory,
-	// and those are NUL '\0' and slash '/'.
-	// For Windows we only handle '\',
-	// consider sanitazing other characters
-	filename = strings.ReplaceAll(filename, "\x00", "")
-	filename = strings.ReplaceAll(filename, "/", escapedForwardSlash)
-	filename = strings.ReplaceAll(filename, "\\", escapedBackwardSlash)
+	for forbidden, safe := range ForbiddenChars {
+		filename = strings.ReplaceAll(filename, forbidden, safe)
+	}
 
 	return filename
 }
 
 func UnsanitizeFilename(filename string) string {
-	filename = strings.ReplaceAll(filename, escapedForwardSlash, "/")
-	filename = strings.ReplaceAll(filename, escapedBackwardSlash, "\\")
+	for forbidden, safe := range ForbiddenChars {
+		if safe == "" {
+			continue
+		}
+
+		filename = strings.ReplaceAll(filename, safe, forbidden)
+	}
 
 	return filename
 }

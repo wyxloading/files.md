@@ -7,7 +7,7 @@ body {
     overscroll-behavior: none;
     margin: 0;
     color: white;
-    font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    font-family: -apple-system, BlinkMacSystemFont, "Nunito", "Segoe UI", "Roboto",
     "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
     display: flex;
@@ -26,7 +26,6 @@ body {
     flex-direction: column;
     width: 100%;
     height: 100vh;
-    border: 1px solid #ccc;
     border-radius: 5px;
     background-color: #fff;
     overflow: hidden;

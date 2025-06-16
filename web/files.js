@@ -575,7 +575,6 @@ async function getFileHandle(path, create = false) {
             try {
                 currentDirHandle = await currentDirHandle.getDirectoryHandle(dirName, {create: create});
             } catch (error) {
-                console.error(`Error getting directory handle for '${dirName}':`, error);
                 throw error;
             }
         }
@@ -585,7 +584,6 @@ async function getFileHandle(path, create = false) {
     try {
         fileHandle = await currentDirHandle.getFileHandle(filename, {create: create});
     } catch (error) {
-        console.error(`Error getting file handle for '${dir}/${filename}':`, error);
         throw error;
     }
 

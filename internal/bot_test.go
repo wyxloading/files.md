@@ -855,9 +855,10 @@ func TestSettingsMainPanel(t *testing.T) {
 	r.NoError(err)
 	r.Equal("Settings:", tgram.LastSentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
-		tg.NewBtn("📌 Notes only mode", tg.NewCmd("notes_only", nil)),
-		tg.NewBtn("✅ Tasks only mode", tg.NewCmd("tasks_only", nil)),
-		tg.NewBtn("💚 Journal only mode", tg.NewCmd("journal_only", nil)),
+		tg.NewBtn("📋 One file mode", tg.NewCmd("file_only", nil)),
+		tg.NewBtn("📌 Notes mode", tg.NewCmd("notes_only", nil)),
+		tg.NewBtn("✅ Tasks mode", tg.NewCmd("tasks_only", nil)),
+		tg.NewBtn("💚 Journal mode", tg.NewCmd("journal_only", nil)),
 		tg.NewBtn("🧠 Full mode", tg.NewCmd("full", nil)),
 		tg.NewBtn("-", tg.NewCmd("nothing", nil)),
 		tg.NewBtn("⚡️ Quick buttons", tg.NewCmd("c_quick_btns", nil)),
@@ -3513,4 +3514,75 @@ func FuzzSaveFromTextMsg(f *testing.F) {
 		_, err = bot.fs.Read("today", filename)
 		r.NoError(err)
 	})
+}
+
+func TestJournalOnlyMode_SaveTextMessage(t *testing.T) {
+	r := require.New(t)
+
+	savedNow := journal.Now
+	defer func() {
+		journal.Now = savedNow
+	}()
+	journal.Now = func() time.Time {
+		return time.Date(2024, 8, 11, 9, 54, 0, 0, time.UTC)
+	}
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+	err = userFS.CreateDirsIfNotExist()
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+
+	cfg := fakeConfig()
+	err = cfg.SetMode(userconfig.ModeJournal)
+	r.NoError(err)
+
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), cfg)
+	err = bot.Reply(tg.NewUpd(-1, "Journal entry"))
+	r.NoError(err)
+
+	todayFiles, err := bot.fs.FilesAndDirs("today")
+	r.NoError(err)
+	r.Len(todayFiles, 0)
+
+	journalFiles, err := bot.fs.FilesAndDirs("journal")
+	r.NoError(err)
+	r.Len(journalFiles, 1)
+
+	content, err := bot.fs.Read("journal", journalFiles[0].Name)
+	r.NoError(err)
+	r.Contains(content, "Journal entry")
+	r.Contains(content, "11 August, Sunday")
+}
+
+func TestFileOnlyMode_SaveTextMessage(t *testing.T) {
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+	err = userFS.CreateDirsIfNotExist()
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+
+	cfg := fakeConfig()
+	err = cfg.SetMode(userconfig.ModeOneFile)
+	r.NoError(err)
+
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), cfg)
+	err = bot.Reply(tg.NewUpd(-1, "File content"))
+	r.NoError(err)
+
+	todayFiles, err := bot.fs.FilesAndDirs("today")
+	r.NoError(err)
+	r.Len(todayFiles, 0)
+
+	rootFiles, err := bot.fs.FilesAndDirs("")
+	r.NoError(err)
+	r.True(len(rootFiles) > 0)
+
+	content, err := bot.fs.Read("", "Saved.md")
+	r.NoError(err)
+	r.Equal("File content", content)
 }

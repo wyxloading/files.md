@@ -18,9 +18,10 @@ const (
 
 func (b *Bot) showSettings(params []string) error {
 	var kb tg.Keyboard
-	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("notes"), b.tr("Notes only mode")), tg.NewCmd(consts.CmdNotesOnlyMode, nil)))
-	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("tasks"), b.tr("Tasks only mode")), tg.NewCmd(consts.CmdTasksOnlyMode, nil)))
-	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("journal"), b.tr("Journal only mode")), tg.NewCmd(consts.CmdJournalOnlyMode, nil)))
+	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("clipboard"), b.tr("One file mode")), tg.NewCmd(consts.CmdOneFileOnlyMode, nil)))
+	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("notes"), b.tr("Notes mode")), tg.NewCmd(consts.CmdNotesOnlyMode, nil)))
+	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("tasks"), b.tr("Tasks mode")), tg.NewCmd(consts.CmdTasksOnlyMode, nil)))
+	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("journal"), b.tr("Journal mode")), tg.NewCmd(consts.CmdJournalOnlyMode, nil)))
 	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("brain"), b.tr("Full mode")), tg.NewCmd(consts.CmdFullMode, nil)))
 	kb.AddRow(tg.NewBtn("-", tg.NewCmd(consts.CmdDoNothing, nil)))
 	kb.AddRow(tg.NewBtn(i18n.StrQuickBtns, tg.NewCmd(consts.CmdShowQuickBtnsSettings, nil)))

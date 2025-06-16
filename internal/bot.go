@@ -264,9 +264,10 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		consts.CmdAddToJournalShortcut:        b.addToJournalFromShortcut,
 		consts.CmdAddToRecentFileShortcut:     b.addToRecentFileOrNoteFromShortcut,
 		consts.CmdRename:                      b.rename,
-		consts.CmdTasksOnlyMode:               b.tasksOnlyMode,
-		consts.CmdNotesOnlyMode:               b.notesOnlyMode,
-		consts.CmdJournalOnlyMode:             b.journalOnlyMode,
+		consts.CmdOneFileOnlyMode:             b.setOneFileOnlyMode,
+		consts.CmdTasksOnlyMode:               b.setTasksOnlyMode,
+		consts.CmdNotesOnlyMode:               b.setNotesOnlyMode,
+		consts.CmdJournalOnlyMode:             b.setJournalOnlyMode,
 		consts.CmdFullMode:                    b.fullMode,
 		consts.CmdCompleteHabit:               b.completeHabit,
 		consts.CmdShare:                       b.shareNote,
@@ -365,6 +366,10 @@ func (b *Bot) saveFromRegularMsg(u Update) error {
 			}
 			return nil
 		}
+	}
+
+	if b.cfg.OneFileOnlyMode() {
+		return b.createOrAdd(fs.DirRoot, userconfig.OneFileName+fs.FileExt, msg)
 	}
 
 	// Adding to an existing file
@@ -640,7 +645,7 @@ func (b *Bot) createOrAdd(dir, filename, content string) error {
 		}
 	}
 
-	if err := b.fs.Write(fs.DirToday, filename, content); err != nil {
+	if err := b.fs.Write(dir, filename, content); err != nil {
 		return fmt.Errorf("create: %w", err)
 	}
 
@@ -1445,17 +1450,18 @@ func (b *Bot) showStart(params []string) error {
 	if len(params) > 0 {
 		mode := strings.ToLower(params[0])
 		if mode == "notes" {
-			return b.notesOnlyMode(nil)
+			return b.setNotesOnlyMode(nil)
 		} else if mode == "tasks" {
-			return b.tasksOnlyMode(nil)
+			return b.setTasksOnlyMode(nil)
 		} else if mode == "journal" {
-			return b.journalOnlyMode(nil)
+			return b.setJournalOnlyMode(nil)
 		} else if mode == "full" {
 			return b.fullMode(nil)
 		}
 	}
 
 	kb := tg.NewKeyboard([]tg.Row{
+		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("clipboard"), b.tr("One file mode")), tg.NewCmd(consts.CmdOneFileOnlyMode, nil))),
 		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("notes"), b.tr("Notes only")), tg.NewCmd(consts.CmdNotesOnlyMode, nil))),
 		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("tasks"), b.tr("Tasks only")), tg.NewCmd(consts.CmdTasksOnlyMode, nil))),
 		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("journal"), b.tr("Journal only")), tg.NewCmd(consts.CmdJournalOnlyMode, nil))),
@@ -2395,7 +2401,16 @@ func (b *Bot) download(_ []string) error {
 	return b.showHTML("Not yet implemented 🏗!", kb)
 }
 
-func (b *Bot) tasksOnlyMode(_ []string) error {
+func (b *Bot) setOneFileOnlyMode(_ []string) error {
+	err := b.cfg.SetMode(userconfig.ModeOneFile)
+	if err != nil {
+		return fmt.Errorf("one file only mode: %w", err)
+	}
+
+	return b.ShowToday(nil)
+}
+
+func (b *Bot) setTasksOnlyMode(_ []string) error {
 	err := b.cfg.SetMode(userconfig.ModeTasks)
 	if err != nil {
 		return fmt.Errorf("tasks only mode: can't set notes only mode %w", err)
@@ -2428,7 +2443,7 @@ func (b *Bot) tasksOnlyMode(_ []string) error {
 	return b.ShowToday(nil)
 }
 
-func (b *Bot) notesOnlyMode(_ []string) error {
+func (b *Bot) setNotesOnlyMode(_ []string) error {
 	err := b.cfg.SetMode(userconfig.ModeNotes)
 	if err != nil {
 		return fmt.Errorf("notes only mode: can't set notes only mode %w", err)
@@ -2437,7 +2452,7 @@ func (b *Bot) notesOnlyMode(_ []string) error {
 	return b.ShowToday(nil)
 }
 
-func (b *Bot) journalOnlyMode(_ []string) error {
+func (b *Bot) setJournalOnlyMode(_ []string) error {
 	err := b.cfg.SetMode(userconfig.ModeJournal)
 	if err != nil {
 		return fmt.Errorf("journal only mode: can't set notes only mode %w", err)

@@ -15,10 +15,13 @@ import (
 )
 
 const (
+	ModeOneFile = "file"
 	ModeTasks   = "tasks"
 	ModeNotes   = "notes"
 	ModeJournal = "journal"
 	ModeFull    = "full"
+
+	OneFileName = "Saved"
 )
 
 var defaultConfig = config{
@@ -99,6 +102,12 @@ func (c *Config) Timezone() *time.Location {
 	}
 
 	return location
+}
+
+func (c *Config) OneFileOnlyMode() bool {
+	cfg, _ := c.read(c.filename)
+
+	return cfg.Mode == ModeOneFile
 }
 
 // TODO release test everything in this mode

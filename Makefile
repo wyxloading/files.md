@@ -58,7 +58,10 @@ deploy: # deploy as systemd service
 	scp /tmp/bot $(host):/app/bot.new && printf "$${GREEN}The binary is copied on the server$${RESET}\n" && \
 	ssh $(host) "mv /app/bot.new /app/bot && systemctl restart bot.service" && \
 	rm /tmp/bot && \
-	scp -r web files:/app && \
+	tar --no-xattrs --disable-copyfile --no-fflags -czf web.tar.gz web && \
+    scp web.tar.gz files:/app/ && \
+    ssh files "cd /app && tar -xzf web.tar.gz && rm web.tar.gz" && \
+    rm web.tar.gz && \
 	printf "$${GREEN}Successfully deployed!$${RESET}\n"
 
 deploy_binary: # deploy as regular binary

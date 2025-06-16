@@ -632,7 +632,11 @@ async function isContentEqual(path, content) {
 
 // TODO save metadata & files
 async function saveTextFile(path, content) {
-    let fileHandle = await getFileHandle(path, true);
+    try {
+        let fileHandle = await getFileHandle(path, true);
+    } catch( err) {
+        console.log('FILEHANDLE, ', err);
+    }
     if (fileHandle === null) {
         // TODO fix once Chromium fixes the bug
         throw new Error("Invalid file name");

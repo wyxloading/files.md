@@ -806,6 +806,12 @@ function openChat() {
         return;
     }
 
+    let cmd = {
+        n: 'today',
+        t: "cmd"
+    }
+    replyCmd(JSON.stringify(cmd));
+
     sidebarContainer.style.display = 'none';
     content.style.display = 'none';
     chatContainer.style.display = 'flex';

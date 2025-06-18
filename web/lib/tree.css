@@ -46,7 +46,12 @@
 }
 
 .tj_mod_icon {
+	stroke: red !important;
 	padding-right: 5px;
+}
+
+.tj_mod_icon svg {
+	stroke: var(--color-tx-alt);
 }
 
 .tj_container li span.tj_icon {

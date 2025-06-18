@@ -8,9 +8,6 @@
 function TreeView(root, container, options) {
     var self = this;
 
-    /*
-    * Konstruktor
-    */
     if (typeof root === "undefined") {
         throw new Error("Parameter 1 must be set (root)");
     }
@@ -241,10 +238,17 @@ function TreeView(root, container, options) {
             if (node.isExpanded()) {
                 ret += '<span class="tj_mod_icon">' + TreeConfig.open_icon + '</span>';
             } else {
-                ret += '<span class="tj_mod_icon">' + TreeConfig.close_icon + '</span>';
+                if (node.toString().startsWith('_')) {
+                    ret += '<span class="tj_mod_icon">' + TreeConfig.checklists_icon + '</span>';
+                } else if (node.toString() === 'today' || node.toString() === 'later') {
+                    ret += '<span class="tj_mod_icon">' + TreeConfig.tasks_icon + '</span>';
+                } else {
+                    ret += '<span class="tj_mod_icon">' + TreeConfig.close_icon + '</span>';
+                }
             }
 
             var icon = TreeUtil.getProperty(node.getOptions(), "icon", "");
+            icon = '';
             if (icon != "") {
                 ret += '<span class="tj_icon">' + icon + '</span>';
             } else if ((icon = TreeUtil.getProperty(options, "parent_icon", "")) != "") {
@@ -590,8 +594,10 @@ function TreePath(root, node) {
 const TreeUtil = {
     default_leaf_icon: "<span>&#128441;</span>",
     default_parent_icon: "<span>&#128449;</span>",
-    default_open_icon: "<svg width=\"22px\" height=\"22px\" viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\"> <path stroke=\"#535358\" stroke-linecap=\"round\" stroke-width=\"2\" d=\"M4 26V8a2 2 0 012-2h6c3 0 3 3 5 3h7a2 2 0 012 2v2M4 26l3.783-12.294A1 1 0 018.739 13H26M4 26h19.523a2 2 0 001.911-1.412l3.168-10.294A1 1 0 0027.646 13H26\"/> </svg>",
-    default_close_icon: "<svg width=\"22px\" height=\"22px\" viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\"> <path stroke=\"#535358\" stroke-linecap=\"round\" stroke-width=\"2\" d=\"M28 11v13a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h6c3 0 3 3 5 3h9.003C27.108 9 28 9.895 28 11z\"/> </svg>",
+    default_open_icon: "<svg width=\"22px\" height=\"22px\" viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\"> <path stroke-linecap=\"round\" stroke-width=\"2\" d=\"M4 26V8a2 2 0 012-2h6c3 0 3 3 5 3h7a2 2 0 012 2v2M4 26l3.783-12.294A1 1 0 018.739 13H26M4 26h19.523a2 2 0 001.911-1.412l3.168-10.294A1 1 0 0027.646 13H26\"/> </svg>",
+    default_close_icon: "<svg width=\"22px\" height=\"22px\" viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\"> <path stroke-linecap=\"round\" stroke-width=\"2\" d=\"M28 11v13a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h6c3 0 3 3 5 3h9.003C27.108 9 28 9.895 28 11z\"/> </svg>",
+    checklists_icon: "<svg width=\"22px\" height=\"22px\" fill=\"none\" viewBox=\"0 0 32 32\"> <path  stroke-linecap=\"round\" stroke-width=\"2\" d=\"M28 11v13a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h6c3 0 3 3 5 3h9.003C27.108 9 28 9.895 28 11zM12 15h8M12 19h8\"/> </svg>",
+    tasks_icon: "<svg width=\"22px\" height=\"22px\" fill=\"none\" viewBox=\"0 0 32 32\"> <path stroke-linecap=\"round\" stroke-width=\"2\" d=\"M28 11v13a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h6c3 0 3 3 5 3h9.003C27.108 9 28 9.895 28 11z\"/> <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 17.5l3 3 6-6\"/> </svg>",
 
     isDOM: function (obj) {
         try {
@@ -667,5 +673,7 @@ var TreeConfig = {
     parent_icon: TreeUtil.default_parent_icon,
     open_icon: TreeUtil.default_open_icon,
     close_icon: TreeUtil.default_close_icon,
+    tasks_icon: TreeUtil.tasks_icon,
+    checklists_icon: TreeUtil.checklists_icon,
     context_menu: undefined
 };

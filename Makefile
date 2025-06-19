@@ -51,7 +51,12 @@ deploy: # deploy as systemd service
 	@GREEN='\e[32m'; \
 	YELLOW='\e[33m'; \
 	RESET='\e[0m'; \
+	TIMESTAMP=$$(date +%s); \
 	printf "$${YELLOW}Building...$${RESET}\n" && \
+	printf "$${YELLOW}Versioning current files with: $${TIMESTAMP}$${RESET}\n" && \
+	grep -l "?v=" -r . | xargs sed -i '' 's/?v=/?v='"$(date +%s)"'/g' && \
+	printf "$${GREEN}Removing versioning$${RESET}\n" && \
+	grep -l "?v=$TIMESTAMP" -r . | xargs sed -i '' 's/?v='"$TIMESTAMP"'/?v=/g' && \
 	make check && \
 	GOOS=linux GOARCH=amd64 go build -o /tmp/bot ./cmd/tgbot && \
 	printf "$${GREEN}Build Completed$${RESET}\n" && \

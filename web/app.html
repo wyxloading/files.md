@@ -14,36 +14,36 @@
           onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" as="style"
           onload="this.onload=null;this.rel='stylesheet'">
-    <link href="app.css" rel="stylesheet">
-    <link href="lib/normalize.css" rel="stylesheet">
-    <link href="lib/tree.css" rel="stylesheet">
-    <link href="lib/codemirror.css" rel="stylesheet">
-    <link href="lib/hypermd.css" rel="stylesheet">
-    <link href="lib/theme-light.css" rel="stylesheet">
-    <link href="lib/theme-dark.css" rel="stylesheet">
-    <link href="chat.css" rel="stylesheet">
-    <script src="lib/tree.js"></script>
-    <script src="lib/codemirror.js"></script>
-    <script src="lib/core.js"></script>
-    <script src="lib/markdown.js"></script>
-    <script src="lib/hypermd.js"></script>
-    <script src="lib/keymap.js"></script>
-    <script src="lib/click.js"></script>
-    <script src="lib/hide-token.js"></script>
-    <script src="lib/fold.js"></script>
-    <script src="lib/fold-image.js"></script>
-    <script src="lib/fold-link.js"></script>
-    <script src="lib/table-align.js"></script>
-    <script src="lib/autocomplete-link.js"></script>
-    <script src="lib/show-hint.js"></script>
-    <script src="lib/autoscroll.js"></script>
-    <script src="lib/codemirror-go.js"></script>
-    <script src="lib/codemirror-php.js"></script>
-    <script src="lib/codemirror-shell.js"></script>
-    <script src="lib/similarity.js"></script>
-    <script src="welcome.js"></script>
-    <script src="files.js"></script>
-    <script src="wasm_exec.js"></script>
+    <link href="app.css?v=$TIMESTAMP" rel="stylesheet">
+    <link href="lib/normalize.css?v=$TIMESTAMP" rel="stylesheet">
+    <link href="lib/tree.css?v=$TIMESTAMP" rel="stylesheet">
+    <link href="lib/codemirror.css?v=$TIMESTAMP" rel="stylesheet">
+    <link href="lib/hypermd.css?v=$TIMESTAMP" rel="stylesheet">
+    <link href="lib/theme-light.css?v=$TIMESTAMP" rel="stylesheet">
+    <link href="lib/theme-dark.css?v=$TIMESTAMP" rel="stylesheet">
+    <link href="chat.css?v=$TIMESTAMP" rel="stylesheet">
+    <script src="lib/tree.js?v=$TIMESTAMP"></script>
+    <script src="lib/codemirror.js?v=$TIMESTAMP"></script>
+    <script src="lib/core.js?v=$TIMESTAMP"></script>
+    <script src="lib/markdown.js?v=$TIMESTAMP"></script>
+    <script src="lib/hypermd.js?v=$TIMESTAMP"></script>
+    <script src="lib/keymap.js?v=$TIMESTAMP"></script>
+    <script src="lib/click.js?v=$TIMESTAMP"></script>
+    <script src="lib/hide-token.js?v=$TIMESTAMP"></script>
+    <script src="lib/fold.js?v=$TIMESTAMP"></script>
+    <script src="lib/fold-image.js?v=$TIMESTAMP"></script>
+    <script src="lib/fold-link.js?v=$TIMESTAMP"></script>
+    <script src="lib/table-align.js?v=$TIMESTAMP"></script>
+    <script src="lib/autocomplete-link.js?v=$TIMESTAMP"></script>
+    <script src="lib/show-hint.js?v=$TIMESTAMP"></script>
+    <script src="lib/autoscroll.js?v=$TIMESTAMP"></script>
+    <script src="lib/codemirror-go.js?v=$TIMESTAMP"></script>
+    <script src="lib/codemirror-php.js?v=$TIMESTAMP"></script>
+    <script src="lib/codemirror-shell.js?v=$TIMESTAMP"></script>
+    <script src="lib/similarity.js?v=$TIMESTAMP"></script>
+    <script src="welcome.js?v=$TIMESTAMP"></script>
+    <script src="files.js?v=$TIMESTAMP"></script>
+    <script src="wasm_exec.js?v=$TIMESTAMP"></script>
 </head>
 <body>
 
@@ -132,8 +132,8 @@
     </form>
     <ul id="move-results"></ul>
 </div>
-<script src="app.js"></script>
-<script src="chat.js"></script>
+<script src="app.js?v=$TIMESTAMP"></script>
+<script src="chat.js?v=$TIMESTAMP"></script>
 <script>
     init(document.getElementById("editor"));
 </script>

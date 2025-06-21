@@ -532,7 +532,7 @@ func (fs FS) Ctime(dir, filename string) (int64, error) {
 // Ctimes recursively scans a directory and returns the ctime
 // for all .md files as Unix timestamps.
 // Returns [filename] => ctime
-// TODO recursively?
+// TODO add tests
 func (fs FS) Ctimes(dir string) (map[string]int64, error) {
 	dirPath := fs.UnsafePath(DirRoot, dir)
 	isSafe, err := fs.isSafe(dirPath)
@@ -551,6 +551,7 @@ func (fs FS) Ctimes(dir string) (map[string]int64, error) {
 		}
 
 		base := filepath.Base(path)
+		// Ignore 2nd level nesting
 		if strings.HasPrefix(base, ".") && path != fs.RootPath {
 			if info.IsDir() {
 				return filepath.SkipDir

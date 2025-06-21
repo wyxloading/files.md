@@ -32,8 +32,8 @@ type oneTimeToken struct {
 	expiresAt time.Time
 }
 
-func GenerateOneTimeToken(userID int64) string {
-	token := generateToken()
+func GenOneTimeToken(userID int64) string {
+	token := genToken()
 
 	mu.Lock()
 	oneTimeTokens[token] = oneTimeToken{
@@ -110,7 +110,7 @@ func issueNewToken(oneTimeToken string) (string, bool) {
 	delete(oneTimeTokens, oneTimeToken)
 	mu.Unlock()
 
-	token := generateToken()
+	token := genToken()
 	tokens, err := fs.NewFS(config.BotCfg.TokensDir, afero.NewOsFs())
 	if err != nil {
 		slog.Error("Failed to create file system for tokens", "error", err)
@@ -124,7 +124,7 @@ func issueNewToken(oneTimeToken string) (string, bool) {
 	return token, true
 }
 
-func generateToken() string {
+func genToken() string {
 	bytes := make([]byte, TokenLength)
 	rand.Read(bytes)
 	return hex.EncodeToString(bytes)

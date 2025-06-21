@@ -531,6 +531,8 @@ func (fs FS) Ctime(dir, filename string) (int64, error) {
 
 // Ctimes recursively scans a directory and returns the ctime
 // for all .md files as Unix timestamps.
+// Returns [filename] => ctime
+// TODO recursively?
 func (fs FS) Ctimes() (map[string]int64, error) {
 	timestamps := make(map[string]int64)
 
@@ -552,6 +554,7 @@ func (fs FS) Ctimes() (map[string]int64, error) {
 			return nil
 		}
 
+		// TODO what if a file inside folder?
 		relPath, err := filepath.Rel(fs.RootPath, path)
 		if err != nil {
 			return nil

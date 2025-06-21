@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
+
+	"github.com/spf13/afero"
 
 	"zakirullin/stuffbot/internal/fs"
 )
@@ -35,21 +36,13 @@ func SyncMedias(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO ../.. Attacks
-	mediaFolder := filepath.Join(StorageDir, fs.DirMedia)
+	// TODO ../.. Attacks (fixed with fs.FS?)
+	mediaDir := filepath.Join(StorageDir, fs.DirMedia)
 	logSync(fmt.Sprintf("Media sync syncMediasRequest for folder: '%s', last sync: %d", fs.DirMedia, syncMediasRequest.Timestamp))
-
-	// TODO migrate to afero
-	if _, err := os.Stat(mediaFolder); os.IsNotExist(err) {
-		emptyResponse := struct {
-			Files     []interface{} `json:"files"`
-			Timestamp int64         `json:"timestamp"`
-		}{
-			Files:     []interface{}{},
-			Timestamp: 0,
-		}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(emptyResponse)
+	mediaFS, err := fs.NewFS(mediaDir, afero.NewOsFs())
+	if err != nil {
+		log.Printf("Error creating media FS: %v", err)
+		http.Error(w, "Error creating media FS", http.StatusInternalServerError)
 		return
 	}
 
@@ -57,40 +50,29 @@ func SyncMedias(w http.ResponseWriter, r *http.Request) {
 	latestTimestamp := int64(0)
 
 	// Find media files newer than client's timestamp
-	err := filepath.Walk(mediaFolder, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return nil
-		}
-
-		if info.IsDir() {
-			return nil
-		}
-
-		modTime := info.ModTime().Unix()
+	ctimes, err := mediaFS.Ctimes()
+	if err != nil {
+		log.Printf("Error getting ctimes for media files: %v", err)
+		http.Error(w, "Error getting media file times", http.StatusInternalServerError)
+		return
+	}
+	for path, modTime := range ctimes {
 		if modTime <= syncMediasRequest.Timestamp {
-			return nil
+			continue
 		}
 		if modTime > latestTimestamp {
 			latestTimestamp = modTime
 		}
 
-		relPath, err := filepath.Rel(mediaFolder, path)
+		relPath, err := filepath.Rel(mediaDir, path)
 		if err != nil {
-			return nil
+			continue
 		}
 
 		mediaFiles = append(mediaFiles, media{
 			Path:         relPath,
 			LastModified: modTime,
 		})
-
-		return nil
-	})
-
-	if err != nil {
-		log.Printf("Error scanning media folder: %v", err)
-		http.Error(w, "Error scanning media folder", http.StatusInternalServerError)
-		return
 	}
 
 	response := struct {
@@ -108,7 +90,7 @@ func SyncMedias(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// SyncMedia syncs a single media file by path
+// SyncMedia syncs a single media file by path.
 func SyncMedia(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -129,10 +111,15 @@ func SyncMedia(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filePath := filepath.Join(StorageDir, fs.DirMedia, clientMedia.Path)
-	// TODO migrate to afero
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		// Writing file
+	exists, err := userFS.Exists(fs.DirMedia, clientMedia.Path)
+	if err != nil {
+		log.Printf("Error checking if media exists: %v", err)
+		http.Error(w, "Error checking media existence", http.StatusInternalServerError)
+		return
+	}
+
+	shouldWriteToServer := clientMedia.Data != "" && !exists
+	if shouldWriteToServer {
 		content, err := base64.StdEncoding.DecodeString(clientMedia.Data)
 		if err != nil {
 			http.Error(w, "Invalid base64 data", http.StatusBadRequest)
@@ -145,9 +132,9 @@ func SyncMedia(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		logSync(fmt.Sprintf("Media created: %s", filePath))
+		logSync(fmt.Sprintf("Media created: %s", clientMedia.Path))
 		return
 	}
 
-	http.ServeFile(w, r, filePath)
+	http.ServeFile(w, r, filepath.Join(StorageDir, fs.DirMedia, clientMedia.Path))
 }

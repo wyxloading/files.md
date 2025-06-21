@@ -141,6 +141,7 @@ func SyncTexts(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Based on known client dirs timestamps, send newly updated or created files.
 	serverTimestamps, err := userFS.Ctimes()
 	if err != nil {
 		log.Printf("Error getting server timestamps: %v", err)

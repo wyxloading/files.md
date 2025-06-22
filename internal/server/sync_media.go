@@ -104,7 +104,7 @@ func SyncMedia(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exists, err := userFS.Exists(fs.DirMedia, clientMedia.Path)
+	exists, err := userFS.Exists(clientMedia.Path, "")
 	if err != nil {
 		log.Printf("Error checking if media exists: %v", err)
 		http.Error(w, "Error checking media existence", http.StatusInternalServerError)
@@ -119,7 +119,7 @@ func SyncMedia(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = userFS.Write(fs.DirMedia, clientMedia.Path, string(content))
+		err = userFS.Write(clientMedia.Path, "", string(content))
 		if err != nil {
 			http.Error(w, "Invalid base64 data", http.StatusBadRequest)
 			return

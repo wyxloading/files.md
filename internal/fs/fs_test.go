@@ -121,7 +121,7 @@ func TestCreateBaseDirs(t *testing.T) {
 	err = fs.CreateDirsIfNotExist()
 	r.NoError(err)
 
-	dirs, err := fs.FilesAndDirs("")
+	dirs, err := fs.FilesAndDirs("/")
 	r.NoError(err)
 	dirs = OnlyDirs(dirs)
 	dirNames := OnlyFilenames(dirs)
@@ -167,7 +167,7 @@ func TestExcludeEverythingButUserDirs(t *testing.T) {
 	err = fs.MakeDir("dir")
 	r.NoError(err)
 
-	entries, err := fs.FilesAndDirs("")
+	entries, err := fs.FilesAndDirs("/")
 	r.NoError(err)
 
 	dirs := OnlyDirs(ExcludeTaskDirs(ExcludeSystemDirs(entries)))
@@ -185,7 +185,7 @@ func TestOnlyFiles(t *testing.T) {
 	err = fs.MakeDir("dir")
 	r.NoError(err)
 
-	entries, err := fs.FilesAndDirs("")
+	entries, err := fs.FilesAndDirs("/")
 	r.NoError(err)
 
 	dirs := OnlyMDFiles(entries)
@@ -203,7 +203,7 @@ func TestOnlyChecklists(t *testing.T) {
 	err = fs.MakeDir("_list_")
 	r.NoError(err)
 
-	entries, err := fs.FilesAndDirs("")
+	entries, err := fs.FilesAndDirs("/")
 	r.NoError(err)
 
 	dirs := OnlyChecklists(entries)
@@ -376,7 +376,7 @@ func TestFSOnlyUserDirs(t *testing.T) {
 	err = fs.MakeDir("123.56")
 	r.NoError(err)
 
-	dirs, _ := fs.FilesAndDirs("")
+	dirs, _ := fs.FilesAndDirs("/")
 	userDirs := OnlyUserDirs(dirs)
 
 	r.Len(userDirs, 1)
@@ -387,7 +387,7 @@ func TestIsSafeWrongRoot(t *testing.T) {
 	r := require.New(t)
 
 	fs, _ := NewFS("/a", afero.NewMemMapFs())
-	p, err := fs.SafePath("/b", "")
+	p, err := fs.SafePath("b", "")
 	r.NoError(err)
 	r.Equal("/a/b", p)
 
@@ -397,7 +397,7 @@ func TestIsSafePathTraversalAttack(t *testing.T) {
 	r := require.New(t)
 
 	fs, _ := NewFS("/a", afero.NewMemMapFs())
-	p, err := fs.SafePath("/a/../b", "")
+	p, err := fs.SafePath("a/../b", "")
 	r.NoError(err)
 	r.Equal("/a/b", p)
 
@@ -412,6 +412,28 @@ func TestIsSafePathTraversalAttack(t *testing.T) {
 	p, err = fs.SafePath("./a/../../b", "")
 	r.Error(err)
 	r.Empty(p)
+}
+
+func TestSafePath(t *testing.T) {
+	r := require.New(t)
+
+	memFS := afero.NewMemMapFs()
+	memFS.Mkdir("/app-secret", 0o755)
+
+	fs, _ := NewFS("/app", memFS)
+
+	p, err := fs.SafePath("subdir", "file")
+	r.NoError(err)
+	r.Equal("/app/subdir/file", p)
+
+	p, err = fs.SafePath("subdir", "../file")
+	r.NoError(err)
+	r.Equal("/app/file", p)
+
+	p, err = fs.SafePath("../app-secret", "file")
+	r.Error(err)
+	r.Equal("", p)
+
 }
 
 func TestIsSafePathTraversalAttackWithRelativePaths(t *testing.T) {
@@ -475,7 +497,7 @@ func TestExistsRoot(t *testing.T) {
 	err := fs.Write("today", "First task.md", "")
 	r.NoError(err)
 
-	exists, err := fs.Exists("", "")
+	exists, err := fs.Exists("/", "")
 	r.NoError(err)
 	r.True(exists)
 }
@@ -724,7 +746,7 @@ func FuzzWrite(f *testing.F) {
 		r.Equal(content, string(actualContent), "Content mismatch for file: %s", filePath)
 
 		// Check that a file is indeed created in user fs, and not outside
-		files, err := userFS.FilesAndDirs("")
+		files, err := userFS.FilesAndDirs("/")
 		r.NoError(err, "Unexpected error for valid inputs dir: '%s', filename: '%s', calculated path: '%s", dir, filename, unsafePath)
 		r.Len(files, 1, "File has been written outside of user dir. Provided dir: '%s', filename: '%s', unsafe path: '%s", dir, filename, filePath)
 	})

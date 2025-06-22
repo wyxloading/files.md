@@ -63,7 +63,7 @@ const (
 // backends, like an in-memory backend, which we use for testing.
 // Check out types implementing afero.Fs for all available backends.
 type FS struct {
-	RootPath string
+	RootPath string // TODO make it private
 	backend  afero.Fs
 }
 
@@ -472,7 +472,7 @@ func (fs FS) Ctime(dir, filename string) (int64, error) {
 // Returns [relPath] => ctime
 // TODO add tests
 func (fs FS) Ctimes(root, extension string) (map[string]int64, error) {
-	rootPath, err := fs.SafePath(DirRoot, root)
+	rootPath, err := fs.SafePath(root, "")
 	if err != nil {
 		return nil, fmt.Errorf("fs ctimes: unsafe rootPath '%s': %w", rootPath, errUnsafePath)
 	}
@@ -536,19 +536,22 @@ func (fs FS) Ctimes(root, extension string) (map[string]int64, error) {
 // attacks due to the race condition. The only real way to prevent this is to disallow symlinks
 // at the OS level. We can do this by mounting a folder with nosymfollow flag, see README.md.
 func (fs FS) SafePath(dir, filename string) (string, error) {
-	fullPath := filepath.Clean(filepath.Join(fs.RootPath, dir, filename))
+	var relativePath string
+	if dir == "/" {
+		if filename == "" {
+			// Just the root directory
+			return fs.RootPath, nil
+		}
+		relativePath = filename
+	} else {
+		relativePath = filepath.Join(dir, filename)
+	}
 
-	// Are we outside of the root path?
-	rel, err := filepath.Rel(fs.RootPath, fullPath)
-	if err != nil {
+	if !filepath.IsLocal(relativePath) {
 		return "", errUnsafePath
 	}
 
-	if rel == ".." || strings.HasPrefix(rel, "../") {
-		return "", errUnsafePath
-	}
-
-	return fullPath, nil
+	return filepath.Join(fs.RootPath, relativePath), nil
 }
 
 func exists(backend afero.Fs, path string) (bool, error) {

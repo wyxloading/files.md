@@ -3578,7 +3578,7 @@ func TestFileOnlyMode_SaveTextMessage(t *testing.T) {
 	r.NoError(err)
 	r.Len(todayFiles, 0)
 
-	rootFiles, err := bot.fs.FilesAndDirs("")
+	rootFiles, err := bot.fs.FilesAndDirs("/")
 	r.NoError(err)
 	r.True(len(rootFiles) > 0)
 

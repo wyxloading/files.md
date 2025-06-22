@@ -315,6 +315,9 @@ function createAutocompleteDict() {
 
     Object.keys(excludeDirs(SYSTEM_DIRS)).forEach(dir => {
         Object.keys(files[dir]).forEach(filename => {
+            if (filename === CONFIG_FILENAME) {
+                return;
+            }
             const key = `${filename.replace(/\.md$/, "")}`;
             const filePath = `${filename.replace(/\.md$/, "")}](${dir}/${filename})`;
             dict[key] = filePath;

@@ -1168,7 +1168,6 @@ window.addEventListener('focus', async () => {
     await syncMedia();
     await syncCurrentFile();
 
-    // Benchmark time took
     const start = performance.now();
     files = await loadLocalFiles(savedDirectoryHandle);
     const end = performance.now();

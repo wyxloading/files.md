@@ -10,9 +10,8 @@ test.beforeEach(async ({page}) => {
 test('should load files', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            // Your mock code here
-            const opfsRoot = await navigator.storage.getDirectory();
-            const testDir = await opfsRoot.getDirectoryHandle('test-files', { create: true });
+            const root = await navigator.storage.getDirectory();
+            const testDir = await root.getDirectoryHandle('test-files', { create: true });
 
             const testFiles = [
                 { name: 'README.md', content: 'Hello world' },
@@ -92,7 +91,6 @@ test('create new in subfolder', async ({ page }) => {
 test('create new in root', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            // Your mock code here
             const root = await navigator.storage.getDirectory();
             const subDir = await root.getDirectoryHandle('dir', { create: true });
 
@@ -144,7 +142,6 @@ test('create new in root', async ({ page }) => {
 test('create and move', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            // Your mock code here
             const root = await navigator.storage.getDirectory();
             const subDir = await root.getDirectoryHandle('dir', { create: true });
 
@@ -316,9 +313,8 @@ test('create dirs and move', async ({ page }) => {
 test('create new lower case', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            // Your mock code here
-            const opfsRoot = await navigator.storage.getDirectory();
-            const testDir = await opfsRoot.getDirectoryHandle('test-files', { create: true });
+            const root = await navigator.storage.getDirectory();
+            const testDir = await root.getDirectoryHandle('test-files', { create: true });
 
             const testFiles = [
                 { name: 'README.md', content: 'Hello world' },
@@ -364,8 +360,8 @@ test('create new lower case', async ({ page }) => {
 test('move file between directories', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            const opfsRoot = await navigator.storage.getDirectory();
-            const testDir = await opfsRoot.getDirectoryHandle('test-files', { create: true });
+            const root = await navigator.storage.getDirectory();
+            const testDir = await root.getDirectoryHandle('test-files', { create: true });
 
             const projectsDir = await testDir.getDirectoryHandle('projects', { create: true });
             const archiveDir = await testDir.getDirectoryHandle('archive', { create: true });
@@ -487,8 +483,8 @@ test('move file between directories', async ({ page }) => {
 test('move file using keyboard navigation', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            const opfsRoot = await navigator.storage.getDirectory();
-            const testDir = await opfsRoot.getDirectoryHandle('test-files', { create: true });
+            const root = await navigator.storage.getDirectory();
+            const testDir = await root.getDirectoryHandle('test-files', { create: true });
 
             // Create directories
             const workDir = await testDir.getDirectoryHandle('work', { create: true });

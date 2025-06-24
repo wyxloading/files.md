@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
@@ -55,7 +54,6 @@ func findUserID(token string) (int64, bool) {
 		return 0, false
 	}
 
-	fmt.Println(saltToken(token))
 	data, err := tokens.Read(fs.DirRoot, saltToken(token))
 	if err != nil {
 		return 0, false

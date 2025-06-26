@@ -1461,10 +1461,10 @@ func (b *Bot) showStart(params []string) error {
 	}
 
 	kb := tg.NewKeyboard([]tg.Row{
-		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("clipboard"), b.tr("One file mode")), tg.NewCmd(consts.CmdOneFileOnlyMode, nil))),
-		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("notes"), b.tr("Notes only")), tg.NewCmd(consts.CmdNotesOnlyMode, nil))),
-		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("tasks"), b.tr("Tasks only")), tg.NewCmd(consts.CmdTasksOnlyMode, nil))),
-		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("journal"), b.tr("Journal only")), tg.NewCmd(consts.CmdJournalOnlyMode, nil))),
+		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("clipboard"), b.tr("Saved messages")), tg.NewCmd(consts.CmdOneFileOnlyMode, nil))),
+		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("notes"), b.tr("Notes")), tg.NewCmd(consts.CmdNotesOnlyMode, nil))),
+		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("tasks"), b.tr("Tasks")), tg.NewCmd(consts.CmdTasksOnlyMode, nil))),
+		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("journal"), b.tr("Journal")), tg.NewCmd(consts.CmdJournalOnlyMode, nil))),
 		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("brain"), b.tr("Everything")), tg.NewCmd(consts.CmdFullMode, nil))),
 	})
 

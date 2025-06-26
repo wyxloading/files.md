@@ -19,7 +19,7 @@ const defaultTestCfgWithNewQuickCmd = `{
         "new_quick_cmd"
     ],
     "twoEmojisEnabled": false,
-    "mode": "tasks",
+    "mode": "file",
     "quickHabitsEnabled": false,
     "channels": []
 }`

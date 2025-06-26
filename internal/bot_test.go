@@ -31,6 +31,12 @@ func init() {
 func TestSaveFromTextMsg(t *testing.T) {
 	r := require.New(t)
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 
@@ -59,6 +65,12 @@ func TestSaveFromLongTextMsg(t *testing.T) {
 
 	tgram := tg.NewFakeTG()
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
 	err = bot.Reply(tg.NewUpd(-1, strings.Repeat("a", 101)))
 	r.NoError(err)
@@ -77,6 +89,12 @@ func TestSaveFromLongTextMsg(t *testing.T) {
 
 func TestSaveFromTextMsgWithSanitize(t *testing.T) {
 	r := require.New(t)
+
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
@@ -110,6 +128,12 @@ func TestSaveFromTextMsgWithSanitize(t *testing.T) {
 func TestAddMultilineTaskToToday(t *testing.T) {
 	r := require.New(t)
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 
@@ -133,6 +157,12 @@ func TestAddMultilineTaskToToday(t *testing.T) {
 
 func TestAddTaskWithSpecCharsToToday(t *testing.T) {
 	r := require.New(t)
+
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
@@ -159,6 +189,12 @@ func TestAddTaskWithOnlyWhitespace(t *testing.T) {
 	// Test adding a task that contains only whitespace characters
 	r := require.New(t)
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 	err = userFS.CreateDirsIfNotExist()
@@ -180,6 +216,12 @@ func TestAddTaskWithLeadingAndTrailingSpaces(t *testing.T) {
 	// Test adding a task with leading and trailing spaces in the name
 	r := require.New(t)
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 
@@ -200,6 +242,12 @@ func TestShowEmptyTodayList(t *testing.T) {
 	// Test displaying today's tasks when there are none
 	r := require.New(t)
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 	err = userFS.CreateDirsIfNotExist()
@@ -217,6 +265,12 @@ func TestShowEmptyTodayList(t *testing.T) {
 func TestSaveFromTextMsgWithUnicodeCharacters(t *testing.T) {
 	// Test handling of text messages containing Unicode characters
 	r := require.New(t)
+
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
@@ -239,6 +293,12 @@ func TestSaveFromTextMsgWithUnicodeCharacters(t *testing.T) {
 func TestSaveFromEmptyTextMsg(t *testing.T) {
 	// Test handling of empty text messages
 	r := require.New(t)
+
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
@@ -266,6 +326,12 @@ func TestSaveFromRegularReply(t *testing.T) {
 	now = func() time.Time {
 		return time.Date(2024, 8, 11, 9, 54, 0, 0, time.UTC)
 	}
+
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
@@ -499,6 +565,12 @@ func TestToday(t *testing.T) {
 		return 0
 	}
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	savedNow := now
 	defer func() {
 		now = savedNow
@@ -578,6 +650,12 @@ func TestTodayQuickMenuFilled(t *testing.T) {
 		return 0
 	}
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	savedNow := now
 	defer func() {
 		now = savedNow
@@ -623,6 +701,12 @@ func TestTodayWithMultilineTasks(t *testing.T) {
 	now = func() time.Time {
 		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 	}
+
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
@@ -1328,6 +1412,12 @@ func TestMoveToExistingFileExistingRecord(t *testing.T) {
 func TestShowMoveTo(t *testing.T) {
 	r := require.New(t)
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 	err = userFS.Write("", "file", "")
@@ -1465,6 +1555,12 @@ func TestAngerInTodayTasks(t *testing.T) {
 	fs.Ctime = func(fi os.FileInfo) int64 {
 		return 0
 	}
+
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
 
 	savedNow := now
 	defer func() {
@@ -2226,6 +2322,12 @@ func TestSaveToNewTaskIntegration(t *testing.T) {
 		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 	}
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 	err = userFS.CreateDirsIfNotExist()
@@ -2285,6 +2387,12 @@ func TestSaveToExistingFileIntegration(t *testing.T) {
 	now = func() time.Time {
 		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 	}
+
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
@@ -2366,6 +2474,12 @@ func TestSaveToNewFileIntegration(t *testing.T) {
 		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 	}
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 	err = userFS.CreateDirsIfNotExist()
@@ -2442,6 +2556,12 @@ func TestSaveToNewDirIntegration(t *testing.T) {
 	now = func() time.Time {
 		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 	}
+
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
@@ -2527,6 +2647,12 @@ func TestSaveToNewMultilineFileIntegration(t *testing.T) {
 		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 	}
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 	err = userFS.CreateDirsIfNotExist()
@@ -2609,6 +2735,12 @@ func TestSaveToNewCustomFileIntegration(t *testing.T) {
 	err = userFS.CreateDirsIfNotExist()
 	r.NoError(err)
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	cfg := userconfig.NewConfig(userFS, -1, "config.json")
 	err = cfg.CreateDefaultIfNotExists()
 	r.NoError(err)
@@ -2680,6 +2812,12 @@ func TestSaveToRecentFileIntegration(t *testing.T) {
 	now = func() time.Time {
 		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 	}
+
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
@@ -2785,6 +2923,12 @@ func TestSaveToTodayTaskIntegration(t *testing.T) {
 		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 	}
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 	err = userFS.CreateDirsIfNotExist()
@@ -2875,6 +3019,12 @@ func TestCollapseForwardedMessages(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
+
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
 
 	tgram := tg.NewFakeTG()
 
@@ -3425,6 +3575,12 @@ func TestMoveToExistingNote_InvalidHash(t *testing.T) {
 }
 
 func FuzzSaveFromTextMsg(f *testing.F) {
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	seedInputs := []string{
 		"Normal task",
 		"Special char /\\:*?|<>",

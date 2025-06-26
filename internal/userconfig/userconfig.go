@@ -24,7 +24,7 @@ const (
 	OneFileName = "Saved"
 )
 
-var defaultConfig = config{
+var DefaultConfig = config{
 	Language:                  "en",
 	Timezone:                  "UTC",
 	MoveToCmds:                []string{},
@@ -32,7 +32,7 @@ var defaultConfig = config{
 	Schedules:                 []Schedule{},
 	QuickCmds:                 []string{},
 	TwoEmojisEnabled:          false,
-	Mode:                      "tasks",
+	Mode:                      "file",
 	QuickHabitsEnabled:        false,
 	Channels:                  []int64{},
 }
@@ -81,7 +81,7 @@ func (c *Config) CreateDefaultIfNotExists() error {
 		return nil
 	}
 
-	err = c.write(defaultConfig)
+	err = c.write(DefaultConfig)
 	if err != nil {
 		return fmt.Errorf("can't write default config file: %w", err)
 	}
@@ -270,22 +270,22 @@ func (c *Config) Channels() []int64 {
 func (c *Config) read(path string) (config, error) {
 	exists, err := c.userFS.Exists(fs.DirRoot, path)
 	if err != nil {
-		return defaultConfig, fmt.Errorf("config load: %w", err)
+		return DefaultConfig, fmt.Errorf("config load: %w", err)
 	}
 
 	if !exists {
-		return defaultConfig, nil
+		return DefaultConfig, nil
 	}
 
 	content, err := c.userFS.Read(fs.DirRoot, c.filename)
 	if err != nil {
-		return defaultConfig, fmt.Errorf("config load: %w", err)
+		return DefaultConfig, fmt.Errorf("config load: %w", err)
 	}
 
 	cfg := config{}
 	err = json.Unmarshal([]byte(content), &cfg)
 	if err != nil {
-		return defaultConfig, fmt.Errorf("config load: can't unmarshal: %w", err)
+		return DefaultConfig, fmt.Errorf("config load: can't unmarshal: %w", err)
 	}
 
 	return cfg, nil

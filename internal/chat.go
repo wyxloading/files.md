@@ -55,7 +55,8 @@ func (b *Bot) saveToChat(content string, timezone *time.Location) (int, error) {
 	}
 
 	// Format timestamp with timezone
-	timestamp := time.Now().In(timezone).Format("`15:04`")
+	// TODO should we use timezone here?
+	timestamp := now().In(timezone).Format("`15:04`")
 
 	// Handle images similar to journal
 	if txt.HasImage(content) {

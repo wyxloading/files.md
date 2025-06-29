@@ -100,8 +100,8 @@ type Database interface {
 	DelInputExpectation()
 	FilenameByMsgID(msgID int) (string, bool)
 	DirByMsgID(msgID int) (string, bool)
-	SetFilenameByMsgID(msgID int, filename string)
-	SetDirByMsgID(msgID int, filename string)
+	SetRecentFilenameByMsgID(msgID int, filename string)
+	SetRecentDirByMsgID(msgID int, filename string)
 	RecentCommand() (string, bool)
 	SetRecentCommand(cmd string)
 	RecentCommandParams() ([]string, bool)
@@ -379,33 +379,38 @@ func (b *Bot) saveFromTextMsg(u Update) error {
 		return b.addToRepliedFile(replyMsgID, msg)
 	}
 
-	////sanitizedTitle, content, err := b.extractTitleAndContent(msg)
-	////if err != nil {
-	////	return fmt.Errorf("save: %w", err)
-	////}
-	////
-	////filename := fs.Filename(sanitizedTitle)
-	////err = b.createOrAdd(fs.DirToday, filename, content)
-	////if err != nil {
-	////	return fmt.Errorf("save: %w", err)
-	////}
-	//
+	if b.cfg.TasksOnlyMode() {
+		sanitizedTitle, content, err := b.extractTitleAndContent(msg)
+		if err != nil {
+			return fmt.Errorf("save: %w", err)
+		}
+
+		filename := fs.Filename(sanitizedTitle)
+		err = b.createOrAdd(fs.DirToday, filename, content)
+		if err != nil {
+			return fmt.Errorf("save: %w", err)
+		}
+
+		msgID, _ := u.MsgID()
+		b.db.SetRecentDirByMsgID(msgID, fs.DirToday)
+		b.db.SetRecentFilenameByMsgID(msgID, filename)
+
+		return b.showMoveTo([]string{fs.Hash(filename)})
+	}
+
+	// TODO handle forwards
 	//if updateHasTime {
 	//	setFirstMsgFilename(b.userID, filename, msgTime)
 	//	setFirstMsgTime(b.userID, msgTime)
-	//}
-	//
-	//msgID, _ := u.MsgID()
-	//b.db.SetDirByMsgID(msgID, fs.DirToday)
-	//b.db.SetFilenameByMsgID(msgID, filename)
-	//
-	//if b.cfg.JournalOnlyMode() {
-	//	return b.moveToJournal([]string{fs.Hash(filename)})
 	//}
 
 	index, err := b.saveToChat(msg, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("save to chat: %w", err)
+	}
+
+	if b.cfg.JournalOnlyMode() {
+		return b.moveToJournal([]string{strconv.Itoa(index)})
 	}
 
 	return b.showMoveTo([]string{strconv.Itoa(index)})
@@ -804,15 +809,15 @@ func (b *Bot) showMD(probablyInvalidMD string, kb *tg.Keyboard) error {
 }
 
 func (b *Bot) showMoveTo(params []string) error {
-	filenameHash := params[0]
+	hashOrIndex := params[0]
 	if b.cfg.NotesOnlyMode() {
 		b.delAllKeyboards()
 
-		return b.showMoveToFileOrDir([]string{filenameHash})
+		return b.showMoveToFileOrDir([]string{hashOrIndex})
 	}
 
 	var kb tg.Keyboard
-	userMoveToBtns := b.moveToBtns(filenameHash)
+	userMoveToBtns := b.moveToBtns(hashOrIndex)
 	if len(userMoveToBtns) == 0 {
 		b.delAllKeyboards()
 
@@ -820,12 +825,12 @@ func (b *Bot) showMoveTo(params []string) error {
 	}
 
 	// Add recent command if any
-	recentBtn := b.recentCmdBtn(filenameHash)
+	recentBtn := b.recentCmdBtn(hashOrIndex)
 	if recentBtn != nil {
 		userMoveToBtns = append(userMoveToBtns, *recentBtn)
 	}
 
-	userMoveToBtns = append(userMoveToBtns, tg.NewBtn(i18n.Tr("Move to tasks"), tg.NewCmd(consts.CmdShowToday, nil)))
+	userMoveToBtns = append(userMoveToBtns, tg.NewBtn(i18n.Tr("➡️ Today"), tg.NewCmd(consts.CmdShowToday, nil)))
 
 	userBtnsByRows := slice.Chunk(userMoveToBtns, btnsPerRow)
 	for _, row := range userBtnsByRows {
@@ -1345,8 +1350,8 @@ func (b *Bot) showMultilineTask(params []string) error {
 
 	msgID, hasLastKeyboard := b.db.LastKeyboardMsgID()
 	if hasLastKeyboard {
-		b.db.SetFilenameByMsgID(msgID, filename)
-		b.db.SetDirByMsgID(msgID, dir)
+		b.db.SetRecentFilenameByMsgID(msgID, filename)
+		b.db.SetRecentDirByMsgID(msgID, dir)
 	}
 
 	return nil
@@ -1394,8 +1399,8 @@ func (b *Bot) showFile(params []string) error {
 
 	msgID, hasLastKeyboard := b.db.LastKeyboardMsgID()
 	if hasLastKeyboard {
-		b.db.SetFilenameByMsgID(msgID, filename)
-		b.db.SetDirByMsgID(msgID, dir)
+		b.db.SetRecentFilenameByMsgID(msgID, filename)
+		b.db.SetRecentDirByMsgID(msgID, dir)
 	}
 
 	return nil
@@ -2010,8 +2015,8 @@ func (b *Bot) showChecklistItem(params []string) error {
 
 	msgID, hasLastKeyboard := b.db.LastKeyboardMsgID()
 	if hasLastKeyboard {
-		b.db.SetFilenameByMsgID(msgID, filename)
-		b.db.SetDirByMsgID(msgID, dir)
+		b.db.SetRecentFilenameByMsgID(msgID, filename)
+		b.db.SetRecentDirByMsgID(msgID, dir)
 	}
 
 	return nil

@@ -88,11 +88,11 @@ func (db *DB) DirByMsgID(msgID int) (string, bool) {
 	return filename.(string), true
 }
 
-func (db *DB) SetFilenameByMsgID(msgID int, filename string) {
+func (db *DB) SetRecentFilenameByMsgID(msgID int, filename string) {
 	filenameByMsgID.Store(filenameByMsgIDKey(db.UserID, msgID), filename)
 }
 
-func (db *DB) SetDirByMsgID(msgID int, filename string) {
+func (db *DB) SetRecentDirByMsgID(msgID int, filename string) {
 	dirByMsgID.Store(dirByMsgIDKey(db.UserID, msgID), filename)
 }
 

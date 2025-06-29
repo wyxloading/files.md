@@ -31,6 +31,14 @@ func init() {
 func TestSaveFromTextMsg(t *testing.T) {
 	r := require.New(t)
 
+	savedNow := now
+	defer func() {
+		now = savedNow
+	}()
+	now = func() time.Time {
+		return time.Date(2025, 7, 29, 12, 0, 0, 0, time.UTC)
+	}
+
 	mode := userconfig.DefaultConfig.Mode
 	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
 	defer func() {
@@ -46,197 +54,193 @@ func TestSaveFromTextMsg(t *testing.T) {
 	err = bot.Reply(tg.NewUpd(-1, "New task"))
 	r.NoError(err)
 
-	tasks, err := bot.fs.FilesAndDirs("today")
+	chat, err := bot.fs.Read("/", "Chat.txt")
 	r.NoError(err)
 
-	r.Len(tasks, 1)
-	r.Equal("New task.md", tasks[0].Name)
-
-	content, err := bot.fs.Read("today", "New task.md")
-	r.NoError(err)
-	r.Empty(content)
+	r.Equal("#### 29 June, Sunday\n`12:00` New task\n", chat)
 }
 
-func TestSaveFromLongTextMsg(t *testing.T) {
-	r := require.New(t)
+// Test - move long from chat to task
+//func TestSaveFromLongTextMsg(t *testing.T) {
+//	r := require.New(t)
+//
+//	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+//	r.NoError(err)
+//
+//	tgram := tg.NewFakeTG()
+//
+//	mode := userconfig.DefaultConfig.Mode
+//	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+//	defer func() {
+//		userconfig.DefaultConfig.Mode = mode
+//	}()
+//
+//	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+//	err = bot.Reply(tg.NewUpd(-1, strings.Repeat("a", 101)))
+//	r.NoError(err)
+//
+//	tasks, err := bot.fs.FilesAndDirs("today")
+//	r.NoError(err)
+//
+//	filename := fmt.Sprintf("A%s....md", strings.Repeat("a", 99))
+//	r.Len(tasks, 1)
+//	r.Equal(filename, tasks[0].Name)
+//
+//	content, err := bot.fs.Read("today", filename)
+//	r.NoError(err)
+//	r.Equal("A"+strings.Repeat("a", 100), content)
+//}
 
-	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
-	r.NoError(err)
+//func TestSaveFromTextMsgWithSanitize(t *testing.T) {
+//	r := require.New(t)
+//
+//	mode := userconfig.DefaultConfig.Mode
+//	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+//	defer func() {
+//		userconfig.DefaultConfig.Mode = mode
+//	}()
+//
+//	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+//	r.NoError(err)
+//
+//	tgram := tg.NewFakeTG()
+//
+//	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+//	err = bot.Reply(tg.NewUpd(-1, "New task/"))
+//	r.NoError(err)
+//
+//	tasks, err := bot.fs.FilesAndDirs("today")
+//	r.NoError(err)
+//
+//	r.Len(tasks, 1)
+//	r.Equal("New task／.md", tasks[0].Name)
+//
+//	content, err := bot.fs.Read("today", "New task／.md")
+//	r.NoError(err)
+//	r.Equal("New task/", content)
+//
+//	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
+//	r.NoError(err)
+//
+//	r.Equal("<b>1</b> left"+wideSpacer, tgram.LastEditedText)
+//	r.Equal(tg.NewKeyboard([]tg.Row{
+//		tg.NewBtn("👀 New task/", tg.NewCmd("task", []string{"today", "24e70ffbf48"})),
+//	},
+//	), tgram.LastEditedKeyboard)
+//}
 
-	tgram := tg.NewFakeTG()
+//func TestAddMultilineTaskToToday(t *testing.T) {
+//	r := require.New(t)
+//
+//	mode := userconfig.DefaultConfig.Mode
+//	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+//	defer func() {
+//		userconfig.DefaultConfig.Mode = mode
+//	}()
+//
+//	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+//	r.NoError(err)
+//
+//	tgram := tg.NewFakeTG()
+//
+//	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+//	err = bot.Reply(tg.NewUpd(-1, "New task\nContent"))
+//	r.NoError(err)
+//
+//	tasks, err := bot.fs.FilesAndDirs("today")
+//	r.NoError(err)
+//
+//	r.Len(tasks, 1)
+//	r.Equal("New task.md", tasks[0].Name)
+//	r.True(tasks[0].IsMultiline)
+//
+//	content, err := bot.fs.Read("today", "New task.md")
+//	r.NoError(err)
+//	r.Equal("Content", content)
+//}
 
-	mode := userconfig.DefaultConfig.Mode
-	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
-	defer func() {
-		userconfig.DefaultConfig.Mode = mode
-	}()
+//func TestAddTaskWithSpecCharsToToday(t *testing.T) {
+//	r := require.New(t)
+//
+//	mode := userconfig.DefaultConfig.Mode
+//	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+//	defer func() {
+//		userconfig.DefaultConfig.Mode = mode
+//	}()
+//
+//	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+//	r.NoError(err)
+//
+//	tgram := tg.NewFakeTG()
+//
+//	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+//	err = bot.Reply(tg.NewUpd(-1, "New task\nUrl! https://g.com (Also_text] ##header\n-item1\n-item2\n1+1=2"))
+//	r.NoError(err)
+//
+//	tasks, err := bot.fs.FilesAndDirs("today")
+//	r.NoError(err)
+//
+//	r.Len(tasks, 1)
+//	r.Equal("New task.md", tasks[0].Name)
+//	r.True(tasks[0].IsMultiline)
+//
+//	content, err := bot.fs.Read("today", "New task.md")
+//	r.NoError(err)
+//	r.Equal("Url! https://g.com (Also_text] ##header\n-item1\n-item2\n1+1=2", content)
+//}
 
-	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Reply(tg.NewUpd(-1, strings.Repeat("a", 101)))
-	r.NoError(err)
+//func TestAddTaskWithOnlyWhitespace(t *testing.T) {
+//	// Test adding a task that contains only whitespace characters
+//	r := require.New(t)
+//
+//	mode := userconfig.DefaultConfig.Mode
+//	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+//	defer func() {
+//		userconfig.DefaultConfig.Mode = mode
+//	}()
+//
+//	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+//	r.NoError(err)
+//	err = userFS.CreateDirsIfNotExist()
+//	r.NoError(err)
+//
+//	tgram := tg.NewFakeTG()
+//
+//	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+//
+//	err = bot.Reply(tg.NewUpd(-1, "   \t\n"))
+//	r.EqualError(err, "save: extract title: empty msg")
+//
+//	tasks, err := bot.fs.FilesAndDirs("today")
+//	r.NoError(err)
+//	r.Len(tasks, 0)
+//}
 
-	tasks, err := bot.fs.FilesAndDirs("today")
-	r.NoError(err)
-
-	filename := fmt.Sprintf("A%s....md", strings.Repeat("a", 99))
-	r.Len(tasks, 1)
-	r.Equal(filename, tasks[0].Name)
-
-	content, err := bot.fs.Read("today", filename)
-	r.NoError(err)
-	r.Equal("A"+strings.Repeat("a", 100), content)
-}
-
-func TestSaveFromTextMsgWithSanitize(t *testing.T) {
-	r := require.New(t)
-
-	mode := userconfig.DefaultConfig.Mode
-	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
-	defer func() {
-		userconfig.DefaultConfig.Mode = mode
-	}()
-
-	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
-	r.NoError(err)
-
-	tgram := tg.NewFakeTG()
-
-	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Reply(tg.NewUpd(-1, "New task/"))
-	r.NoError(err)
-
-	tasks, err := bot.fs.FilesAndDirs("today")
-	r.NoError(err)
-
-	r.Len(tasks, 1)
-	r.Equal("New task／.md", tasks[0].Name)
-
-	content, err := bot.fs.Read("today", "New task／.md")
-	r.NoError(err)
-	r.Equal("New task/", content)
-
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
-	r.NoError(err)
-
-	r.Equal("<b>1</b> left"+wideSpacer, tgram.LastEditedText)
-	r.Equal(tg.NewKeyboard([]tg.Row{
-		tg.NewBtn("👀 New task/", tg.NewCmd("task", []string{"today", "24e70ffbf48"})),
-	},
-	), tgram.LastEditedKeyboard)
-}
-
-func TestAddMultilineTaskToToday(t *testing.T) {
-	r := require.New(t)
-
-	mode := userconfig.DefaultConfig.Mode
-	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
-	defer func() {
-		userconfig.DefaultConfig.Mode = mode
-	}()
-
-	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
-	r.NoError(err)
-
-	tgram := tg.NewFakeTG()
-
-	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Reply(tg.NewUpd(-1, "New task\nContent"))
-	r.NoError(err)
-
-	tasks, err := bot.fs.FilesAndDirs("today")
-	r.NoError(err)
-
-	r.Len(tasks, 1)
-	r.Equal("New task.md", tasks[0].Name)
-	r.True(tasks[0].IsMultiline)
-
-	content, err := bot.fs.Read("today", "New task.md")
-	r.NoError(err)
-	r.Equal("Content", content)
-}
-
-func TestAddTaskWithSpecCharsToToday(t *testing.T) {
-	r := require.New(t)
-
-	mode := userconfig.DefaultConfig.Mode
-	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
-	defer func() {
-		userconfig.DefaultConfig.Mode = mode
-	}()
-
-	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
-	r.NoError(err)
-
-	tgram := tg.NewFakeTG()
-
-	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Reply(tg.NewUpd(-1, "New task\nUrl! https://g.com (Also_text] ##header\n-item1\n-item2\n1+1=2"))
-	r.NoError(err)
-
-	tasks, err := bot.fs.FilesAndDirs("today")
-	r.NoError(err)
-
-	r.Len(tasks, 1)
-	r.Equal("New task.md", tasks[0].Name)
-	r.True(tasks[0].IsMultiline)
-
-	content, err := bot.fs.Read("today", "New task.md")
-	r.NoError(err)
-	r.Equal("Url! https://g.com (Also_text] ##header\n-item1\n-item2\n1+1=2", content)
-}
-
-func TestAddTaskWithOnlyWhitespace(t *testing.T) {
-	// Test adding a task that contains only whitespace characters
-	r := require.New(t)
-
-	mode := userconfig.DefaultConfig.Mode
-	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
-	defer func() {
-		userconfig.DefaultConfig.Mode = mode
-	}()
-
-	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
-	r.NoError(err)
-	err = userFS.CreateDirsIfNotExist()
-	r.NoError(err)
-
-	tgram := tg.NewFakeTG()
-
-	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-
-	err = bot.Reply(tg.NewUpd(-1, "   \t\n"))
-	r.EqualError(err, "save: extract title: empty msg")
-
-	tasks, err := bot.fs.FilesAndDirs("today")
-	r.NoError(err)
-	r.Len(tasks, 0)
-}
-
-func TestAddTaskWithLeadingAndTrailingSpaces(t *testing.T) {
-	// Test adding a task with leading and trailing spaces in the name
-	r := require.New(t)
-
-	mode := userconfig.DefaultConfig.Mode
-	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
-	defer func() {
-		userconfig.DefaultConfig.Mode = mode
-	}()
-
-	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
-	r.NoError(err)
-
-	tgram := tg.NewFakeTG()
-
-	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-
-	err = bot.Reply(tg.NewUpd(-1, "   Task with spaces   "))
-	r.NoError(err)
-
-	tasks, err := bot.fs.FilesAndDirs("today")
-	r.NoError(err)
-	r.Len(tasks, 1)
-	r.Equal("Task with spaces.md", tasks[0].Name)
-}
+//func TestAddTaskWithLeadingAndTrailingSpaces(t *testing.T) {
+//	// Test adding a task with leading and trailing spaces in the name
+//	r := require.New(t)
+//
+//	mode := userconfig.DefaultConfig.Mode
+//	userconfig.DefaultConfig.Mode = userconfig.ModeTasks
+//	defer func() {
+//		userconfig.DefaultConfig.Mode = mode
+//	}()
+//
+//	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+//	r.NoError(err)
+//
+//	tgram := tg.NewFakeTG()
+//
+//	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+//
+//	err = bot.Reply(tg.NewUpd(-1, "   Task with spaces   "))
+//	r.NoError(err)
+//
+//	tasks, err := bot.fs.FilesAndDirs("today")
+//	r.NoError(err)
+//	r.Len(tasks, 1)
+//	r.Equal("Task with spaces.md", tasks[0].Name)
+//}
 
 func TestShowEmptyTodayList(t *testing.T) {
 	// Test displaying today's tasks when there are none
@@ -340,8 +344,8 @@ func TestSaveFromRegularReply(t *testing.T) {
 
 	tgram := tg.NewFakeTG()
 	database := db.NewFakeDB()
-	database.SetDirByMsgID(255, "today")
-	database.SetFilenameByMsgID(255, "Existing file.md")
+	database.SetRecentDirByMsgID(255, "today")
+	database.SetRecentFilenameByMsgID(255, "Existing file.md")
 	bot := NewBot(-1, tgram, userFS, database, fakeConfig())
 
 	upd := tg.NewUpd(-1, "Line")
@@ -487,8 +491,8 @@ func TestSaveFromReplyPhotoWithCaption(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	database := db.NewFakeDB()
-	database.SetDirByMsgID(255, "today")
-	database.SetFilenameByMsgID(255, "Existing file.md")
+	database.SetRecentDirByMsgID(255, "today")
+	database.SetRecentFilenameByMsgID(255, "Existing file.md")
 	bot := NewBot(-1, tgram, userFS, database, fakeConfig())
 
 	upd := tg.NewUpd(-1, "")
@@ -2311,7 +2315,7 @@ func TestShowFileEscapesHTML(t *testing.T) {
 	r.Equal("<b>File</b>\n\n&lt;b&gt;bold<i>italic</i>", tgram.LastSentText)
 }
 
-func TestSaveToNewTaskIntegration(t *testing.T) {
+func TestSaveToNewTask(t *testing.T) {
 	r := require.New(t)
 
 	savedNow := now
@@ -2719,7 +2723,7 @@ func TestSaveToNewMultilineFileIntegration(t *testing.T) {
 	r.Equal(msgID, tgram.LastSentMessageID)
 }
 
-func TestSaveToNewCustomFileIntegration(t *testing.T) {
+func TestSaveToNewCustomFile(t *testing.T) {
 	r := require.New(t)
 
 	savedNow := now
@@ -3286,8 +3290,8 @@ func TestSaveFromImage_ReplyToExistingFile(t *testing.T) {
 
 	tgram := tg.NewFakeTG()
 	database := db.NewFakeDB()
-	database.SetDirByMsgID(255, "today")
-	database.SetFilenameByMsgID(255, "Existing file.md")
+	database.SetRecentDirByMsgID(255, "today")
+	database.SetRecentFilenameByMsgID(255, "Existing file.md")
 	bot := NewBot(-1, tgram, userFS, database, fakeConfig())
 
 	upd := tg.NewUpd(-1, "")

@@ -102,6 +102,12 @@ func (c *Config) Timezone() *time.Location {
 	return location
 }
 
+func (c *Config) TasksOnlyMode() bool {
+	cfg, _ := c.read(c.filename)
+
+	return cfg.Mode == ModeTasks
+}
+
 func (c *Config) OneFileOnlyMode() bool {
 	cfg, _ := c.read(c.filename)
 

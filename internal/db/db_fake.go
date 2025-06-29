@@ -47,7 +47,7 @@ func (db *FakeDB) DelInputExpectation() {
 	db.InputExpectationCMD = nil
 }
 
-func (db *FakeDB) SetFilenameByMsgID(msgID int, filename string) {
+func (db *FakeDB) SetRecentFilenameByMsgID(msgID int, filename string) {
 	db.FilenameByMessageID = filename
 }
 
@@ -59,7 +59,7 @@ func (db *FakeDB) DirByMsgID(msgID int) (string, bool) {
 	return db.DirByMessageID, db.DirByMessageID != ""
 }
 
-func (db *FakeDB) SetDirByMsgID(msgID int, filename string) {
+func (db *FakeDB) SetRecentDirByMsgID(msgID int, filename string) {
 	db.DirByMessageID = filename
 }
 

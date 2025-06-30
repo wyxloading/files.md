@@ -130,11 +130,11 @@ func TestSaveFromTextMsgWithSanitize(t *testing.T) {
 	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
 	r.NoError(err)
 
-	r.Equal("<b>1</b> left"+wideSpacer, tgram.LastEditedText)
+	r.Equal("<b>1</b> left"+wideSpacer, tgram.LastSentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("👀 New task/", tg.NewCmd("task", []string{"today", "24e70ffbf48"})),
 	},
-	), tgram.LastEditedKeyboard)
+	), tgram.LastSentKeyboard)
 }
 
 func TestAddMultilineTaskToToday(t *testing.T) {
@@ -327,7 +327,7 @@ func TestSaveFromEmptyTextMsg(t *testing.T) {
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
 	err = bot.Reply(tg.NewUpd(-1, ""))
-	r.EqualError(err, "save: extract title: empty msg")
+	r.EqualError(err, "save: empty message")
 
 	tasks, err := bot.fs.FilesAndDirs("today")
 	r.NoError(err)
@@ -379,7 +379,17 @@ func TestSaveFromRegularReply(t *testing.T) {
 func TestSaveFromPhotoWithCaption(t *testing.T) {
 	r := require.New(t)
 
+	savedNow := now
+	defer func() {
+		now = savedNow
+	}()
+	now = func() time.Time {
+		return time.Date(2024, 8, 11, 9, 54, 0, 0, time.UTC)
+	}
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+	err = userFS.CreateDirsIfNotExist()
 	r.NoError(err)
 
 	tgram := tg.NewFakeTG()
@@ -391,17 +401,20 @@ func TestSaveFromPhotoWithCaption(t *testing.T) {
 	err = bot.Reply(upd)
 	r.NoError(err)
 
+	content, err := userFS.Read("/", "Chat.txt")
+	r.NoError(err)
+	r.Equal("#### 11 August, Sunday\n`09:54` ![center|400](media/tg_PHOTO_ID)\nCaption\n", content)
+
 	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
 	r.NoError(err)
 
 	files, err := bot.fs.FilesAndDirs("today")
 	r.NoError(err)
-
 	r.Len(files, 1)
 	r.Equal("Caption.md", files[0].Name)
 	r.True(files[0].IsMultiline)
 
-	content, err := bot.fs.Read("today", "Caption.md")
+	content, err = bot.fs.Read("today", "Caption.md")
 	r.NoError(err)
 	r.Equal("![center|400](media/tg_PHOTO_ID)\nCaption", content)
 }
@@ -546,7 +559,7 @@ func TestAddTaskToLater(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"later", "today", "0824149b387"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv_t", []string{"later", "today", "0824149b387"})))
 	r.NoError(err)
 
 	todayTasks, err := bot.fs.FilesAndDirs("today")
@@ -3165,6 +3178,9 @@ func TestSaveToTodayTask(t *testing.T) {
 	database := db.NewFakeDB()
 	bot := NewBot(-1, tgram, userFS, database, cfg)
 	err = bot.Reply(tg.NewUpd(-1, "New task"))
+	r.NoError(err)
+
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
 	r.NoError(err)
 
 	kb := tg.NewKeyboard([]tg.Row{

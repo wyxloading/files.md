@@ -58,15 +58,16 @@ func (b *Bot) saveToChat(content string, timezone *time.Location) (int, error) {
 	timestamp := now().In(timezone).Format("`15:04`")
 
 	// Handle images similar to journal
-	if txt.HasImage(content) {
-		// If there's an image - place timestamp under the image
-		re := regexp.MustCompile(txt.ImgPattern)
-		imgLink := re.FindString(content)
-		content = strings.TrimSpace(strings.Replace(content, imgLink, "", 1))
-		content = fmt.Sprintf("%s\n%s %s\n", imgLink, timestamp, strings.TrimSpace(content))
-	} else {
-		content = fmt.Sprintf("%s %s\n", timestamp, content)
-	}
+	//if txt.HasImage(content) {
+	//	// If there's an image - place timestamp under the image
+	//	re := regexp.MustCompile(txt.ImgPattern)
+	//	imgLink := re.FindString(content)
+	//	content = strings.TrimSpace(strings.Replace(content, imgLink, "", 1))
+	//	content = fmt.Sprintf("%s\n%s %s\n", imgLink, timestamp, strings.TrimSpace(content))
+	//} else {
+	content = fmt.Sprintf("%s %s\n", timestamp, content)
+	fmt.Println(content)
+	//}
 
 	md += content
 

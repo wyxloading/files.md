@@ -359,6 +359,9 @@ func (b *Bot) extractCmd(u Update) (*tg.Cmd, error) {
 
 func (b *Bot) saveFromTextMsg(u Update) error {
 	msg := extractMarkdown(u)
+	if len(msg) == 0 {
+		return fmt.Errorf("save: empty message")
+	}
 
 	// Collapse a few consecutive messages into one, see bot_forwards.go
 	msgTime, updateHasTime := u.Time()
@@ -427,50 +430,56 @@ func (b *Bot) saveFromImage(u Update) error {
 	}
 
 	// Collapse a few consecutive messages into one, see bot_forwards.go
-	msgTime, updateHasTime := u.Time()
-	if updateHasTime {
-		filename, shouldCollapse := collapseToMsg(b.userID, msgTime)
-		if shouldCollapse {
-			err := b.createOrAdd(fs.DirToday, filename, content)
-			if err != nil {
-				return fmt.Errorf("save collapsed: %w", err)
-			}
-			return nil
-		}
-	}
+	// TODO support forwards
+	//msgTime, updateHasTime := u.Time()
+	//if updateHasTime {
+	//	filename, shouldCollapse := collapseToMsg(b.userID, msgTime)
+	//	if shouldCollapse {
+	//		err := b.createOrAdd(fs.DirToday, filename, content)
+	//		if err != nil {
+	//			return fmt.Errorf("save collapsed: %w", err)
+	//		}
+	//		return nil
+	//	}
+	//}
 
 	// Adding to an existing file
 	if replyMsgID, ok := u.ReplyToMsgID(); ok {
 		return b.addToRepliedFile(replyMsgID, content)
 	}
 
-	// Creating a new file
-	title := strings.SplitN(strings.TrimSpace(u.Caption()), "\n", 2)[0]
-	title = strings.TrimSpace(title)
-	if utf8.RuneCountInString(title) > maxTitleLength {
-		title = txt.Substr(title, 0, maxTitleLength) + "..."
-	}
-	if title == "" {
-		title = fmt.Sprintf("Img %s", now().Format("02.01.06 15:04"))
-	}
-	sanitizedTitle := fs.SanitizeFilename(title)
-
-	filename := fs.Filename(sanitizedTitle)
-	err = b.createOrAdd(fs.DirToday, filename, content)
+	msgIndex, err := b.saveToChat(content, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("save from image: %w", err)
 	}
 
-	if updateHasTime {
-		setFirstMsgFilename(b.userID, filename, msgTime)
-		setFirstMsgTime(b.userID, msgTime)
-	}
+	//title := strings.SplitN(strings.TrimSpace(u.Caption()), "\n", 2)[0]
+	//title = strings.TrimSpace(title)
+	//if utf8.RuneCountInString(title) > maxTitleLength {
+	//	title = txt.Substr(title, 0, maxTitleLength) + "..."
+	//}
+	//if title == "" {
+	//	title = fmt.Sprintf("Img %s", now().Format("02.01.06 15:04"))
+	//}
+	//sanitizedTitle := fs.SanitizeFilename(title)
+	//
+	//filename := fs.Filename(sanitizedTitle)
+	//err = b.createOrAdd(fs.DirToday, filename, content)
+	//if err != nil {
+	//	return fmt.Errorf("save from image: %w", err)
+	//}
+
+	// TODO fix forwards
+	//if updateHasTime {
+	//	setFirstMsgFilename(b.userID, filename, msgTime)
+	//	setFirstMsgTime(b.userID, msgTime)
+	//}
 
 	if b.cfg.JournalOnlyMode() {
-		return b.moveToJournal([]string{fs.Hash(filename)})
+		return b.moveToJournal([]string{strconv.Itoa(msgIndex)})
 	}
 
-	return b.showMoveTo([]string{fs.Hash(filename)})
+	return b.showMoveTo([]string{strconv.Itoa(msgIndex)})
 }
 
 // saveImage saves an image to the filesystem and returns a markdown link to it
@@ -489,6 +498,7 @@ func (b *Bot) saveImage(u Update) (string, error) {
 		return "", fmt.Errorf("can't save image: %w", err)
 	}
 
+	// TODO remove center
 	imgPath := fmt.Sprintf("%s/%s", fs.DirMedia, imgFilename)
 	content := fmt.Sprintf("![center|%d](%s)", savedImgWidth, imgPath)
 	// If there's caption, place it under the image
@@ -501,6 +511,7 @@ func (b *Bot) saveImage(u Update) (string, error) {
 	return content, nil
 }
 
+// TODO add chat.md support
 func (b *Bot) addToRepliedFile(replyToMsgID int, newContent string) error {
 	dir, _ := b.db.DirByMsgID(replyToMsgID)
 	existingFilename, ok := b.db.FilenameByMsgID(replyToMsgID)
@@ -668,6 +679,14 @@ func (b *Bot) extractTitleAndContent(msg string) (string, string, error) {
 
 	parts := strings.SplitN(msg, "\n", 2)
 	title := txt.Ucfirst(strings.TrimSpace(parts[0]))
+	if txt.HasImage(title) {
+		if len(parts) > 1 {
+			title = txt.Ucfirst(strings.TrimSpace(parts[1]))
+		}
+		if title == "" {
+			title = fmt.Sprintf("Img %s", now().Format("02.01.06 15:04"))
+		}
+	}
 
 	if utf8.RuneCountInString(title) > maxTitleLength {
 		title = txt.Substr(title, 0, maxTitleLength) + "..."

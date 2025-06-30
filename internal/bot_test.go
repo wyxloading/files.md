@@ -483,6 +483,12 @@ func TestSaveFromPhotoWithoutCaption(t *testing.T) {
 		return time.Date(2024, 8, 11, 9, 54, 0, 0, time.UTC)
 	}
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeFull
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 
@@ -493,6 +499,10 @@ func TestSaveFromPhotoWithoutCaption(t *testing.T) {
 	upd.PhotoID = "PHOTO_ID"
 	err = bot.Reply(upd)
 	r.NoError(err)
+
+	content, err := userFS.Read("/", "Chat.txt")
+	r.NoError(err)
+	r.Equal("#### 11 August, Sunday\n`09:54` ![center|400](media/tg_PHOTO_ID)\n", content)
 
 	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
 	r.NoError(err)
@@ -506,7 +516,7 @@ func TestSaveFromPhotoWithoutCaption(t *testing.T) {
 	r.True(files[0].IsMultiline)
 
 	// Be aware that it's not regular ꞉
-	content, err := bot.fs.Read("today", "Img 11.08.24 09꞉54.md")
+	content, err = bot.fs.Read("today", "Img 11.08.24 09꞉54.md")
 	r.NoError(err)
 	r.Equal("![center|400](media/tg_PHOTO_ID)", content)
 }

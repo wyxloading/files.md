@@ -683,7 +683,8 @@ func (b *Bot) extractTitleAndContent(msg string) (string, string, error) {
 		if len(parts) > 1 {
 			title = txt.Ucfirst(strings.TrimSpace(parts[1]))
 		}
-		if title == "" {
+
+		if title == "" || len(parts) == 1 {
 			title = fmt.Sprintf("Img %s", now().Format("02.01.06 15:04"))
 		}
 	}

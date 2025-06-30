@@ -422,7 +422,17 @@ func TestSaveFromPhotoWithCaption(t *testing.T) {
 func TestSaveFromPhotoWithLongCaption(t *testing.T) {
 	r := require.New(t)
 
+	savedNow := now
+	defer func() {
+		now = savedNow
+	}()
+	now = func() time.Time {
+		return time.Date(2024, 8, 11, 9, 54, 0, 0, time.UTC)
+	}
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+	err = userFS.CreateDirsIfNotExist()
 	r.NoError(err)
 
 	tgram := tg.NewFakeTG()
@@ -434,10 +444,14 @@ func TestSaveFromPhotoWithLongCaption(t *testing.T) {
 	err = bot.Reply(upd)
 	r.NoError(err)
 
+	content, err := userFS.Read("/", "Chat.txt")
+	r.NoError(err)
+	r.Equal("#### 11 August, Sunday\n`09:54` ![center|400](media/tg_PHOTO_ID)\nAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n", content)
+
 	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
 	r.NoError(err)
 
-	content, err := bot.fs.Read("today", fmt.Sprintf("A%s....md", strings.Repeat("a", 99)))
+	content, err = bot.fs.Read("today", fmt.Sprintf("A%s....md", strings.Repeat("a", 99)))
 	r.NoError(err)
 	r.Equal(fmt.Sprintf("![center|400](media/tg_PHOTO_ID)\nA%s", strings.Repeat("a", 100)), content)
 }
@@ -445,7 +459,17 @@ func TestSaveFromPhotoWithLongCaption(t *testing.T) {
 func TestSaveFromPhotoWithSanitizedCaption(t *testing.T) {
 	r := require.New(t)
 
+	savedNow := now
+	defer func() {
+		now = savedNow
+	}()
+	now = func() time.Time {
+		return time.Date(2024, 8, 11, 9, 54, 0, 0, time.UTC)
+	}
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+	err = userFS.CreateDirsIfNotExist()
 	r.NoError(err)
 
 	tgram := tg.NewFakeTG()
@@ -457,6 +481,10 @@ func TestSaveFromPhotoWithSanitizedCaption(t *testing.T) {
 	err = bot.Reply(upd)
 	r.NoError(err)
 
+	content, err := userFS.Read("/", "Chat.txt")
+	r.NoError(err)
+	r.Equal("#### 11 August, Sunday\n`09:54` ![center|400](media/tg_PHOTO_ID)\nCaption/\n", content)
+
 	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
 	r.NoError(err)
 
@@ -467,7 +495,7 @@ func TestSaveFromPhotoWithSanitizedCaption(t *testing.T) {
 	r.Equal("Caption／.md", files[0].Name)
 	r.True(files[0].IsMultiline)
 
-	content, err := bot.fs.Read("today", "Caption／.md")
+	content, err = bot.fs.Read("today", "Caption／.md")
 	r.NoError(err)
 	r.Equal("![center|400](media/tg_PHOTO_ID)\nCaption/", content)
 }

@@ -144,6 +144,7 @@ function initChat() {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSend();
+            autoResize();
         }
     });
 
@@ -244,12 +245,52 @@ function renderMessages() {
 
 function attachEventListeners() {
     chatContainer.addEventListener('mousedown', function(e) {
+        // If clicking outside messages, prepare for multi-select
+        if (!e.target.closest('.message')) {
+            let allMessages = Array.from(chatContainer.querySelectorAll('.message'));
+            let startMessage = null;
+
+            function handleMouseMove(e) {
+                const currentMessage = e.target.closest('.message');
+                if (currentMessage) {
+                    document.getSelection().removeAllRanges(); // Prevent text selection
+
+                    if (!startMessage) {
+                        startMessage = currentMessage;
+                        document.querySelectorAll('.message.selected').forEach(m => m.classList.remove('selected'));
+                        currentMessage.classList.add('selected');
+                    } else if (currentMessage !== startMessage) {
+                        // Select range like normal message selection
+                        const startIndex = allMessages.indexOf(startMessage);
+                        const endIndex = allMessages.indexOf(currentMessage);
+                        const minIndex = Math.min(startIndex, endIndex);
+                        const maxIndex = Math.max(startIndex, endIndex);
+
+                        document.querySelectorAll('.message.selected').forEach(m => m.classList.remove('selected'));
+
+                        for (let i = minIndex; i <= maxIndex; i++) {
+                            allMessages[i].classList.add('selected');
+                        }
+                    }
+                }
+            }
+
+            function handleMouseUp() {
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+            }
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            return;
+        }
+
         const message = e.target.closest('.message');
         if (!message || e.target.closest('.message-actions')) {
             return;
         }
 
-        if (e.ctrlKey || e.metaKey) {
+        if (isMetaKey(e)) {
             message.classList.toggle('selected');
             return;
         }
@@ -321,6 +362,7 @@ function attachEventListeners() {
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
             searchModal.open('', btn.dataset.index, e.target)
+            chatInput.focus();
         });
     });
 
@@ -347,6 +389,7 @@ function attachEventListeners() {
                     message.remove();
                 }, 300);
             });
+            chatInput.focus();
         });
     });
 
@@ -395,6 +438,15 @@ function escapeHtml(text) {
 }
 
 function autoResize() {
+    if (chatInput.value === '') {
+        chatInput.style.height = '';
+        return;
+    }
+
+    if (chatInput.value.split('\n').length <= 1) {
+        return;
+    }
+
     chatInput.style.height = 'auto';
     chatInput.style.height = Math.min(chatInput.scrollHeight, 250) + 'px';
 }

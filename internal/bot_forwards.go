@@ -26,8 +26,8 @@ import (
 )
 
 var (
-	firstMsgFilenames sync.Map
-	firstMsgTimes     sync.Map
+	firstMsgIndicies sync.Map
+	firstMsgTimes    sync.Map
 )
 
 func firstMsgTime(userID int64) (int, bool) {
@@ -43,16 +43,16 @@ func setFirstMsgTime(userID int64, time int) {
 	firstMsgTimes.Store(userID, time)
 }
 
-func firstMsgFilename(userID int64) (string, bool) {
-	msg, ok := firstMsgFilenames.Load(userID)
+func firstMsgIndex(userID int64) (int, bool) {
+	msg, ok := firstMsgIndicies.Load(userID)
 	if !ok {
-		return "", false
+		return 0, false
 	}
 
-	return msg.(string), true
+	return msg.(int), true
 }
 
-func setFirstMsgFilename(userID int64, filename string, time int) {
+func setFirstMsgIndex(userID int64, msgIndex int, time int) {
 	firstTime, ok := firstMsgTime(userID)
 	if ok {
 		diff := time - firstTime
@@ -62,20 +62,20 @@ func setFirstMsgFilename(userID int64, filename string, time int) {
 		}
 	}
 
-	firstMsgFilenames.Store(userID, filename)
+	firstMsgIndicies.Store(userID, msgIndex)
 }
 
-func collapseToMsg(userID int64, time int) (string, bool) {
+func collapseToMsg(userID int64, time int) (int, bool) {
 	firstTime, ok := firstMsgTime(userID)
 	if !ok {
-		return "", false
+		return 0, false
 	}
 
 	diff := time - firstTime
 	// Sent in exactly same second or second after
 	if diff == 0 || diff == 1 {
-		return firstMsgFilename(userID)
+		return firstMsgIndex(userID)
 	}
 
-	return "", false
+	return 0, false
 }

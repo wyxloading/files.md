@@ -366,9 +366,11 @@ func (b *Bot) saveFromTextMsg(u Update) error {
 	// Collapse a few consecutive messages into one, see bot_forwards.go
 	msgTime, updateHasTime := u.Time()
 	if updateHasTime {
-		filename, shouldCollapse := collapseToMsg(b.userID, msgTime)
+		_, shouldCollapse := collapseToMsg(b.userID, msgTime)
 		if shouldCollapse {
-			err := b.createOrAdd(fs.DirToday, filename, msg)
+			// We just write at the end of our append-only chat file,
+			// that would concat the current message with the previous one.
+			err := b.createOrAdd(fs.DirRoot, fs.ChatFilename, msg)
 			if err != nil {
 				return fmt.Errorf("save collapsed: %w", err)
 			}
@@ -404,22 +406,21 @@ func (b *Bot) saveFromTextMsg(u Update) error {
 	//	return b.showMoveTo([]string{fs.Hash(filename)})
 	//}
 
-	// TODO handle forwards
-	//if updateHasTime {
-	//	setFirstMsgFilename(b.userID, filename, msgTime)
-	//	setFirstMsgTime(b.userID, msgTime)
-	//}
-
-	index, err := b.saveToChat(msg, b.cfg.Timezone())
+	msgIndex, err := b.saveToChat(msg, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("save to chat: %w", err)
 	}
 
-	if b.cfg.JournalOnlyMode() {
-		return b.moveToJournal([]string{strconv.Itoa(index)})
+	if updateHasTime {
+		setFirstMsgIndex(b.userID, msgIndex, msgTime)
+		setFirstMsgTime(b.userID, msgTime)
 	}
 
-	return b.showMoveTo([]string{strconv.Itoa(index)})
+	if b.cfg.JournalOnlyMode() {
+		return b.moveToJournal([]string{strconv.Itoa(msgIndex)})
+	}
+
+	return b.showMoveTo([]string{strconv.Itoa(msgIndex)})
 }
 
 // TODO test collapsing from both regular messages and images

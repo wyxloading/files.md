@@ -347,17 +347,6 @@ async function initWasm() {
     window.replyCmd = replyCmd
 }
 
-async function receive(val) {
-    console.log(val);
-    await loadData();
-    renderMessages();
-    scrollToBottom();
-
-    let file = await ((await getFileHandle(CHAT_FILENAME)).getFile());
-    // TODO inmemory lastmodified should be reloaded
-    files[editor.currentDir][editor.currentFile].lastModified =  file.lastModified;
-}
-
 function createAutocompleteDict() {
     const dict = {};
 

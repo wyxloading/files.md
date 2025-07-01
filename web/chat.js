@@ -3,6 +3,7 @@ let messages = [];
 let chatContainer;
 let messageInput;
 const CHAT_FILENAME = 'Chat.txt';
+let chatIsClean = true; // Are there any unsaved changes?
 
 function parseFileContent(content) {
     // Normalize line endings
@@ -143,7 +144,7 @@ function initChat() {
     messageInput.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            handleSend();
+            send();
             autoResize();
         }
     });
@@ -153,15 +154,28 @@ function initChat() {
     });
 }
 
-async function handleSend() {
+async function send() {
     const text = messageInput.value.trim();
     if (!text) return;
 
     messageInput.value = '';
+    chatIsClean = false;
     reply(text);
     await loadData();
     renderMessages();
     scrollToBottom();
+}
+
+async function receive(val) {
+    console.log(val);
+    await loadData();
+    renderMessages();
+    scrollToBottom();
+
+    let file = await ((await getFileHandle(CHAT_FILENAME)).getFile());
+    // TODO inmemory lastmodified should be reloaded
+    files[editor.currentDir][editor.currentFile].lastModified =  file.lastModified;
+    chatIsClean = true;
 }
 
 function renderMessages() {
@@ -376,14 +390,25 @@ function attachEventListeners() {
     chatContainer.querySelectorAll('.to-file-btn').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            searchModal.open('', btn.dataset.index, e.target)
+            const searchModalElement = document.getElementById('search');
+            if (searchModalElement.style.display !== 'none' && searchModalElement.style.display !== '') {
+                searchModal.close();
+            } else {
+                searchModal.open('', btn.dataset.index, e.target);
+            }
         });
     });
 
     chatContainer.querySelectorAll('.to-dir-btn').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            moveModal.open(btn.dataset.index, e.target)
+
+            const moveModalElement = document.getElementById('move');
+            if (moveModalElement.style.display !== 'none' && moveModalElement.style.display !== '') {
+                moveModal.close();
+            } else {
+                moveModal.open(btn.dataset.index, e.target);
+            }
         });
     });
 

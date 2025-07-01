@@ -978,7 +978,7 @@ async function syncCurrentFile(syncWithServer = true) {
     // If fs has fresher change, merge.
     // Sync with server.
 
-    if (editor.currentFile === CHAT_FILENAME) {
+    if (editor.currentFile === CHAT_FILENAME && chatIsClean) {
         try {
             let inMemoryLastModified = files[editor.currentDir]?.[editor.currentFile]?.lastModified;
             let file = await ((await getFileHandle(CHAT_FILENAME)).getFile());

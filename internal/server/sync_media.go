@@ -54,6 +54,7 @@ func SyncMedias(w http.ResponseWriter, r *http.Request) {
 	latestTimestamp := int64(0)
 	for filename, modTime := range ctimes {
 		// TODO theoretically it is possible to miss some files if there were created in the same second.
+		slog.Error("Mod time ", "filename", filename, "modTime", modTime, "syncMediasRequest.Timestamp", syncMediasRequest.Timestamp)
 		if modTime <= syncMediasRequest.Timestamp {
 			continue
 		}

@@ -7,6 +7,7 @@ import (
 	"syscall"
 )
 
+// Ctime returns the creation time of a file in microseconds since epoch.
 var Ctime = func(fi os.FileInfo) int64 {
 	stat := fi.Sys().(*syscall.Stat_t)
 

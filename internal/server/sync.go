@@ -24,10 +24,12 @@ const (
 )
 
 type file struct {
-	Status       string `json:"status"`
-	Path         string `json:"path"`
-	LastModified int64  `json:"lastModified"`
-	Content      string `json:"content"`
+	Status             string `json:"status"`
+	Path               string `json:"path"`
+	LastModified       int64  `json:"lastModified"`
+	ClientLastModified int64  `json:"clientLastModified,omitempty"`
+	ClientLastSynced   int64  `json:"clientLastSynced,omitempty"`
+	Content            string `json:"content"`
 }
 
 type syncRequest struct {
@@ -254,7 +256,7 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctime, err := userFS.Ctime(fs.DirRoot, path)
+	serverLastModified, err := userFS.Ctime(fs.DirRoot, path)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
 			slog.Error("Sync error: syncText: error getting ctime for clientFile '%s': %v", path, err)
@@ -268,7 +270,7 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 	if serverContent == clientFile.Content {
 		response := map[string]interface{}{
 			"status":       StatusNotModified,
-			"lastModified": ctime,
+			"lastModified": serverLastModified,
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
@@ -281,11 +283,14 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 		logSync(fmt.Sprintf("Creating one clientFile: '%s'", clientFile.Path), r)
 		content = clientFile.Content
 	} else {
-		fileWasModifiedOnServer = ctime > clientFile.LastModified
-		if fileWasModifiedOnServer {
-			logSync(fmt.Sprintf("Server one clientFile '%s' was modified at %d, client timestamp is %d", path, ctime, clientFile.LastModified), r)
+		wasNotModifiedOnClient := clientFile.ClientLastModified == clientFile.ClientLastSynced
+		fileWasModifiedOnServer = serverLastModified > clientFile.LastModified
+		if fileWasModifiedOnServer && wasNotModifiedOnClient {
+			content = serverContent
+		} else if fileWasModifiedOnServer {
+			logSync(fmt.Sprintf("Server one clientFile '%s' was modified at %d, client timestamp is %d", path, serverLastModified, clientFile.LastModified), r)
 			logSync(fmt.Sprintf("Merging and writing one clientFile: '%s'", clientFile.Path), r)
-			content = Merge(string(serverContent), clientFile.Content)
+			content = Merge(serverContent, clientFile.Content)
 		} else {
 			// TODO for resilience add merge here, because we had case when server saved latest TS but no conent.
 			// Also, if for some reason timestamps would change on server migration and such.
@@ -304,14 +309,14 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctime, err = userFS.Ctime(fs.DirRoot, path)
+	serverLastModified, err = userFS.Ctime(fs.DirRoot, path)
 	// TODO what if 0?
-	logSync(fmt.Sprintf("Server timestamp for '%s': %d", path, ctime), r)
+	logSync(fmt.Sprintf("Server timestamp for '%s': %d", path, serverLastModified), r)
 
 	if !fileWasModifiedOnServer {
 		response := map[string]interface{}{
 			"status":       StatusUpdatedOnServer,
-			"lastModified": ctime,
+			"lastModified": serverLastModified,
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
@@ -322,7 +327,7 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 		Status:       StatusOK,
 		Content:      content,
 		Path:         clientFile.Path,
-		LastModified: ctime,
+		LastModified: serverLastModified,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

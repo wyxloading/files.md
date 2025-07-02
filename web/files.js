@@ -278,8 +278,8 @@ async function syncLocalFileWithServer(dir, filename) {
             body: JSON.stringify({
                 path: toPath(dir, filename),
                 lastModified: serverTimestamp,
-                lastSynced: serverFiles?.files?.[dir]?.[filename]?.lastSynced || 0,
-                localLastModified: file.lastModified,
+                clientLastSynced: serverFiles?.files?.[dir]?.[filename]?.lastSynced || 0,
+                clientLastModified: file.lastModified,
                 content: content,
             })
         });

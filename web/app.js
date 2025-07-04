@@ -1080,6 +1080,7 @@ window.addEventListener('focus', async () => {
 // Sync files on chat focus lose.
 window.addEventListener('blur', async function () {
     console.log('Window lost focus');
+    editor.refresh();
     if (!isChat) {
         return;
     }

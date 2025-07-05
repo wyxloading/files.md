@@ -1,4 +1,5 @@
 // TODO Do sync not as often
+// TODO migrate to unversal file id = filepath, instead of two components
 const API_HOST = window.API_HOST || 'https://api.files.md';
 // TODO that's quite often. Maybe on edit + focus?
 const SAVE_INTERVAL = 1000; // ms, how often to save currently open file

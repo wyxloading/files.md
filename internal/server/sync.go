@@ -52,6 +52,15 @@ type syncResponse struct {
 // 3) Based on known client dirs timestamps, send newly updated or created files
 // 4) Respond with last modification timestamps for every dir
 func SyncTexts(w http.ResponseWriter, r *http.Request) {
+	response := syncResponse{
+		Status: "reload",
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
+	}
+	return
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -134,7 +143,7 @@ func SyncTexts(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// We don't accept config from client, because for now it is only modified on server.
-		// Plus we need to mess with JSON merging :)
+		// Plus we need to mess with JSON mergingg :)
 		if clientFile.Path == config.BotCfg.ConfigFilename {
 			continue
 		}

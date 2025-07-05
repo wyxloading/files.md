@@ -958,7 +958,13 @@ async function openFile(dir, filename, saveToHistory = true, el = 'editor-textar
     if (cursorPos !== null) {
         console.log('cursor not null');
         currentEditor.setCursor(cursorPos);
-        currentEditor.scrollIntoView(cursorPos, 500);
+        const editorScrollHeight = currentEditor.getScrollInfo().clientHeight;
+        // Only scroll if editor'sheight more than current screen height
+        const contentFitsTheScreen = editorScrollHeight <= window.innerHeight;
+        if (!contentFitsTheScreen) {
+            let margin = 500;
+            currentEditor.scrollIntoView(cursorPos, margin);
+        }
         // TODO only focus if there's no quick dialogue
         currentEditor.focus();
     } else {

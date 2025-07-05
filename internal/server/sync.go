@@ -8,8 +8,10 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
+	"zakirullin/stuffbot/config"
 	"zakirullin/stuffbot/internal/fs"
 )
 
@@ -50,193 +52,184 @@ type syncResponse struct {
 // 3) Based on known client dirs timestamps, send newly updated or created files
 // 4) Respond with last modification timestamps for every dir
 func SyncTexts(w http.ResponseWriter, r *http.Request) {
-	response := syncResponse{
-		Status: "reload",
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
 	}
+
+	var request syncRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid syncMediasRequest JSON", http.StatusBadRequest)
+		return
+	}
+
+	userFS, err := fs.NewUserFS(userID(r))
+	if err != nil {
+		slog.Error("Sync error: syncTexts: error creating user FS", "error", err)
+		http.Error(w, "Error creating user FS", http.StatusInternalServerError)
+		return
+	}
+
+	// Delete files.
+	for _, path := range request.Deleted {
+		err = userFS.Del(fs.DirRoot, path)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				continue
+			}
+			slog.Error("Sync error: syncTexts: error deleting file", "path", path, "error", err)
+			continue
+		}
+		logDelete(fmt.Sprintf("Deleting file: '%s'", path), r)
+	}
+
+	// TODO using rename log first replace old paths in client request to new so other code will work okay
+	// and maybe include it right away for files to send
+	// TODO what if multiply moves, back and forth? Merge them?
+	lastSync := int64(0)
+	for _, ts := range request.Timestamps {
+		if ts > lastSync {
+			lastSync = ts
+		}
+	}
+	// TODO if a file was changed on client on oldPath, merge it with the new path
+
+	renames := make(map[string]string)
+	// Don't respond renames on first sync
+	if lastSync != 0 {
+		renames = RenamesLog(userID(r), lastSync)
+	}
+
+	// If a file was renamed and changed, on client we would rename then change?
+	// Save client-modified files to the server
+	for _, clientFile := range request.Modified {
+		path := clientFile.Path
+
+		serverModifiedTime, err := userFS.Ctime(fs.DirRoot, path)
+		var clientContent string
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			slog.Error("Sync error: syncTexts: error reading file '%s': %v", path, err)
+			logSync(fmt.Sprintf("Error reading file '%s': %v", path, err), r)
+			// TODO All-or-nothing sync?
+			continue
+		} else if errors.Is(err, os.ErrNotExist) {
+			logSync(fmt.Sprintf("Creating: '%s'", clientFile.Path), r)
+			clientContent = clientFile.Content
+		} else {
+			// file locks?
+			fileWasModifiedOnServer := serverModifiedTime > clientFile.LastModified
+			if fileWasModifiedOnServer {
+				serverContent, err := userFS.Read(fs.DirRoot, path)
+				if err != nil {
+					slog.Error("Sync error: syncTexts: error reading modified on server file '%s': %v", path, err)
+					continue
+				}
+				logSync(fmt.Sprintf("Merging and writing: '%s'", clientFile.Path), r)
+				clientContent = Merge(string(serverContent), clientFile.Content)
+			} else {
+				// Changed on client, unchanged on client
+				logSync(fmt.Sprintf("Writing only: '%s'", clientFile.Path), r)
+				clientContent = clientFile.Content
+			}
+		}
+
+		// We don't accept config from client, because for now it is only modified on server.
+		// Plus we need to mess with JSON mergingg :)
+		if clientFile.Path == config.BotCfg.ConfigFilename {
+			continue
+		}
+
+		// Write the clientContent to the server at path
+		err = userFS.Write(fs.DirRoot, path, clientContent)
+		if err != nil {
+			slog.Error("Sync error: syncTexts: error writing file '%s': %v", path, err)
+			logSync(fmt.Sprintf("Error writing file '%s': %v", path, err), r)
+			continue
+		}
+	}
+
+	// Based on known client dirs timestamps, send newly updated or created files.
+	serverTimestamps, err := userFS.Ctimes(fs.DirRoot, fs.MDExt, ".txt")
+	if err != nil {
+		slog.Error("Sync error: syncTexts: error getting server timestamps", "error", err)
+		http.Error(w, fmt.Sprintf("Failed to get timestamps: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Include config file timestamp, so it will be sent to the client if stale.
+	configCtime, err := userFS.Ctime(fs.DirRoot, config.BotCfg.ConfigFilename)
+	if err != nil {
+		slog.Error("Sync error: syncTexts: error getting timestamp for config file", "error", err)
+	} else {
+		serverTimestamps[config.BotCfg.ConfigFilename] = configCtime
+	}
+
+	// Prepare the list of files to send to the client
+	// TODO optimize don't send files known to client.
+	// For now we save client file to server, and the code below would include it again.
+	files := make([]file, 0)
+	dirTimestamps := make(map[string]int64)
+	for path, serverFileTime := range serverTimestamps {
+		// TOOD make it not as ugly?
+		parts := strings.Split(path, string(os.PathSeparator))
+		dir := parts[0]
+		isInRoot := len(parts) == 1
+		if isInRoot {
+			dir = "."
+		}
+
+		requestDirTime, exists := request.Timestamps[dir]
+		if !exists || serverFileTime > requestDirTime {
+			// Client needs this file - read its content
+			content, err := userFS.Read(fs.DirRoot, path)
+			if err != nil {
+				slog.Error("Sync error: syncTexts: error reading file", "path", path, "error", err)
+				logSync(fmt.Sprintf("Error reading file %s: %v", path, err), r)
+				continue
+			}
+
+			files = append(files, file{
+				Status:       StatusOK,
+				Path:         path,
+				LastModified: serverFileTime,
+				Content:      content,
+			})
+		}
+
+		// Calculate the latest file timestamp for each directory
+		existingTimestamp, exists := dirTimestamps[dir]
+		if !exists {
+			dirTimestamps[dir] = serverFileTime
+			continue
+		}
+		if serverFileTime > existingTimestamp {
+			dirTimestamps[dir] = serverFileTime
+		}
+	}
+
+	// Calculate deletions for client (files that exist on client but not on server)
+	// NO real delete yet
+	deletions := make([]string, 0)
+	for clientPath := range request.Timestamps {
+		if _, existsOnServer := serverTimestamps[clientPath]; !existsOnServer {
+			deletions = append(deletions, clientPath)
+		}
+	}
+	if len(deletions) > 0 {
+		logSync(fmt.Sprintf("Deleting files: %v", deletions), r)
+	}
+
+	response := syncResponse{
+		Status:     StatusOK,
+		Files:      files,
+		Timestamps: dirTimestamps,
+		Renames:    renames,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, "Error encoding response", http.StatusInternalServerError)
 	}
-	return
-	//
-	//if r.Method != http.MethodPost {
-	//	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	//	return
-	//}
-	//
-	//var request syncRequest
-	//if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-	//	http.Error(w, "Invalid syncMediasRequest JSON", http.StatusBadRequest)
-	//	return
-	//}
-	//
-	//userFS, err := fs.NewUserFS(userID(r))
-	//if err != nil {
-	//	slog.Error("Sync error: syncTexts: error creating user FS", "error", err)
-	//	http.Error(w, "Error creating user FS", http.StatusInternalServerError)
-	//	return
-	//}
-	//
-	//// Delete files.
-	//for _, path := range request.Deleted {
-	//	err = userFS.Del(fs.DirRoot, path)
-	//	if err != nil {
-	//		if errors.Is(err, os.ErrNotExist) {
-	//			continue
-	//		}
-	//		slog.Error("Sync error: syncTexts: error deleting file", "path", path, "error", err)
-	//		continue
-	//	}
-	//	logDelete(fmt.Sprintf("Deleting file: '%s'", path), r)
-	//}
-	//
-	//// TODO using rename log first replace old paths in client request to new so other code will work okay
-	//// and maybe include it right away for files to send
-	//// TODO what if multiply moves, back and forth? Merge them?
-	//lastSync := int64(0)
-	//for _, ts := range request.Timestamps {
-	//	if ts > lastSync {
-	//		lastSync = ts
-	//	}
-	//}
-	//// TODO if a file was changed on client on oldPath, merge it with the new path
-	//
-	//renames := make(map[string]string)
-	//// Don't respond renames on first sync
-	//if lastSync != 0 {
-	//	renames = RenamesLog(userID(r), lastSync)
-	//}
-	//
-	//// If a file was renamed and changed, on client we would rename then change?
-	//// Save client-modified files to the server
-	//for _, clientFile := range request.Modified {
-	//	path := clientFile.Path
-	//
-	//	serverModifiedTime, err := userFS.Ctime(fs.DirRoot, path)
-	//	var clientContent string
-	//	if err != nil && !errors.Is(err, os.ErrNotExist) {
-	//		slog.Error("Sync error: syncTexts: error reading file '%s': %v", path, err)
-	//		logSync(fmt.Sprintf("Error reading file '%s': %v", path, err), r)
-	//		// TODO All-or-nothing sync?
-	//		continue
-	//	} else if errors.Is(err, os.ErrNotExist) {
-	//		logSync(fmt.Sprintf("Creating: '%s'", clientFile.Path), r)
-	//		clientContent = clientFile.Content
-	//	} else {
-	//		// file locks?
-	//		fileWasModifiedOnServer := serverModifiedTime > clientFile.LastModified
-	//		if fileWasModifiedOnServer {
-	//			serverContent, err := userFS.Read(fs.DirRoot, path)
-	//			if err != nil {
-	//				slog.Error("Sync error: syncTexts: error reading modified on server file '%s': %v", path, err)
-	//				continue
-	//			}
-	//			logSync(fmt.Sprintf("Merging and writing: '%s'", clientFile.Path), r)
-	//			clientContent = Merge(string(serverContent), clientFile.Content)
-	//		} else {
-	//			// Changed on client, unchanged on client
-	//			logSync(fmt.Sprintf("Writing only: '%s'", clientFile.Path), r)
-	//			clientContent = clientFile.Content
-	//		}
-	//	}
-	//
-	//	// We don't accept config from client, because for now it is only modified on server.
-	//	// Plus we need to mess with JSON mergingg :)
-	//	if clientFile.Path == config.BotCfg.ConfigFilename {
-	//		continue
-	//	}
-	//
-	//	// Write the clientContent to the server at path
-	//	err = userFS.Write(fs.DirRoot, path, clientContent)
-	//	if err != nil {
-	//		slog.Error("Sync error: syncTexts: error writing file '%s': %v", path, err)
-	//		logSync(fmt.Sprintf("Error writing file '%s': %v", path, err), r)
-	//		continue
-	//	}
-	//}
-	//
-	//// Based on known client dirs timestamps, send newly updated or created files.
-	//serverTimestamps, err := userFS.Ctimes(fs.DirRoot, fs.MDExt, ".txt")
-	//if err != nil {
-	//	slog.Error("Sync error: syncTexts: error getting server timestamps", "error", err)
-	//	http.Error(w, fmt.Sprintf("Failed to get timestamps: %v", err), http.StatusInternalServerError)
-	//	return
-	//}
-	//
-	//// Include config file timestamp, so it will be sent to the client if stale.
-	//configCtime, err := userFS.Ctime(fs.DirRoot, config.BotCfg.ConfigFilename)
-	//if err != nil {
-	//	slog.Error("Sync error: syncTexts: error getting timestamp for config file", "error", err)
-	//} else {
-	//	serverTimestamps[config.BotCfg.ConfigFilename] = configCtime
-	//}
-	//
-	//// Prepare the list of files to send to the client
-	//// TODO optimize don't send files known to client.
-	//// For now we save client file to server, and the code below would include it again.
-	//files := make([]file, 0)
-	//dirTimestamps := make(map[string]int64)
-	//for path, serverFileTime := range serverTimestamps {
-	//	// TOOD make it not as ugly?
-	//	parts := strings.Split(path, string(os.PathSeparator))
-	//	dir := parts[0]
-	//	isInRoot := len(parts) == 1
-	//	if isInRoot {
-	//		dir = "."
-	//	}
-	//
-	//	requestDirTime, exists := request.Timestamps[dir]
-	//	if !exists || serverFileTime > requestDirTime {
-	//		// Client needs this file - read its content
-	//		content, err := userFS.Read(fs.DirRoot, path)
-	//		if err != nil {
-	//			slog.Error("Sync error: syncTexts: error reading file", "path", path, "error", err)
-	//			logSync(fmt.Sprintf("Error reading file %s: %v", path, err), r)
-	//			continue
-	//		}
-	//
-	//		files = append(files, file{
-	//			Status:       StatusOK,
-	//			Path:         path,
-	//			LastModified: serverFileTime,
-	//			Content:      content,
-	//		})
-	//	}
-	//
-	//	// Calculate the latest file timestamp for each directory
-	//	existingTimestamp, exists := dirTimestamps[dir]
-	//	if !exists {
-	//		dirTimestamps[dir] = serverFileTime
-	//		continue
-	//	}
-	//	if serverFileTime > existingTimestamp {
-	//		dirTimestamps[dir] = serverFileTime
-	//	}
-	//}
-	//
-	//// Calculate deletions for client (files that exist on client but not on server)
-	//// NO real delete yet
-	//deletions := make([]string, 0)
-	//for clientPath := range request.Timestamps {
-	//	if _, existsOnServer := serverTimestamps[clientPath]; !existsOnServer {
-	//		deletions = append(deletions, clientPath)
-	//	}
-	//}
-	//if len(deletions) > 0 {
-	//	logSync(fmt.Sprintf("Deleting files: %v", deletions), r)
-	//}
-	//
-	//response := syncResponse{
-	//	Status:     StatusOK,
-	//	Files:      files,
-	//	Timestamps: dirTimestamps,
-	//	Renames:    renames,
-	//}
-	//
-	//w.Header().Set("Content-Type", "application/json")
-	//if err := json.NewEncoder(w).Encode(response); err != nil {
-	//	http.Error(w, "Error encoding response", http.StatusInternalServerError)
-	//}
 }
 
 func SyncText(w http.ResponseWriter, r *http.Request) {

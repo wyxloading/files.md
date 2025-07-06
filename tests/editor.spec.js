@@ -85,10 +85,10 @@ test.describe('Files.md Text Editor Sync Tests', () => {
         expect(count).toEqual(4);
 
         const expectedSelections = [
-            { left: 2, width: 143, right: 145 },
-            { left: 2, width: 97, right: 99 },
-            { left: 2, width: 196, right: 198 },
-            { left: 2, width: 229, right: 231 },
+            { left: 2, width: 134, right: 136 },
+            { left: 2, width: 95, right: 97 },
+            { left: 2, width: 188, right: 190 },
+            { left: 2, width: 225, right: 227 },
         ];
 
         for (let i = 0; i < count; i++) {
@@ -132,16 +132,16 @@ test.describe('Files.md Text Editor Sync Tests', () => {
         expect(count).toEqual(10);
 
         const expectedSelections = [
-            { left: 2, width: 142, right: 144 },
-            { left: 2, width: 741, right: 743 },
-            { left: 2, width: 728, right: 730 },
-            { left: 2, width: 752, right: 754 },
-            { left: 2, width: 716, right: 718 },
-            { left: 2, width: 734, right: 736 },
-            { left: 2, width: 734, right: 736 },
+            { left: 2, width: 138, right: 140 },
+            { left: 2, width: 742, right: 744 },
+            { left: 2, width: 740, right: 742 },
             { left: 2, width: 753, right: 755 },
-            { left: 2, width: 730, right: 732 },
-            { left: 2, width: 624, right: 626 },
+            { left: 2, width: 738, right: 740 },
+            { left: 2, width: 718, right: 720 },
+            { left: 2, width: 746, right: 748 },
+            { left: 2, width: 702, right: 704 },
+            { left: 2, width: 691, right: 693 },
+            { left: 2, width: 503, right: 505 },
         ];
 
         for (let i = 0; i < count; i++) {
@@ -187,8 +187,8 @@ test.describe('Files.md Text Editor Sync Tests', () => {
         expect(count).toEqual(2);
 
         const expectedSelections = [
-            { left: 2, width: 758, right: 760 },
-            { left: 2, width: 67, right: 69 },
+            { left: 699, width: 62, right: 761 },
+            { left: 2, width: 752, right: 754 },
         ];
 
         for (let i = 0; i < count; i++) {

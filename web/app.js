@@ -665,6 +665,7 @@ function focusLastLine() {
     }
     for (let i = lastLine; i >= 0; i--) {
         const lineContent = currentEditor.getLine(i).trim();
+
         if (!lineContent.startsWith('[') && (!lineContent.endsWith(']') || !lineContent.endsWith(')'))) {
             targetLine = i;
             break;

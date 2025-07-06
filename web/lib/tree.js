@@ -515,6 +515,22 @@ function TreeView(root, container, options) {
         return li_header;
     }
 
+    function shouldShowGroupHeaders() {
+        var groupCount = 0;
+        var children = root.getChildren();
+
+        if (children.length > 0) {
+            groupCount = 1; // First group
+            for (var i = 0; i < children.length; i++) {
+                if (children[i].isGroupEnd) {
+                    groupCount++;
+                }
+            }
+        }
+
+        return groupCount > 1;
+    }
+
     function renderNode(node) {
         var li_outer = document.createElement("li");
         var span_desc = document.createElement("span");
@@ -526,7 +542,7 @@ function TreeView(root, container, options) {
         var groupHeaderText = "";
         var groupHeaderClass = "";
 
-        if (node.parent === root && !isWelcome) {
+        if (node.parent === root) {
             var siblings = root.getChildren();
             var myIndex = siblings.indexOf(node);
             console.log("My index among root children:", myIndex, isWelcome);
@@ -558,7 +574,7 @@ function TreeView(root, container, options) {
         }
 
         // If we need a group header, we'll return a document fragment with both header and node
-        if (needsGroupHeader) {
+        if (needsGroupHeader && shouldShowGroupHeaders()) {
             var fragment = document.createDocumentFragment();
             fragment.appendChild(createGroupHeader(groupHeaderText, groupHeaderClass));
         }
@@ -794,7 +810,7 @@ function TreeView(root, container, options) {
         }
 
 
-        if (needsGroupHeader) {
+        if (needsGroupHeader && shouldShowGroupHeaders()) {
             fragment.appendChild(li_outer);
             return fragment;
         }

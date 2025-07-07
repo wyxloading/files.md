@@ -1,5 +1,5 @@
 class SearchModal {
-    static RECENT_RESULTS = 8;
+    static RECENT_RESULTS = 15;
 
     constructor() {
         this.messageIndex = null;

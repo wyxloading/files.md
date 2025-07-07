@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -20,14 +21,17 @@ import (
 )
 
 const (
-	TokenLength        = 32
-	OneTimeTokenExpiry = 10 * time.Minute
+	TokenLength            = 32
+	OneTimeTokenExpiration = 10 * time.Minute
 )
 
 var (
 	oneTimeTokens = make(map[string]oneTimeToken)
 	mu            sync.RWMutex
 )
+
+var blockedIPs = make(map[string]time.Time)
+var blockedIPsMutex sync.RWMutex
 
 type oneTimeToken struct {
 	userID    int64
@@ -40,7 +44,7 @@ func GenOneTimeToken(userID int64) string {
 	mu.Lock()
 	oneTimeTokens[token] = oneTimeToken{
 		userID:    userID,
-		expiresAt: time.Now().Add(OneTimeTokenExpiry),
+		expiresAt: time.Now().Add(OneTimeTokenExpiration),
 	}
 	mu.Unlock()
 
@@ -67,7 +71,7 @@ func findUserID(token string) (int64, bool) {
 	return userID, true
 }
 
-func issueToken(w http.ResponseWriter, r *http.Request) {
+func IssueToken(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("PANIC in IssueToken: %v", r)
@@ -80,15 +84,7 @@ func issueToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req struct {
-		OneTimeToken string `json:"oneTimeToken"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
-		return
-	}
-
-	permanentToken, ok := issueNewToken(req.OneTimeToken)
+	permanentToken, ok := issueNewToken(r)
 	if !ok {
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
@@ -103,11 +99,28 @@ func issueToken(w http.ResponseWriter, r *http.Request) {
 }
 
 // TODO CHECK that user id belongs to oneTimeToken ID, or get user id by oneTimeToken
+// TODO add tests
 func tokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ipAndPort := strings.Split(r.RemoteAddr, ":")
+		ip := ipAndPort[0]
+
+		blockedIPsMutex.RLock()
+		blockedUntil, isBlocked := blockedIPs[ip]
+		blockedIPsMutex.RUnlock()
+		if isBlocked && time.Now().Before(blockedUntil) {
+			w.WriteHeader(http.StatusTooManyRequests)
+			return
+		}
+
 		token := r.Header.Get("Authorization")
 		userID, ok := findUserID(token)
 		if !ok {
+			// Block for 1 hour
+			blockedIPsMutex.Lock()
+			blockedIPs[ip] = time.Now().Add(1 * time.Hour)
+			blockedIPsMutex.Unlock()
+
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
@@ -117,14 +130,38 @@ func tokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func issueNewToken(oneTimeToken string) (string, bool) {
-	mu.Lock()
-	data, exists := oneTimeTokens[oneTimeToken]
-	if !exists || time.Now().After(data.expiresAt) {
-		mu.Unlock()
+// TODO add tests
+func issueNewToken(r *http.Request) (string, bool) {
+	// Return false if IP is blocked.
+	ipAndPort := strings.Split(r.RemoteAddr, ":")
+	ip := ipAndPort[0]
+	blockedIPsMutex.RLock()
+	blockedUntil, isBlocked := blockedIPs[ip]
+	blockedIPsMutex.RUnlock()
+	if isBlocked && time.Now().Before(blockedUntil) {
 		return "", false
 	}
-	delete(oneTimeTokens, oneTimeToken)
+
+	var req struct {
+		OneTimeToken string `json:"oneTimeToken"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return "", false
+	}
+
+	mu.Lock()
+	data, exists := oneTimeTokens[req.OneTimeToken]
+	if !exists || time.Now().After(data.expiresAt) {
+		mu.Unlock()
+
+		// Block IP for 1 minute if token is invalid or expired
+		blockedIPsMutex.Lock()
+		blockedIPs[ip] = time.Now().Add(1 * time.Minute)
+		blockedIPsMutex.Unlock()
+
+		return "", false
+	}
+	delete(oneTimeTokens, req.OneTimeToken)
 	mu.Unlock()
 
 	token := genToken()

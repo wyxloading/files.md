@@ -82,21 +82,27 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
     event.respondWith(
-        caches.match(event.request)
+        fetch(event.request)
             .then(response => {
-                if (response) {
-                    return response;
+                // Update cache with fresh content
+                if (response.ok) {
+                    const responseClone = response.clone();
+                    caches.open(cacheName).then(cache => {
+                        cache.put(event.request, responseClone);
+                    });
                 }
-
-                // Not in cache, try network
-                return fetch(event.request);
+                return response;
             })
-            .catch(err => {
-                console.error('Both cache and network failed:', event.request.url, err);
-                return new Response('Offline and not cached', {
-                    status: 503,
-                    statusText: 'Service Unavailable'
-                });
+            .catch(() => {
+                // Network failed, try cache
+                return caches.match(event.request)
+                    .then(cached => {
+                        if (cached) return cached;
+                        return new Response('Offline and not cached', {
+                            status: 503,
+                            statusText: 'Service Unavailable'
+                        });
+                    });
             })
     );
 });

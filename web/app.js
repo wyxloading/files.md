@@ -1173,7 +1173,7 @@ function findNextFile(currentDir, currentFilename) {
     const allFiles = [];
 
     // Collect all files except system files
-    for (let dir in excludeDirs(SYSTEM_DIRS)) {
+    for (let dir in files) {
         for (let file in files[dir]) {
             if (file === CONFIG_FILENAME || file === CHAT_FILENAME) {
                 continue;

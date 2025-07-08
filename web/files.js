@@ -750,6 +750,13 @@ async function removeFile(path) {
     }
     await fileHandle.remove()
     console.log(`File ${path} removed successfully.`);
+
+    const parts = path.split('/');
+    const filename = parts.pop();
+    const dir = parts.join('/');
+    if (files[dir] && files[dir][filename]) {
+        delete files[dir][filename];
+    }
 }
 
 // TODO can we reuse moveFile?

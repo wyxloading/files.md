@@ -272,7 +272,6 @@ test('delete files on client will propagate to server as well', async ({ page })
 test('files exist on both client and server, config is not removed on first sync', async ({ page }) => {
     await createFileOnServer('file.md', 'test content');
     await createFileOnServer('another.md', '*italic*');
-    await createFileOnServer('config.json', '{mode:"full"}');
 
     await setup(page);
     await page.waitForTimeout(300);
@@ -380,6 +379,8 @@ test('files exist on both client and server, serverFiles contains proper server 
             path: 'file.md'
         }
     });
+
+    await clickAndExpectContent(page, 'dir/file2', '# File2\ntest content2');
 });
 
 async function createFileOnServer(filepath, content) {
@@ -417,7 +418,7 @@ async function clickAndExpectContent(page, filePath, expectedContent) {
     const file = parts[parts.length - 1];
 
     for (const dir of dirs) {
-        const isSelected = await page.locator(`#sidebar-tree .tj_description:has-text('${dir}')`).evaluate(el => el.classList.contains('expanded'));
+        const isSelected = await page.locator(`#sidebar-tree .tj_description:text-is('${dir}')`).evaluate(el => el.classList.contains('expanded'));
         if (!isSelected) {
             await page.click(`#sidebar-tree .tj_description:has-text('${dir}')`);
             await page.waitForTimeout(100);

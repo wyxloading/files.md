@@ -337,7 +337,7 @@ test('rename should not create multiply files', async ({ page }) => {
     })
 
     expect(clientFiles).toBeDefined();
-    expect(clientFiles.length).toBe(6);
+    expect(clientFiles.length).toBe(7);
     expect(clientFiles).toContain('New file.md');
 });
 

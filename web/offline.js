@@ -81,10 +81,16 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+    // Skip chrome-extension URLs and non-GET requests for caching
+    if (event.request.method !== 'GET' || event.request.url.startsWith('chrome-extension:') ||
+        event.request.url.startsWith('moz-extension:')) {
+        return; // Let the browser handle it normally
+    }
+
     event.respondWith(
         fetch(event.request)
             .then(response => {
-                if (response.ok && event.request.method === 'GET') {
+                if (response.ok) {
                     const responseClone = response.clone();
                     caches.open(cacheName).then(cache => {
                         cache.put(event.request, responseClone);
@@ -94,18 +100,14 @@ self.addEventListener("fetch", (event) => {
             })
             .catch(() => {
                 // Network failed, try cache (only works for GET anyway)
-                if (event.request.method === 'GET') {
-                    return caches.match(event.request)
-                        .then(cached => {
-                            if (cached) return cached;
-                            return new Response('Offline and not cached', {
-                                status: 503,
-                                statusText: 'Service Unavailable'
-                            });
+                return caches.match(event.request)
+                    .then(cached => {
+                        if (cached) return cached;
+                        return new Response('Offline and not cached', {
+                            status: 503,
+                            statusText: 'Service Unavailable'
                         });
-                }
-                // For non-GET requests, just fail
-                throw new Error('Network unavailable');
+                    });
             })
     );
 });

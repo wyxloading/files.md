@@ -170,6 +170,20 @@ function renderSidebar(focusDir = '') {
         });
     }
 
+    // Hide if only 2 groups
+    let groupEndCount = 0;
+    const rootChildren = root.getChildren();
+    for (const child of rootChildren) {
+        if (child.isGroupEnd) {
+            groupEndCount++;
+        }
+    }
+    if (groupEndCount < 2) {
+        for (const child of rootChildren) {
+            child.isGroupEnd = false;
+        }
+    }
+
     // Move all other nodes down
     for (const dir in dirNodes) {
         if (dir === '/' ||  groupedDirs.has(toFilename(dir))) continue;
@@ -768,6 +782,7 @@ function TreeView(root, container, options) {
             var siblings = root.getChildren();
             var myIndex = siblings.indexOf(node);
 
+            // ?? =)
             if (myIndex === 0) {
                 needsGroupHeader = true;
             } else if (myIndex > 0 && siblings[myIndex - 1].isGroupEnd) {
@@ -776,13 +791,13 @@ function TreeView(root, container, options) {
 
             if (needsGroupHeader) {
                 var nodeStr = node.toString();
-                if (nodeStr === '_read_') {
+                if (nodeStr.startsWith('_') && nodeStr.endsWith('_')) {
                     groupHeaderText = "Lists";
                     groupHeaderClass = "lists";
-                } else if (nodeStr === 'today') {
+                } else if (['today', 'later'].includes(nodeStr)) {
                     groupHeaderText = "Tasks";
                     groupHeaderClass = "tasks";
-                } else if (nodeStr === 'journal') {
+                } else if (['journal', 'habits', 'insights', 'archive'].includes(nodeStr)) {
                     groupHeaderText = "Personal";
                     groupHeaderClass = "personal";
                 } else {

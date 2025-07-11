@@ -112,7 +112,7 @@ test('sync new files from client, ignore current file in syncTexts', async ({ pa
 
     expect(consoleMessages).toContainEqual({
         type: 'log',
-        text: 'Skip sending current file: /New file.md'
+        text: 'Skip receiving current file during bath sync /New file.md'
     });
 
 });
@@ -129,7 +129,20 @@ test('sync existing files from client', async ({ page }) => {
     await clickAndExpectContent(page, 'README', '# README\nHello world');
     await clickAndExpectContent(page, 'Notes', '# Notes\nSome Text');
 
-    await page.waitForTimeout(3000);
+
+    // Trigger syncTexts, first time to get server state
+    await page.evaluate(() => {
+        window.dispatchEvent(new Event('focus'));
+    });
+
+    await page.waitForTimeout(500);
+
+    // Trigger syncTexts, second time to send client files
+    await page.evaluate(() => {
+        window.dispatchEvent(new Event('focus'));
+    });
+
+    await page.waitForTimeout(500);
 
     // Check that existing files from client are synced
     await expectFileOnServer(page, 'README.md', 'Hello world');

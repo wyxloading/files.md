@@ -232,7 +232,7 @@ async function syncTextsWithServer() {
                 if (shouldRemoveOldFile) {
                     const oldPath = joinPath('/', server.renames[relPath]);
                     try {
-                        console.log('REMOVING due to renaming');
+                        console.log('REMOVING due to renaming', oldPath);
                         await removeFile(oldPath);
                     } catch (err) {
                         console.log('RENAME: cant remove file: ', err, path);
@@ -376,7 +376,7 @@ async function syncMedia() {
                 });
 
                 if (!response.ok) {
-                    console.error(`Failed to sync media file ${mediaFilename}:`, response.statusText);
+                    console.error(`Failed to sync media file ${mediaFilename}:`, response.statusText, response, await response.text());
                 } else {
                     serverFiles['media'][mediaFilename] = {
                         lastModified: 0, // We don't track binary files modifications.

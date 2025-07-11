@@ -297,13 +297,13 @@ func (fs FS) FilesAndDirs(dir string) ([]File, error) {
 		return nil, fmt.Errorf("can't get files for '%s': %w", path.Join(fs.rootPath, dir), errUnsafePath)
 	}
 
-	err = fs.CreateDirsIfNotExist(dir)
-	if err != nil {
-		return nil, fmt.Errorf("can't get files for '%s': %w", path.Join(fs.rootPath, dir), err)
-	}
-
 	entries, err := ReadDir(fs.backend, userPath)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			// Create folders only on write-actions
+			return nil, nil
+		}
+
 		return nil, fmt.Errorf("can't get files for '%s': %w", path.Join(fs.rootPath, dir), err)
 	}
 

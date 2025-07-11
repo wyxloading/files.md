@@ -464,11 +464,11 @@ async function initWasm() {
     const wasmFile = await fetch(`chat.wasm${window.COMMIT_HASH}`);
     const wasmModule = await WebAssembly.instantiateStreaming(wasmFile, go.importObject);
     go.run(wasmModule.instance);
-    let cmd = {
-        n: 'today',
-        t: 'cmd'
-    }
-    replyCmd(JSON.stringify(cmd));
+    // let cmd = {
+    //     n: 'today',
+    //     t: 'cmd'
+    // }
+    // replyCmd(JSON.stringify(cmd));
 
     window.reply = reply
     window.replyCmd = replyCmd
@@ -836,6 +836,7 @@ window.addEventListener('popstate', (event) => {
 });
 
 async function openDir() {
+    // TODO migrate files from opfs to local
     let dirHandle = await window.showDirectoryPicker({'mode': 'readwrite'});
     document.getElementById('open-folder').style.display = 'none';
     document.getElementById('new-file').style.display = 'inline';

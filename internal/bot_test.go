@@ -65,6 +65,8 @@ func TestSaveFromLongTextMsg(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
+	err = userFS.CreateDirsIfNotExist()
+	r.NoError(err)
 
 	tgram := tg.NewFakeTG()
 
@@ -103,6 +105,8 @@ func TestSaveFromTextMsgWithSanitize(t *testing.T) {
 	}()
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+	err = userFS.CreateDirsIfNotExist()
 	r.NoError(err)
 
 	tgram := tg.NewFakeTG()
@@ -148,6 +152,8 @@ func TestAddMultilineTaskToToday(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
+	err = userFS.CreateDirsIfNotExist()
+	r.NoError(err)
 
 	tgram := tg.NewFakeTG()
 
@@ -181,6 +187,7 @@ func TestAddTaskWithSpecCharsToToday(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
+	userFS.CreateDirsIfNotExist()
 
 	tgram := tg.NewFakeTG()
 
@@ -245,6 +252,7 @@ func TestAddTaskWithLeadingAndTrailingSpaces(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
+	userFS.CreateDirsIfNotExist()
 
 	tgram := tg.NewFakeTG()
 
@@ -528,6 +536,7 @@ func TestSaveFromPhotoWithoutCaption(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
+	userFS.CreateDirsIfNotExist("today")
 
 	tgram := tg.NewFakeTG()
 
@@ -3534,6 +3543,7 @@ func TestSaveFromImage_NewFile(t *testing.T) {
 	}()
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	userFS.CreateDirsIfNotExist("today")
 	r.NoError(err)
 
 	tgram := tg.NewFakeTG()
@@ -3569,6 +3579,7 @@ func TestSaveFromImage_LongCaption(t *testing.T) {
 	}()
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	userFS.CreateDirsIfNotExist("today")
 	r.NoError(err)
 
 	tgram := tg.NewFakeTG()
@@ -3690,6 +3701,7 @@ func TestSaveFromImage_EmptyCaption(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
+	userFS.CreateDirsIfNotExist("today")
 
 	tgram := tg.NewFakeTG()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())

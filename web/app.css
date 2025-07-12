@@ -69,7 +69,7 @@ body {
 #sidebar {
     display: block;
     width: 280px;
-    min-width: 200px;
+    min-width: 220px;
     max-width: 800px;
     position: relative;
     overflow: auto;

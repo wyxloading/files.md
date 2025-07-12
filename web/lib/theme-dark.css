@@ -1,6 +1,6 @@
 @media (prefers-color-scheme: dark) {
     :root {
-        --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        --font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif !important;
         /*--font: Rubik, Cambria, "Times New Roman", Times, serif;*/
         --col-tx: #FAF9F4;
         --col-tx-alt: #C2C0B7;

@@ -300,7 +300,7 @@ function initEditor(el) {
                             imageUrl: URL.createObjectURL(file)
                         };
 
-                        const markdownImageSyntax = `![](media/${fileName})`;
+                        const markdownImageSyntax = `![](media/${fileName})\n`;
                         currentEditor.replaceSelection(markdownImageSyntax);
                         console.log(`Image saved as: ${fileName}`);
                     } else {

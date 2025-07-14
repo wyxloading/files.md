@@ -721,7 +721,7 @@ body.dragging * {
 
 @keyframes sidebar-highlight {
     0% { color: var(--col-link); background-color: var(--col-bg-active); opacity: 0.8; }
-    25% { color: var(--col-link); background-color: var(--col-bg-active); opacity: 0.6; }
+    25% { color: var(--col-link); background-color: var(--col-bg-active); opacity: 0.4; }
     50% { color: var(--col-link);  background-color: var(--col-bg-active); opacity: 0.8; }
     75% { color: var(--col-link);  background-color: var(--col-bg-active); opacity: 0.4; }
     100% { color: var(--col-link); background-color: transparent; opacity: 1; }

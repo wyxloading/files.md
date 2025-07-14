@@ -1163,7 +1163,7 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
     // Artefacts can be observed during text selection (cmd+a).
     setTimeout(() => {
         currentEditor.setOption('viewportMargin', Infinity);
-    }, 1000);
+    }, 100);
 }
 
 // 0) Read content from local fs

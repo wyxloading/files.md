@@ -34,7 +34,7 @@
 
 .message {
     background: var(--col-bg-alt);
-    padding: 6px 12px;
+    padding: 4px 8px;
     border-bottom: 1px solid var(--col-border);
     position: relative;
     animation: slideIn 0.3s ease-out;
@@ -134,8 +134,8 @@
     opacity: 0;
     transition: opacity 0.2s;
     position: absolute;
-    right: -12px;
-    bottom: -6px;
+    right: -8px;
+    bottom: -4px;
 }
 
 .message-hover-zone {
@@ -165,6 +165,7 @@
     color: #8e8e93;
     font-weight: 400;
     margin-left: 4px;
+    margin-bottom: 5px;
 }
 
 

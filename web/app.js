@@ -46,22 +46,10 @@ async function init(el) {
     if (!hasSavedLocalDir) {
         document.getElementById('open-folder').style.display = 'inline';
         isWelcome = false;
-        // document.getElementById('new-file').style.display = 'none';
-        // document.getElementById('new-folder').style.display = 'none';
-        // document.getElementById('open-chat').style.display = 'none';
         document.getElementById('open-chat-modal').style.display = 'inline';
-        // files = DEFAULT_FILES;
-        // isWelcome = true;
-        // renderSidebar();
-        // await openFile('/Welcome.md');
-        // return;
-
     } else {
         isWelcome = false;
         document.getElementById('open-folder').style.display = 'none';
-        // document.getElementById('new-file').style.display = 'inline';
-        // document.getElementById('new-folder').style.display = 'inline';
-        // document.getElementById('open-chat').style.display = 'inline';
         document.getElementById('open-chat-modal').style.display = 'inline';
     }
 
@@ -71,10 +59,7 @@ async function init(el) {
         console.log('PERMISSION', permission);
         if (permission !== 'granted') {
             document.getElementById('open-folder').style.display = 'inline';
-            // document.getElementById('new-file').style.display = 'none';
-            // document.getElementById('new-folder').style.display = 'none';
-            // document.getElementById('open-chat').style.display = 'none';
-            // document.getElementById('open-chat-modal').style.display = 'none';
+            // TODO maybe ask user to check "Allow on every visit" on left part of the sidebar
             await removeSavedRootDirHandle();
             alert('Can\'t access folder.\n\nPlease, open folder again and check "Allow on every visit" checkbox');
         }

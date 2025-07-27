@@ -111,29 +111,30 @@ func MoveDueTasks(
 	return nil
 }
 
-func moveTaskToToday(item string, userFS *fs.FS) (bool, error) {
+// Create task if not found in Later.txt or Done.txt?
+func moveTaskToToday(task string, userFS *fs.FS) (bool, error) {
 	// Try to move task from Done.txt
 	doneMD, err := userFS.Read(fs.DirArchive, fs.DoneFilename)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return false, fmt.Errorf("moveTaskToToday: can't read done file: %w", err)
 	}
 
-	reducedDoneMD, _ := txt.RemoveChecklistItem(doneMD, item)
+	todayMD, err := userFS.Read(fs.DirRoot, fs.TodayFilename)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			err = userFS.Write(fs.DirRoot, fs.TodayFilename, "")
+			if err != nil {
+				return false, fmt.Errorf("moveTaskToToday: can't create today file: %w", err)
+			}
+		} else {
+			return false, fmt.Errorf("moveTaskToToday: can't read today file: %w", err)
+		}
+	}
+
+	reducedDoneMD, _ := txt.RemoveChecklistItem(doneMD, task)
 	itemWasRemoved := doneMD != reducedDoneMD
 	if itemWasRemoved {
-		todayMD, err := userFS.Read(fs.DirToday, fs.TodayFilename)
-		if err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				err = userFS.Write(fs.DirRoot, fs.TodayFilename, "")
-				if err != nil {
-					return false, fmt.Errorf("moveTaskToToday: can't create today file: %w", err)
-				}
-			} else {
-				return false, fmt.Errorf("moveTaskToToday: can't read today file: %w", err)
-			}
-		}
-
-		err = userFS.Write(fs.DirRoot, fs.TodayFilename, txt.AddChecklistItem(todayMD, item, false))
+		err = userFS.Write(fs.DirRoot, fs.TodayFilename, txt.AddChecklistItem(todayMD, task, false))
 		if err != nil {
 			return false, fmt.Errorf("moveTaskToToday: can't write to today file: %w", err)
 		}
@@ -152,22 +153,10 @@ func moveTaskToToday(item string, userFS *fs.FS) (bool, error) {
 		return false, fmt.Errorf("moveTaskToToday: can't read later file: %w", err)
 	}
 
-	reducedLaterMD, _ := txt.RemoveChecklistItem(laterMD, item)
+	reducedLaterMD, _ := txt.RemoveChecklistItem(laterMD, task)
 	itemWasRemoved = laterMD != reducedLaterMD
 	if itemWasRemoved {
-		todayMD, err := userFS.Read(fs.DirToday, fs.TodayFilename)
-		if err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				err = userFS.Write(fs.DirRoot, fs.LaterFilename, "")
-				if err != nil {
-					return false, fmt.Errorf("moveTaskToToday: can't create later file: %w", err)
-				}
-			} else {
-				return false, fmt.Errorf("moveTaskToToday: can't read later file: %w", err)
-			}
-		}
-
-		err = userFS.Write(fs.DirRoot, fs.TodayFilename, txt.AddChecklistItem(todayMD, item, false))
+		err = userFS.Write(fs.DirRoot, fs.TodayFilename, txt.AddChecklistItem(todayMD, task, false))
 		if err != nil {
 			return false, fmt.Errorf("moveTaskToToday: can't write to today file: %w", err)
 		}
@@ -178,6 +167,12 @@ func moveTaskToToday(item string, userFS *fs.FS) (bool, error) {
 		}
 
 		return true, nil
+	}
+
+	// Task wasn't found in either files, so we'll just create
+	err = userFS.Write(fs.DirRoot, fs.TodayFilename, txt.AddChecklistItem(todayMD, task, false))
+	if err != nil {
+		return false, fmt.Errorf("moveTaskToToday: can't write to today file: %w", err)
 	}
 
 	return false, nil

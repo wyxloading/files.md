@@ -168,6 +168,14 @@ function renderSidebar(focusDir = '', modifiedPaths) {
         node.on('click', async function (n, node) {
             await openFile(TODAY_PATH);
         });
+        root.addChild(node);
+    }
+    if (files[toFilename(LATER_PATH)] !== undefined) {
+        let node = new TreeNode('later list', {expanded: false, dir: false});
+        node.path = LATER_PATH;
+        node.on('click', async function (n, node) {
+            await openFile(LATER_PATH);
+        });
         node.isGroupEnd = true;
         root.addChild(node);
     }
@@ -885,6 +893,9 @@ function TreeView(root, container, options) {
                 } else if (nodeStr === 'today list') {
                     groupHeaderText = "Tasks";
                     groupHeaderClass = "tasks";
+                } else if (nodeStr === 'later list') {
+                    groupHeaderText = "Tasks";
+                    groupHeaderClass = "tasks";
                 } else if (['journal', 'habits', 'insights'].includes(nodeStr)) {
                     groupHeaderText = "Personal";
                     groupHeaderClass = "personal";
@@ -930,7 +941,7 @@ function TreeView(root, container, options) {
         }
 
         // TODO dirty hack
-        if (node.isExpanded() && node.toString() !== 'today list') {
+        if (node.isExpanded() && node.toString() !== 'today list' && node.toString() !== 'later list') {
             span_desc.classList.add("expanded");
         }
 
@@ -1102,6 +1113,8 @@ function TreeView(root, container, options) {
             } else if ((icon = TreeUtil.getProperty(options, "leaf_icon", "")) != "") {
                 ret += '<span class="tj_icon">' + icon + '</span>';
             } else if (node.toString() === 'today list') {
+                ret += '<span class="tj_mod_icon">' + TreeConfig.tasks_icon + '</span>';
+            } else if (node.toString() === 'later list') {
                 ret += '<span class="tj_mod_icon">' + TreeConfig.tasks_icon + '</span>';
             } else {
                 ret += '<span class="tj_icon">' + TreeConfig.leaf_icon + '</span>';

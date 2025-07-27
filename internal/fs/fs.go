@@ -44,7 +44,6 @@ const (
 	DirArchive  = "archive"
 	DirToday    = "today"
 	DirLater    = "later"
-	DirImg      = "img"
 	DirMedia    = "media"
 	DirJournal  = "journal"
 	DirHabits   = "habits"

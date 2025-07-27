@@ -1245,7 +1245,7 @@ func (b *Bot) showChecklists(_ []string) error {
 }
 
 func (b *Bot) showPostpone(_ []string) error {
-	todayMD, err := b.fs.Read(fs.DirRoot, fs.DirToday)
+	todayMD, err := b.fs.Read(fs.DirRoot, fs.TodayFilename)
 	tasks := txt.ChecklistItems(todayMD)
 
 	var kb tg.Keyboard
@@ -2238,20 +2238,6 @@ func (b *Bot) completeFromChat(params []string) error {
 		return fmt.Errorf("complete: can't read content from chat: %w", err)
 	}
 
-	//if dir == fs.DirToday && filename == fs.PomodoroTask {
-	//	err = b.cfg.AddToSchedule(filename, time.Now().Unix()+int64(b.cfg.PomodoroDuration().Seconds()), "")
-	//	if err != nil {
-	//		return fmt.Errorf("complete: can't add to schedule: %w", err)
-	//	}
-	//} else {
-	//	// We can tolerate failure of writing to journal, since that's not single source of truth
-	//	_ = journal.AddRecord(b.fs, fmt.Sprintf("✅ %s", fs.Title(filename)), b.cfg.Timezone())
-	//}
-
-	//if dir == fs.DirLater {
-	//	return b.showLaterTasks(nil)
-	//}
-
 	return b.ShowToday(nil)
 }
 
@@ -2638,13 +2624,15 @@ func (b *Bot) togglePomodoro(_ []string) error {
 	}
 
 	if hasPomodoroInToday {
-		err = b.fs.Del(fs.DirToday, fs.PomodoroTask)
+		todayMD, _ = txt.RemoveChecklistItem(todayMD, fs.PomodoroTask)
+		err = b.fs.Write(fs.DirRoot, fs.TodayFilename, todayMD)
 		if err != nil {
 			return fmt.Errorf("toggle pomodoro: failed to delete pomodoro file: %w", err)
 		}
 	}
 	if hasPomodoroInArchive {
-		err = b.fs.Del(fs.DirArchive, fs.PomodoroTask)
+		doneMD, _ = txt.RemoveChecklistItem(doneMD, fs.PomodoroTask)
+		err = b.fs.Write(fs.DirArchive, fs.DoneFilename, doneMD)
 		if err != nil {
 			return fmt.Errorf("toggle pomodoro: failed to delete pomodoro file: %w", err)
 		}

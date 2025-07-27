@@ -75,9 +75,10 @@ func RemoveChecklistItem(md, item string) string {
 	var newLines []string
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		if line != "- [ ] "+item && line != "- [x] "+item {
-			newLines = append(newLines, line)
+		if line == "- [ ] "+item || line == "- [x] "+item {
+			continue
 		}
+		newLines = append(newLines, line)
 	}
 	return strings.Join(newLines, "\n")
 }

@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -113,7 +114,7 @@ func MoveDueTasks(
 func moveTaskToToday(item string, userFS *fs.FS) (bool, error) {
 	// Try to move task from Done.txt
 	doneMD, err := userFS.Read(fs.DirArchive, fs.DoneFilename)
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return false, fmt.Errorf("moveTaskToToday: can't read done file: %w", err)
 	}
 
@@ -122,7 +123,14 @@ func moveTaskToToday(item string, userFS *fs.FS) (bool, error) {
 	if itemWasRemoved {
 		todayMD, err := userFS.Read(fs.DirToday, fs.TodayFilename)
 		if err != nil {
-			return false, fmt.Errorf("moveTaskToToday: can't read today file: %w", err)
+			if errors.Is(err, os.ErrNotExist) {
+				err = userFS.Write(fs.DirRoot, fs.TodayFilename, "")
+				if err != nil {
+					return false, fmt.Errorf("moveTaskToToday: can't create today file: %w", err)
+				}
+			} else {
+				return false, fmt.Errorf("moveTaskToToday: can't read today file: %w", err)
+			}
 		}
 
 		err = userFS.Write(fs.DirRoot, fs.TodayFilename, txt.AddChecklistItem(todayMD, item, false))
@@ -140,7 +148,7 @@ func moveTaskToToday(item string, userFS *fs.FS) (bool, error) {
 
 	// Try to move task from Later.txt
 	laterMD, err := userFS.Read(fs.DirRoot, fs.LaterFilename)
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return false, fmt.Errorf("moveTaskToToday: can't read later file: %w", err)
 	}
 
@@ -149,7 +157,14 @@ func moveTaskToToday(item string, userFS *fs.FS) (bool, error) {
 	if itemWasRemoved {
 		todayMD, err := userFS.Read(fs.DirToday, fs.TodayFilename)
 		if err != nil {
-			return false, fmt.Errorf("moveTaskToToday: can't read today file: %w", err)
+			if errors.Is(err, os.ErrNotExist) {
+				err = userFS.Write(fs.DirRoot, fs.LaterFilename, "")
+				if err != nil {
+					return false, fmt.Errorf("moveTaskToToday: can't create later file: %w", err)
+				}
+			} else {
+				return false, fmt.Errorf("moveTaskToToday: can't read later file: %w", err)
+			}
 		}
 
 		err = userFS.Write(fs.DirRoot, fs.TodayFilename, txt.AddChecklistItem(todayMD, item, false))

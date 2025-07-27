@@ -2134,15 +2134,16 @@ func TestSchedule(t *testing.T) {
 	r.NoError(err)
 	r.Empty(tasksForToday)
 
-	tasksForLater, err := userFS.FilesAndDirs("later")
+	laterMD, err := userFS.Read(fs.DirRoot, fs.LaterFilename)
 	r.NoError(err)
-	r.Len(tasksForLater, 1)
-	r.Equal("Task.md", tasksForLater[0].Name)
+
+	items := txt.ChecklistItems(laterMD)
+	r.Contains(items, "Task")
 
 	sc, err := cfg.Schedules()
 	r.NoError(err)
 	r.Len(sc, 1)
-	r.Equal("Task.md", sc[0].Filename)
+	r.Equal("Task", sc[0].Filename)
 	r.Equal(int64(345600), sc[0].ScheduledAt)
 	r.Equal("0 0 * * 1-5", sc[0].Cron)
 }
@@ -2176,15 +2177,16 @@ func TestScheduleNoRepeat(t *testing.T) {
 	r.NoError(err)
 	r.Empty(tasksForToday)
 
-	tasksForLater, err := userFS.FilesAndDirs("later")
+	laterMD, err := userFS.Read(fs.DirRoot, fs.LaterFilename)
 	r.NoError(err)
-	r.Len(tasksForLater, 1)
-	r.Equal("Task.md", tasksForLater[0].Name)
+
+	items := txt.ChecklistItems(laterMD)
+	r.Contains(items, "Task")
 
 	sc, err := cfg.Schedules()
 	r.NoError(err)
 	r.Len(sc, 1)
-	r.Equal("Task.md", sc[0].Filename)
+	r.Equal("Task", sc[0].Filename)
 	r.Equal(int64(345600), sc[0].ScheduledAt)
 }
 
@@ -4384,14 +4386,16 @@ func TestScheduleForTmrw(t *testing.T) {
 	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("sc_tmrw", []string{"0"})))
 	r.NoError(err)
 
-	exists, err := userFS.Exists("later", "Task for tomorrow.md")
+	laterMD, err := userFS.Read(fs.DirRoot, fs.LaterFilename)
 	r.NoError(err)
-	r.True(exists)
+
+	items := txt.ChecklistItems(laterMD)
+	r.Contains(items, "Task for tomorrow")
 
 	sc, err := cfg.Schedules()
 	r.NoError(err)
 	r.Len(sc, 1)
-	r.Equal("Task for tomorrow.md", sc[0].Filename)
+	r.Equal("Task for tomorrow", sc[0].Filename)
 	r.Equal(int64(86400), sc[0].ScheduledAt)
 	r.Equal("", sc[0].Cron)
 }

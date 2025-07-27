@@ -11,6 +11,7 @@ import (
 	"zakirullin/stuffbot/internal/fs"
 	"zakirullin/stuffbot/internal/userconfig"
 	"zakirullin/stuffbot/pkg/tg"
+	"zakirullin/stuffbot/pkg/txt"
 )
 
 func init() {
@@ -148,16 +149,16 @@ func TestMoveDueTasksFromArchive(t *testing.T) {
 	r.NoError(err)
 	err = userFS.CreateDirsIfNotExist()
 	r.NoError(err)
-	_ = userFS.Write("archive", "due task.md", "")
+	_ = userFS.Write(fs.DirArchive, fs.DoneFilename, "- [ ] due task")
 
 	cfg := userconfig.NewConfig(userFS, -1, "config.json")
 	_ = cfg.CreateDefaultIfNotExists()
-	_ = cfg.AddToSchedule("due task.md", 0, "")
+	_ = cfg.AddToSchedule("due task", 0, "")
 	r.NoError(err)
 
 	sc, err := cfg.Schedules()
 	r.NoError(err)
-	r.Equal("due task.md", sc[0].Filename)
+	r.Equal("due task", sc[0].Filename)
 	r.Equal(int64(0), sc[0].ScheduledAt)
 	r.Equal("", sc[0].Cmd)
 	r.Equal("", sc[0].Cron)
@@ -166,9 +167,11 @@ func TestMoveDueTasksFromArchive(t *testing.T) {
 	err = MoveDueTasks("/", "config.json", fsBackend, tgram)
 	r.NoError(err)
 
-	exists, err := userFS.Exists("today", "due task.md")
+	todayMD, err := userFS.Read(fs.DirRoot, fs.TodayFilename)
 	r.NoError(err)
-	r.True(exists)
+
+	items := txt.ChecklistItems(todayMD)
+	r.Contains(items, "due task")
 
 	sc, err = cfg.Schedules()
 	r.NoError(err)
@@ -191,16 +194,16 @@ func TestMoveDueTasksFromLater(t *testing.T) {
 	r.NoError(err)
 	err = userFS.CreateDirsIfNotExist()
 	r.NoError(err)
-	_ = userFS.Write("later", "due task.md", "")
+	_ = userFS.Write(fs.DirRoot, fs.LaterFilename, "- [ ] due task")
 
 	cfg := userconfig.NewConfig(userFS, -1, "config.json")
 	_ = cfg.CreateDefaultIfNotExists()
-	_ = cfg.AddToSchedule("due task.md", 0, "")
+	_ = cfg.AddToSchedule("due task", 0, "")
 	r.NoError(err)
 
 	sc, err := cfg.Schedules()
 	r.NoError(err)
-	r.Equal("due task.md", sc[0].Filename)
+	r.Equal("due task", sc[0].Filename)
 	r.Equal(int64(0), sc[0].ScheduledAt)
 	r.Equal("", sc[0].Cmd)
 	r.Equal("", sc[0].Cron)
@@ -209,9 +212,11 @@ func TestMoveDueTasksFromLater(t *testing.T) {
 	err = MoveDueTasks("/", "config.json", fsBackend, tgram)
 	r.NoError(err)
 
-	exists, err := userFS.Exists("today", "due task.md")
+	todayMD, err := userFS.Read(fs.DirRoot, fs.TodayFilename)
 	r.NoError(err)
-	r.True(exists)
+
+	items := txt.ChecklistItems(todayMD)
+	r.Contains(items, "due task")
 
 	sc, err = cfg.Schedules()
 	r.NoError(err)

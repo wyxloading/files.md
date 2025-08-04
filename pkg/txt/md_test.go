@@ -357,7 +357,7 @@ func TestCompleteChecklistItem(t *testing.T) {
 	itemHash := Hash("task one")
 	result, foundItem := CompleteChecklistItem(md, itemHash)
 
-	r.Equal("- [x] task one\n- [ ] task two", result)
+	r.Equal("- [ ] task two\n- [x] task one", result)
 	r.Equal("task one", foundItem)
 }
 
@@ -378,7 +378,7 @@ func TestCompleteChecklistItemWithWhitespace(t *testing.T) {
 	itemHash := Hash("spaced task")
 	result, foundItem := CompleteChecklistItem(md, itemHash)
 
-	r.Equal("- [x] spaced task\nother text", result)
+	r.Equal("other text\n- [x] spaced task", result)
 	r.Equal("spaced task", foundItem)
 }
 

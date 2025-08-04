@@ -80,6 +80,7 @@ func AddChecklistItem(md, item string, checked bool) string {
 func CompleteChecklistItem(md, itemHash string) (string, string) {
 	foundItem := ""
 	lines := strings.Split(md, "\n")
+	foundIndex := -1
 	for i, line := range lines {
 		line = strings.TrimSpace(line)
 		if len(line) < 6 {
@@ -88,8 +89,15 @@ func CompleteChecklistItem(md, itemHash string) (string, string) {
 
 		if strings.HasPrefix(line, "- [ ] ") && Hash(line[6:]) == itemHash {
 			foundItem = line[6:]
-			lines[i] = "- [x] " + line[6:]
+			foundIndex = i
+			break
 		}
+	}
+
+	// If found, remove it and add completed version at end
+	if foundIndex != -1 {
+		lines = append(lines[:foundIndex], lines[foundIndex+1:]...)
+		lines = append(lines, "- [x] "+foundItem)
 	}
 
 	return strings.Join(lines, "\n"), foundItem

@@ -995,7 +995,7 @@ function TreeView(root, container, options) {
                     // TODO handle multiple subdirs?
                     targetDir = node.toString();
                 } else {
-                    targetDir = node.parent ? node.parent.toString() : '';
+                    targetDir = node.parent ? node.parent.toString() : '/';
                 }
 
                 window.handleNodeMove(sourceDir, sourceFile, targetDir);

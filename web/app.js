@@ -185,7 +185,6 @@ function initEditor(el) {
     };
 
     newEditor.hmdReadLink = async function (path) {
-        console.log('PATH', path);
         path = path.replace(/\|.*]$/, '');
         path = path.replace('[', '').replace(']', '');
 

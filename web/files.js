@@ -855,7 +855,7 @@ async function moveCurrentFile(toDir) {
 
     // TODO add prevent syncing?
     const oldPath = currentEditor.path;
-    const newPath = '/' + toDir + '/' + toFilename(currentEditor.path);
+    const newPath = joinPath('/', toDir, toFilename(currentEditor.path));
 
     try {
         let content = getCurrentContent();
@@ -1249,7 +1249,7 @@ async function syncCurrentFile(syncWithServer = true) {
                 let content = getCurrentContent();
                 // TODO every await means we can can have RC due to editor content change
                 await removeFile(path);
-                console.log('Removed', path);
+                console.log('Removed due to filename change', path);
 
                 // Get fresher content after await.
                 // if (isCurrentEditorSame()) {

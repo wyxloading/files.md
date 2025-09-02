@@ -92,7 +92,7 @@ func SyncMedia(w http.ResponseWriter, r *http.Request) {
 	var clientMedia media
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Cannot read request body", http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("Cannot read request body: %s", err), http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()

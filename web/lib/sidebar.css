@@ -169,8 +169,8 @@
 	bottom: 0;
 	width: 25px;
 	cursor: col-resize;
-	z-index: 10;
 	background: transparent;
+	z-index: 11;
 }
 
 .resize:hover {
@@ -194,12 +194,13 @@
 #close-sidebar {
 	position: absolute;
 	top: 2px;
-	right: 4px;
+	right: 0;
 	opacity: 0;
 	cursor: pointer;
 	font-size: 27px;
 	color: var(--col-link);
 	transition: opacity 0.2s;
-	background: red;
-	z-index: 11;
+	border: none;
+	background: transparent;
+	z-index: 12;
 }

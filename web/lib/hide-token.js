@@ -83,7 +83,7 @@
                 // _this.updateImmediately();
                 _this.update();
             };
-            this.update = core_1.debounce(function () { return _this.updateImmediately(); }, 100);
+            this.update = core_1.debounce(function () { return _this.updateImmediately(); }, 130);
             /** Current user's selections, in each line */
             this._rangesInLine = {};
             new core_1.FlipFlop(
@@ -287,8 +287,8 @@
                     if (lineChanged && caretAtLines[line])
                         caretLineChanged = true;
                 }
-                // PATCHED, the following code causes all links to unfold after we add a new one
-                return;
+
+
                 // refresh cursor position if needed
                 if (caretLineChanged) {
                     if (DEBUG)

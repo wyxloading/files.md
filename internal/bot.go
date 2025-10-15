@@ -523,7 +523,7 @@ func (b *Bot) addToRepliedFile(replyToMsgID int, newContent string) error {
 	}
 
 	header := fmt.Sprintf("#### %d %s, %s", now().Day(), now().Format("January"), now().Weekday())
-	content := txt.InsertTextAfterHeader(existingContent, header, newContent)
+	content := txt.AddHeaderAndText(existingContent, header, newContent)
 	err = b.fs.Write(dir, existingFilename, content)
 	if err != nil {
 		return fmt.Errorf("add: can't write: %w", err)
@@ -2785,7 +2785,7 @@ func (b *Bot) addToFile(dir, filename, content string) error {
 	}
 
 	header := fmt.Sprintf("#### %d %s %d, %s", now().Day(), now().Format("January"), now().Year(), now().Weekday())
-	newContent := txt.InsertTextAfterHeader(existingContent, header, content)
+	newContent := txt.AddHeaderAndText(existingContent, header, content)
 
 	err = b.fs.Write(dir, filename, newContent)
 	if err != nil {

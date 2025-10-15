@@ -1,59 +1,177 @@
 // Various string functions, ported from Golang bot.
 
-function insertTextAfterHeader(existingContent, header, newContent) {
-    if (!existingContent.includes(header)) {
-        if (existingContent === "") {
-            return `${header}\n${newContent}`;
+async function addChecklistItem(path, item, checked = false) {
+    let md = '';
+    try {
+        md = await read(path);
+        md = normNewLines(md);
+    } catch (err) {
+        md = '';
+    }
+
+    // Remove existing item
+    const lines = md.split('\n');
+    const filteredLines = [];
+
+    for (const line of lines) {
+        const trimmedLine = line.trim();
+
+        if (trimmedLine.length < 6) {
+            filteredLines.push(trimmedLine);
+            continue;
+        }
+
+        const itemText = trimmedLine.substring(6);
+        if (hash(itemText) === item || itemText === item) {
+            continue;
+        }
+
+        filteredLines.push(trimmedLine);
+    }
+
+    // Add new item
+    if (checked) {
+        filteredLines.push('- [x] ' + item);
+    } else {
+        // Find the last incomplete item and insert before it
+        let insertIndex = filteredLines.length;
+        for (let i = filteredLines.length - 1; i >= 0; i--) {
+            const line = filteredLines[i].trim();
+            if (line.startsWith('- [ ] ')) {
+                insertIndex = i;
+            }
+        }
+
+        // Insert the new incomplete item
+        if (insertIndex === filteredLines.length) {
+            filteredLines.push('- [ ] ' + item);
         } else {
-            return `${header}\n${newContent}\n\n${existingContent}`;
+            filteredLines.splice(insertIndex, 0, '- [ ] ' + item);
         }
     }
 
-    const lines = existingContent.split("\n");
-    let headerIndex = -1;
+    const result = filteredLines.join('\n').trim();
+    await write(path, result);
+}
 
-    // Find the header line
-    for (let i = 0; i < lines.length; i++) {
-        if (lines[i] === header) {
-            headerIndex = i;
-            break;
-        }
+async function removeChecklistItem(path, itemOrHash) {
+    let md = '';
+    try {
+        md = await read(path);
+        md = normNewLines(md);
+    } catch (err) {
+        md = '';
     }
 
-    if (headerIndex === -1) {
-        return `${header}\n${newContent}\n\n${existingContent}`;
-    }
-
-    // Find where to insert (after the last line belonging to this header)
-    let insertIndex = headerIndex + 1;
-
-    // Look for the next header or end of content
-    for (let i = headerIndex + 1; i < lines.length; i++) {
-        if (lines[i].startsWith("###")) {
-            insertIndex = i;
-            break;
-        }
-        // If we encounter an empty line, insert before it
-        if (lines[i].trim() === "") {
-            insertIndex = i;
-            break;
-        }
-        insertIndex = i + 1;
-    }
-
-    // Insert the new content
+    let removedItem = '';
+    const lines = md.split('\n');
     const newLines = [];
-    newLines.push(...lines.slice(0, insertIndex));
-    newLines.push(newContent);
 
-    // Add empty line after new content if there's content following and it's not empty
-    if (insertIndex < lines.length && lines[insertIndex].trim() !== "") {
-        newLines.push("");
+    for (const line of lines) {
+        const trimmedLine = line.trim();
+
+        // Preserve invalid lines
+        if (trimmedLine.length < 6) {
+            newLines.push(trimmedLine);
+            continue;
+        }
+
+        const itemText = trimmedLine.substring(6);
+        if (hash(itemText) === itemOrHash || itemText === itemOrHash) {
+            removedItem = itemText;
+            continue;
+        }
+
+        newLines.push(trimmedLine);
     }
 
-    newLines.push(...lines.slice(insertIndex));
+    const result = newLines.join('\n');
+    await write(path, result);
+    return removedItem;
+}
 
-    return newLines.join("\n");
+async function addHeaderAndText(path, header, text, atStart = false) {
+    const now = new Date();
+    const timestamp = `\`${now.toLocaleTimeString('en-US', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit'
+    })}\``;
+
+    let formattedContent;
+    if (hasImage(text)) {
+        const imgMatch = text.match(IMG_PATTERN);
+        if (imgMatch) {
+            const imgLink = imgMatch[0];
+            const textContent = text.replace(imgLink, '').trim();
+            formattedContent = `${imgLink}\n${timestamp} ${textContent}`;
+        }
+    } else {
+        formattedContent = `${timestamp} ${text}`;
+    }
+
+    let existingText = '';
+    try {
+        existingText = await read(path);
+        existingText = normNewLines(existingText);
+        existingText = existingText.trim();
+    } catch (err) {
+        existingText = '';
+    }
+
+    let result;
+    if (!existingText.includes(header)) {
+        if (existingText === "") {
+            result = `${header}\n${formattedContent}`;
+        } else {
+            result = atStart
+                ? `${header}\n${formattedContent}\n\n${existingText}`
+                : `${existingText}\n\n${header}\n${formattedContent}`;
+        }
+    } else {
+        const lines = existingText.split("\n");
+        let headerIndex = -1;
+
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i] === header) {
+                headerIndex = i;
+                break;
+            }
+        }
+
+        if (headerIndex === -1) {
+            result = atStart
+                ? `${header}\n${formattedContent}\n\n${existingText}`
+                : `${existingText}\n\n${header}\n${formattedContent}`;
+        } else {
+            let insertIndex = headerIndex + 1;
+
+            for (let i = headerIndex + 1; i < lines.length; i++) {
+                if (lines[i].startsWith("###")) {
+                    insertIndex = i;
+                    break;
+                }
+                if (lines[i].trim() === "") {
+                    insertIndex = i;
+                    break;
+                }
+                insertIndex = i + 1;
+            }
+
+            const newLines = [];
+            newLines.push(...lines.slice(0, insertIndex));
+            newLines.push(formattedContent);
+
+            if (insertIndex < lines.length && lines[insertIndex].trim() !== "") {
+                newLines.push("");
+            }
+
+            newLines.push(...lines.slice(insertIndex));
+            result = newLines.join("\n");
+        }
+    }
+
+    await write(path, result);
 }
 
 function normNewLines(text) {

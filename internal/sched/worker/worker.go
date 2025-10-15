@@ -182,7 +182,7 @@ func RemoveCompletedChecklistItems(
 				continue
 			}
 			header := fmt.Sprintf("#### %d %s %d, %s", now().Day(), now().Format("January"), now().Year(), now().Weekday())
-			doneMD = txt.InsertTextAfterHeader(doneMD, header, removedMD)
+			doneMD = txt.AddHeaderAndText(doneMD, header, removedMD)
 
 			err = userFS.Write(fs.DirArchive, fs.DoneFilename, doneMD)
 			if err != nil {

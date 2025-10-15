@@ -365,7 +365,7 @@ function renderMessages() {
                         <span class="btn-label">To Journal</span>
                     </div>
                        <div class="btn-wrapper">
-                    <button class="action-btn to-checklist-btn" data-index="${message.index}" data-checklist="Read.txt">
+                    <button class="action-btn to-checklist-btn" data-checklist="Read.txt">
 <?xml version="1.0" encoding="utf-8"?>
 <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M4 19V6.2C4 5.0799 4 4.51984 4.21799 4.09202C4.40973 3.71569 4.71569 3.40973 5.09202 3.21799C5.51984 3 6.0799 3 7.2 3H16.8C17.9201 3 18.4802 3 18.908 3.21799C19.2843 3.40973 19.5903 3.71569 19.782 4.09202C20 4.51984 20 5.0799 20 6.2V17H6C4.89543 17 4 17.8954 4 19ZM4 19C4 20.1046 4.89543 21 6 21H20M9 7H15M9 11H15M19 17V21"  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
@@ -627,20 +627,24 @@ function attachEventListeners() {
     });
 
     inbox.querySelectorAll('.to-today-btn').forEach(btn => {
-        btn.addEventListener('click', function (e) {
+        btn.addEventListener('click', async function (e) {
             e.stopPropagation();
             const selectedMessages = document.querySelectorAll('.message.selected');
-            let indices = [];
+
+            let msgs = [];
             let messagesToRemove = [];
             if (selectedMessages.length > 0) {
-                indices = Array.from(selectedMessages).map(msg => msg.dataset.index);
+                msgs = Array.from(selectedMessages).map(msg => msg.dataset.text);
                 messagesToRemove = selectedMessages;
             } else {
-                indices = [btn.dataset.index];
+                msgs = [btn.closest('.message').dataset.text];
                 messagesToRemove = [btn.closest('.message')];
             }
 
-            sendCmd('add_item', [toFilename(TODAY_PATH), indices.join(',')]);
+            for (const msg of msgs) {
+                await moveFromInbox(msg, msg => {addChecklistItem(TODAY_PATH, msg)});
+            }
+
             messagesToRemove.forEach(message => {
                 message.classList.add('removing');
                 setTimeout(() => {
@@ -888,90 +892,6 @@ function todayHeader(timezone) {
     return `#### ${day} ${monthNames[monthIndex]} ${year}, ${dayNames[dayIndex]}`;
 }
 
-async function addHeaderAndText(path, header, text, atStart = false) {
-    const now = new Date();
-    const timestamp = `\`${now.toLocaleTimeString('en-US', {
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit'
-    })}\``;
-
-    let formattedContent;
-    if (hasImage(text)) {
-        const imgMatch = text.match(IMG_PATTERN);
-        if (imgMatch) {
-            const imgLink = imgMatch[0];
-            const textContent = text.replace(imgLink, '').trim();
-            formattedContent = `${imgLink}\n${timestamp} ${textContent}`;
-        }
-    } else {
-        formattedContent = `${timestamp} ${text}`;
-    }
-
-    let existingText = '';
-    try {
-        existingText = await read(path);
-        existingText = normNewLines(existingText);
-        existingText = existingText.trim();
-    } catch (err) {
-        existingText = '';
-    }
-
-    let result;
-    if (!existingText.includes(header)) {
-        if (existingText === "") {
-            result = `${header}\n${formattedContent}`;
-        } else {
-            result = atStart
-                ? `${header}\n${formattedContent}\n\n${existingText}`
-                : `${existingText}\n\n${header}\n${formattedContent}`;
-        }
-    } else {
-        const lines = existingText.split("\n");
-        let headerIndex = -1;
-
-        for (let i = 0; i < lines.length; i++) {
-            if (lines[i] === header) {
-                headerIndex = i;
-                break;
-            }
-        }
-
-        if (headerIndex === -1) {
-            result = atStart
-                ? `${header}\n${formattedContent}\n\n${existingText}`
-                : `${existingText}\n\n${header}\n${formattedContent}`;
-        } else {
-            let insertIndex = headerIndex + 1;
-
-            for (let i = headerIndex + 1; i < lines.length; i++) {
-                if (lines[i].startsWith("###")) {
-                    insertIndex = i;
-                    break;
-                }
-                if (lines[i].trim() === "") {
-                    insertIndex = i;
-                    break;
-                }
-                insertIndex = i + 1;
-            }
-
-            const newLines = [];
-            newLines.push(...lines.slice(0, insertIndex));
-            newLines.push(formattedContent);
-
-            if (insertIndex < lines.length && lines[insertIndex].trim() !== "") {
-                newLines.push("");
-            }
-
-            newLines.push(...lines.slice(insertIndex));
-            result = newLines.join("\n");
-        }
-    }
-
-    await write(path, result);
-}
-
 async function addToJournal(text) {
     text = text.trim();
     const journalFilename = todayJournalFilename();
@@ -979,16 +899,15 @@ async function addToJournal(text) {
     await addHeaderAndText(journalPath, todayHeader(), text);
 }
 
-
-async function moveFromInbox(record, callback) {
-    callback(record);
+async function moveFromInbox(text, callback) {
+    callback(text);
     const inboxContent = await read(INBOX_PATH);
     const lines = normNewLines(inboxContent).split('\n');
     let filteredLines = [];
     // remove lines that has `xx:xx` + record
     const timePattern = /^\`\d{2}:\d{2}\`\s*/;
     for (const line of lines) {
-        if (line.replace(timePattern, '').trim() !== record.trim()) {
+        if (line.replace(timePattern, '').trim() !== text.trim()) {
             filteredLines.push(line);
         }
     }

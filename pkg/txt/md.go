@@ -3,6 +3,7 @@ package txt
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -27,6 +28,62 @@ var closeTags = map[string]string{
 	"**": "</b>",
 	"_":  "</i>",
 	"__": "</b>",
+}
+
+func AddHeaderAndText(existingContent, header, newContent string) string {
+	if !strings.Contains(existingContent, header) {
+		if existingContent == "" {
+			return fmt.Sprintf("%s\n%s", header, newContent)
+		} else {
+			return fmt.Sprintf("%s\n%s\n\n%s", header, newContent, existingContent)
+		}
+	}
+
+	lines := strings.Split(existingContent, "\n")
+	headerIndex := -1
+
+	// Find the header line
+	for i, line := range lines {
+		if line == header {
+			headerIndex = i
+			break
+		}
+	}
+
+	if headerIndex == -1 {
+		return fmt.Sprintf("%s\n%s\n\n%s", header, newContent, existingContent)
+	}
+
+	// Find where to insert (after the last line belonging to this header)
+	insertIndex := headerIndex + 1
+
+	// Look for the next header or end of content
+	for i := headerIndex + 1; i < len(lines); i++ {
+		if strings.HasPrefix(lines[i], "###") {
+			insertIndex = i
+			break
+		}
+		// If we encounter an empty line, insert before it
+		if strings.TrimSpace(lines[i]) == "" {
+			insertIndex = i
+			break
+		}
+		insertIndex = i + 1
+	}
+
+	// Insert the new content
+	newLines := make([]string, 0, len(lines)+2)
+	newLines = append(newLines, lines[:insertIndex]...)
+	newLines = append(newLines, newContent)
+
+	// Add empty line after new content if there's content following and it's not empty
+	if insertIndex < len(lines) && strings.TrimSpace(lines[insertIndex]) != "" {
+		newLines = append(newLines, "")
+	}
+
+	newLines = append(newLines, lines[insertIndex:]...)
+
+	return strings.Join(newLines, "\n")
 }
 
 func IncompleteChecklistItems(md string) []string {

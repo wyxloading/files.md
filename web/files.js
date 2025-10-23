@@ -1095,6 +1095,8 @@ async function syncCurrentEditor(syncWithServer = true) {
             }
         }
 
+        isMessingWithCurrentEditor = false;
+        
         if (syncWithServer) {
             try {
                 await syncLocalFileWithServer(INBOX_PATH);
@@ -1103,7 +1105,6 @@ async function syncCurrentEditor(syncWithServer = true) {
             }
         }
 
-        isMessingWithCurrentEditor = false;
         return;
     }
 

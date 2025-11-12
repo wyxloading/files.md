@@ -25,12 +25,6 @@ It works like a regular chat, so it's easier to use because there's less resista
 `/pkg` - various packages   
 `/web` - standalone web application for viewing/editing files (alpha version, Chrome only)   
 
-## Local Chat
-1) Install [Go](https://go.dev/doc/install) and [Wails](https://wails.io/docs/gettingstarted/installation)
-2) Run the bot:
-```bash
-$ make chat
-```
 
 ## Telegram Bot 🤖
 1) Install [Go](https://go.dev/doc/install)

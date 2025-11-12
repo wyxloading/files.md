@@ -930,7 +930,7 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
     } else if (el === 'editor2-textarea') {
         currentEditor = editor2;
     }
-    if (currentEditor.path !== undefined) {
+    if (currentEditor.path !== undefined && currentEditor.path !== path) {
         log('Began syncing previous file');
         await syncCurrentEditor(false);
         log('Finished syncing previous file');
@@ -1206,7 +1206,7 @@ async function syncCurrentEditor(syncWithServer = true) {
         // Changes only from local system
         try {
             isMessingWithCurrentEditor = false;
-            await openFile(path);
+            await openFile(path, false);
         } catch (error) {
             console.error('Error opening file:', error);
             isMessingWithCurrentEditor = false;

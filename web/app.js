@@ -58,7 +58,7 @@ async function init() {
     if (!hasSavedLocalDir) {
         document.getElementById('open-folder').style.display = 'inline';
         isWelcome = false;
-        document.getElementById('open-chat-modal').style.display = 'inline';
+        // document.getElementById('open-chat-modal').style.display = 'inline';
     } else {
         isWelcome = false;
         document.getElementById('open-folder').style.display = 'none';
@@ -610,6 +610,10 @@ window.addEventListener('blur', async function () {
     // Why we did that?
 
     // Sync media first, so that new images for current file would be loaded
+    // if files is not empty object
+    if (Object.keys(files).length === 0) {
+        return;
+    }
     await syncMedia();
     await syncCurrentEditor();
 

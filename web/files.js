@@ -941,6 +941,7 @@ function saveServerFiles() {
 async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
     // There are a few awaits during syncCurrentFile, we should not change currentEditor during that.
     while (isMessingWithCurrentEditor) {
+        log('Waiting isMessingWithCurrentEditor...');    
         await new Promise(r => setTimeout(r, 50));
     }
 

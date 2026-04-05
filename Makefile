@@ -1,5 +1,5 @@
-tgbot:
-	go run ./cmd/tgbot
+server:
+	go run ./cmd/server
 
 chat:
 	cd ./cmd/chat && wails build

@@ -20,11 +20,11 @@ deploy: # deploy as systemd service, TODO make timestamps hussle in separate dir
 	COMMIT_HASH=$$(git rev-parse --short HEAD); \
 	printf "$${YELLOW}Building...$${RESET}\n" && \
 	make check && \
-	GOOS=linux GOARCH=amd64 go build -o /tmp/bot ./cmd/tgbot && \
+	GOOS=linux GOARCH=amd64 go build -o /tmp/server ./cmd/server && \
 	printf "$${GREEN}Build Completed$${RESET}\n" && \
-	scp /tmp/bot $(host):/app/bot.new && printf "$${GREEN}The binary is copied on the server$${RESET}\n" && \
-	ssh $(host) "mv /app/bot.new /app/bot && systemctl daemon-reload && systemctl restart bot.service" && \
-	rm /tmp/bot && \
+	scp /tmp/server $(host):/app/server.new && printf "$${GREEN}The binary is copied on the server$${RESET}\n" && \
+	ssh $(host) "mv /app/server.new /app/server && systemctl daemon-reload && systemctl restart server.service" && \
+	rm /tmp/server && \
 	printf "$${YELLOW}Versioning current files with commit: $${COMMIT_HASH}$${RESET}\n" && \
 	find . -name "*.html" -exec grep -l "?v=" {} \; | xargs sed -i '' 's/?v=/?v='"$${COMMIT_HASH}"'/g' && \
 	tar --no-xattrs --disable-copyfile --no-fflags -czf web.tar.gz web && \
@@ -42,13 +42,13 @@ format:
 	gofumpt -w .
 
 e2e: # make e2e test="create and move"
-	killall tgbot || true
-	go run ./cmd/tgbot & \
+	killall server || true
+	go run ./cmd/server & \
 	cd tests && npm run test $(if $(test),-g "$(test)")
 
 e2eh: # headed e2e tests
-	killall tgbot || true
-	go run ./cmd/tgbot & \
+	killall server || true
+	go run ./cmd/server & \
 	cd tests && npm run test:headed $(if $(test),-g "$(test)")
 
 e2es: # run single test
@@ -59,13 +59,13 @@ e2esh: # run single test headed
 
 
 sync:
-	killall tgbot || true
-	go run ./cmd/tgbot & \
+	killall server || true
+	go run ./cmd/server & \
 	cd tests && npm run test --g "sync"
 
 synch:
-	killall tgbot || true
-	go run ./cmd/tgbot & \
+	killall server || true
+	go run ./cmd/server & \
 	cd tests && npm run test:headed --g "sync"
 
 report:
@@ -77,13 +77,13 @@ deploy_binary: # deploy as regular binary, kinda deprecated, but ok for simple s
 	RESET='\e[0m'; \
 	printf "$${YELLOW}Building...$${RESET}\n" && \
 	make check && \
-	GOOS=linux GOARCH=amd64 go build -o /tmp/bot ./cmd/tgbot && \
+	GOOS=linux GOARCH=amd64 go build -o /tmp/server ./cmd/server && \
 	printf "$${GREEN}Build Completed$${RESET}\n" && \
-	ssh $(host) "killall bot || true" && \
-	scp /tmp/bot $(host):/app/bot && printf "$${GREEN}The binary is copied on the server$${RESET}\n" && \
-  	ssh $(host) "sudo setcap 'cap_net_bind_service=+ep' /app/bot" && \
-	ssh $(host) "su -c \"cd /app && nohup ./bot >> /app/log 2>>/app/err &\" -s /bin/sh www-data" && \
-	rm /tmp/bot && \
+	ssh $(host) "killall server || true" && \
+	scp /tmp/server $(host):/app/server && printf "$${GREEN}The binary is copied on the server$${RESET}\n" && \
+  	ssh $(host) "sudo setcap 'cap_net_bind_service=+ep' /app/server" && \
+	ssh $(host) "su -c \"cd /app && nohup ./server >> /app/log 2>>/app/err &\" -s /bin/sh www-data" && \
+	rm /tmp/server && \
 	printf "$${GREEN}Successfully deployed!$${RESET}\n"
 
 init_server: # create directories and configuration files on the service
@@ -100,23 +100,23 @@ init_server: # create directories and configuration files on the service
 		echo 'SERVER_LOG_FILE=/var/log/files.md/server.log' >> /app/.env && \
 		chown www-data:www-data /app/.env && \
 		( \
-			echo '[Unit]' > /etc/systemd/system/bot.service && \
-			echo 'Description=Bot Service' >> /etc/systemd/system/bot.service && \
-			echo 'After=network.target' >> /etc/systemd/system/bot.service && \
-			echo '' >> /etc/systemd/system/bot.service && \
-			echo '[Service]' >> /etc/systemd/system/bot.service && \
-			echo 'User=www-data' >> /etc/systemd/system/bot.service && \
-			echo 'ExecStart=/app/bot' >> /etc/systemd/system/bot.service && \
-			echo 'WorkingDirectory=/app' >> /etc/systemd/system/bot.service && \
-			echo 'Environment=TOKENS_SALT=your-secret-salt-here' >> /etc/systemd/system/bot.service && \
-			echo 'Restart=always' >> /etc/systemd/system/bot.service && \
-			echo 'RestartSec=5' >> /etc/systemd/system/bot.service && \
-			echo 'StandardOutput=append:/app/log' >> /etc/systemd/system/bot.service && \
-			echo 'StandardError=append:/app/err' >> /etc/systemd/system/bot.service && \
-			echo 'AmbientCapabilities=CAP_NET_BIND_SERVICE' >> /etc/systemd/system/bot.service && \
-			echo '' >> /etc/systemd/system/bot.service && \
-			echo '[Install]' >> /etc/systemd/system/bot.service && \
-			echo 'WantedBy=multi-user.target' >> /etc/systemd/system/bot.service \
+			echo '[Unit]' > /etc/systemd/system/server.service && \
+			echo 'Description=Files.md Server' >> /etc/systemd/system/server.service && \
+			echo 'After=network.target' >> /etc/systemd/system/server.service && \
+			echo '' >> /etc/systemd/system/server.service && \
+			echo '[Service]' >> /etc/systemd/system/server.service && \
+			echo 'User=www-data' >> /etc/systemd/system/server.service && \
+			echo 'ExecStart=/app/server' >> /etc/systemd/system/server.service && \
+			echo 'WorkingDirectory=/app' >> /etc/systemd/system/server.service && \
+			echo 'Environment=TOKENS_SALT=your-secret-salt-here' >> /etc/systemd/system/server.service && \
+			echo 'Restart=always' >> /etc/systemd/system/server.service && \
+			echo 'RestartSec=5' >> /etc/systemd/system/server.service && \
+			echo 'StandardOutput=append:/app/log' >> /etc/systemd/system/server.service && \
+			echo 'StandardError=append:/app/err' >> /etc/systemd/system/server.service && \
+			echo 'AmbientCapabilities=CAP_NET_BIND_SERVICE' >> /etc/systemd/system/server.service && \
+			echo '' >> /etc/systemd/system/server.service && \
+			echo '[Install]' >> /etc/systemd/system/server.service && \
+			echo 'WantedBy=multi-user.target' >> /etc/systemd/system/server.service \
 		) || echo 'Failed to write service file. Check permissions.'; \
 		echo 'Directories created and permissions set successfully.' \
 	"

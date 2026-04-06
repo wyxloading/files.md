@@ -38,7 +38,7 @@ Only now I send notes and ideas to the bot.
 And it saves everything to `.md` files nicely.  
 
 ## Telegram Bot 🤖
-<img src="https://github.com/zakirullin/files.md/raw/main/web/bot.jpg" alt="Telegram Bot screenshot" title="Telegram Bot"/>
+<img src="https://github.com/zakirullin/files.md/raw/main/web/bot.png" alt="Telegram Bot screenshot" title="Telegram Bot"/>
 
 When we are focused and distracting information comes in, we want to get rid of it as quickly as possible. To do that, just send whatever is distracting you to the bot. Then choose how you want to save it - as a task, a note, or a journal entry. By default, it will be saved as today's task.
 

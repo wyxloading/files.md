@@ -6,10 +6,9 @@ import (
 
 	"github.com/zakirullin/files.md/server/config"
 	"github.com/zakirullin/files.md/server/consts"
-	i18n2 "github.com/zakirullin/files.md/server/i18n"
+	"github.com/zakirullin/files.md/server/i18n"
 	"github.com/zakirullin/files.md/server/pkg/tg"
 	"github.com/zakirullin/files.md/server/pkg/txt"
-	"github.com/zakirullin/files.md/server/userconfig"
 )
 
 const (
@@ -17,18 +16,43 @@ const (
 	delBtn = "➖"
 )
 
+var AvailableMoveToBtns = []tg.Btn{
+	tg.NewBtn(i18n.StrToTomorrow, tg.NewCmd(consts.CmdScheduleForTmrw, nil)),
+	tg.NewBtn(i18n.StrToLater, tg.NewCmd(consts.CmdMoveToLater, nil)),
+	tg.NewBtn(i18n.StrToADay, tg.NewCmd(consts.CmdShowScheduleForDay, nil)),
+	tg.NewBtn(i18n.StrToFile, tg.NewCmd(consts.CmdShowMoveToDirOrFile, nil)),
+	tg.NewBtn(i18n.StrToJournal, tg.NewCmd(consts.CmdMoveToJournal, nil)),
+	tg.NewBtn(i18n.StrToRead, tg.NewCmd(consts.CmdMoveToRead, nil)),
+	tg.NewBtn(i18n.StrToWatch, tg.NewCmd(consts.CmdMoveToWatch, nil)),
+	tg.NewBtn(i18n.StrToShop, tg.NewCmd(consts.CmdMoveToShop, nil)),
+	tg.NewBtn(i18n.StrToChecklist, tg.NewCmd(consts.CmdShowMoveToChecklist, nil)),
+}
+
+var AvailableQuickBtns = []tg.Btn{
+	tg.NewBtn("Later", tg.NewCmd(consts.CmdLater, nil)),
+	tg.NewBtn("Search", tg.NewCustomCmd(consts.CmdInlineQuerySearchEveryWhere, nil, tg.CmdTypeInlineQueryCurrentChat)),
+	tg.NewBtn("Files", tg.NewCmd(consts.CmdShowFiles, nil)),
+	tg.NewBtn("Checklists", tg.NewCmd(consts.CmdShowChecklists, nil)),
+	tg.NewBtn("Postpone", tg.NewCmd(consts.CmdShowPostpone, nil)),
+	tg.NewBtn("Read", tg.NewCmd(consts.CmdShowReadChecklist, nil)),
+	tg.NewBtn("Watch", tg.NewCmd(consts.CmdShowWatchChecklist, nil)),
+	tg.NewBtn("Shop", tg.NewCmd(consts.CmdShowShopChecklist, nil)),
+	tg.NewBtn("Schedule", tg.NewCmd(consts.CmdShowSchedule, nil)),
+	tg.NewBtn("Habits", tg.NewCustomCmd(consts.CmdWebAppHabits, nil, tg.CmdTypeWebApp)),
+}
+
 func (b *Bot) showSettings(params []string) error {
 	var kb tg.Keyboard
-	kb.AddRow(tg.NewBtn(txt.Emoji(i18n2.Emoji("brain"), b.tr("Full mode")), tg.NewCmd(consts.CmdFullMode, nil)))
-	kb.AddRow(tg.NewBtn(txt.Emoji(i18n2.Emoji("chat"), b.tr("Inbox mode")), tg.NewCmd(consts.CmdChatMode, nil)))
-	kb.AddRow(tg.NewBtn(txt.Emoji(i18n2.Emoji("notes"), b.tr("Notes mode")), tg.NewCmd(consts.CmdNotesOnlyMode, nil)))
-	kb.AddRow(tg.NewBtn(txt.Emoji(i18n2.Emoji("tasks"), b.tr("Tasks mode")), tg.NewCmd(consts.CmdTasksOnlyMode, nil)))
-	kb.AddRow(tg.NewBtn(txt.Emoji(i18n2.Emoji("journal"), b.tr("Journal mode")), tg.NewCmd(consts.CmdJournalOnlyMode, nil)))
+	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("brain"), b.tr("Full mode")), tg.NewCmd(consts.CmdFullMode, nil)))
+	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("chat"), b.tr("Inbox mode")), tg.NewCmd(consts.CmdChatMode, nil)))
+	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("notes"), b.tr("Notes mode")), tg.NewCmd(consts.CmdNotesOnlyMode, nil)))
+	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("tasks"), b.tr("Tasks mode")), tg.NewCmd(consts.CmdTasksOnlyMode, nil)))
+	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("journal"), b.tr("Journal mode")), tg.NewCmd(consts.CmdJournalOnlyMode, nil)))
 	kb.AddRow(tg.NewBtn("-", tg.NewCmd(consts.CmdDoNothing, nil)))
-	kb.AddRow(tg.NewBtn(i18n2.StrQuickBtns, tg.NewCmd(consts.CmdShowQuickBtnsSettings, nil)))
-	kb.AddRow(tg.NewBtn(i18n2.StrMoveToBtns, tg.NewCmd(consts.CmdShowMoveToBtnsSettings, nil)))
-	kb.AddRow(tg.NewBtn(txt.Emoji(i18n2.Emoji("world"), b.tr("Timezone")), tg.NewCmd(consts.CmdShowTimezone, nil)))
-	kb.AddRow(tg.NewBtn(i18n2.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
+	kb.AddRow(tg.NewBtn(i18n.StrQuickBtns, tg.NewCmd(consts.CmdShowQuickBtnsSettings, nil)))
+	kb.AddRow(tg.NewBtn(i18n.StrMoveToBtns, tg.NewCmd(consts.CmdShowMoveToBtnsSettings, nil)))
+	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("world"), b.tr("Timezone")), tg.NewCmd(consts.CmdShowTimezone, nil)))
+	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
 
 	err := b.showHTML("Settings:", &kb)
 	if err != nil {
@@ -62,7 +86,7 @@ func (b *Bot) showTimezone(_ []string) error {
 		}
 		kb.AddRow(tg.NewBtn(name, tg.NewCmd(consts.CmdSetTimezone, []string{tz})))
 	}
-	kb.AddRow(tg.NewBtn(i18n2.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
+	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
 
 	err := b.showHTML("Timezone:", &kb)
 	if err != nil {
@@ -96,12 +120,12 @@ func (b *Bot) showQuickBtnsSettings(params []string) error {
 	}
 
 	for _, cmd := range cmds {
-		for _, btn := range userconfig.AvailableQuickBtns {
+		for _, btn := range AvailableQuickBtns {
 			if btn.Cmd.Name != cmd {
 				continue
 			}
 
-			name := fmt.Sprintf("%s %s %s", i18n2.Emoji(btn.Name), btn.Name, delBtn)
+			name := fmt.Sprintf("%s %s %s", i18n.Emoji(btn.Name), btn.Name, delBtn)
 			enabledCmd := tg.NewCmd(consts.CmdDelFromQuickBtns, []string{btn.Cmd.Name})
 			kb.AddRow(tg.NewBtn(name, enabledCmd))
 			usedCmds = append(usedCmds, cmd)
@@ -112,7 +136,7 @@ func (b *Bot) showQuickBtnsSettings(params []string) error {
 	kb.AddRow(tg.NewBtn("-", tg.NewCmd(consts.CmdDoNothing, nil)))
 
 	// Step 2. now, let's fill buttons that are not disabled...
-	for _, btn := range userconfig.AvailableQuickBtns {
+	for _, btn := range AvailableQuickBtns {
 		// Check if command is enabled
 		cmdUsed := false
 		for _, usedCmd := range usedCmds {
@@ -124,12 +148,12 @@ func (b *Bot) showQuickBtnsSettings(params []string) error {
 			continue
 		}
 		// Command is not enabled, so add it to disabled list
-		name := fmt.Sprintf("%s %s %s", i18n2.Emoji(btn.Name), btn.Name, addBtn)
+		name := fmt.Sprintf("%s %s %s", i18n.Emoji(btn.Name), btn.Name, addBtn)
 		disabledCmd := tg.NewCmd(consts.CmdAddToQuickBtns, []string{btn.Cmd.Name})
 		kb.AddRow(tg.NewBtn(name, disabledCmd))
 	}
 
-	kb.AddRow(tg.NewBtn(i18n2.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
+	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
 
 	text := fmt.Sprintf("Configure quick buttons (%s = add to quick buttons, %s = to remove from quick buttons):", addBtn, delBtn)
 	err = b.showHTML(text, &kb)
@@ -145,7 +169,7 @@ func (b *Bot) addToQuickBtns(params []string) error {
 
 	// Search whether a command is valid
 	found := false
-	for _, btn := range userconfig.AvailableQuickBtns {
+	for _, btn := range AvailableQuickBtns {
 		if btn.Cmd.Name == cmd {
 			found = true
 			break
@@ -177,13 +201,13 @@ func (b *Bot) quickBtns() []tg.Btn {
 	// We can tolerate missing quick btns
 	cmds, _ := b.cfg.QuickCmds()
 	for _, cmd := range cmds {
-		for _, btn := range userconfig.AvailableQuickBtns {
+		for _, btn := range AvailableQuickBtns {
 			if btn.Cmd.Name == cmd {
 				if btn.Cmd.Name == consts.CmdWebAppHabits {
 					habitsUrl := fmt.Sprintf("https://%s/habits_v2/%d", config.ServerCfg.APIHost, b.userID)
 					btn.Cmd.Params = []string{habitsUrl}
 				}
-				btn.Name = i18n2.Emoji(btn.Name)
+				btn.Name = i18n.Emoji(btn.Name)
 
 				quickBtnsRow = append(quickBtnsRow, btn)
 				break
@@ -207,7 +231,7 @@ func (b *Bot) showMoveToBtnsSettings(params []string) error {
 		return fmt.Errorf("can't get move to cmds: %w", err)
 	}
 	for _, cmd := range cmds {
-		for _, btn := range userconfig.AvailableMoveToBtns {
+		for _, btn := range AvailableMoveToBtns {
 			if btn.Cmd.Name != cmd {
 				continue
 			}
@@ -223,7 +247,7 @@ func (b *Bot) showMoveToBtnsSettings(params []string) error {
 	kb.AddRow(tg.NewBtn("-", tg.NewCmd(consts.CmdDoNothing, nil)))
 
 	// Step 2. now, let's fill buttons that are not disabled...
-	for _, btn := range userconfig.AvailableMoveToBtns {
+	for _, btn := range AvailableMoveToBtns {
 		// Check if command is enabled
 		cmdUsed := false
 		for _, usedCmd := range usedCmds {
@@ -240,7 +264,7 @@ func (b *Bot) showMoveToBtnsSettings(params []string) error {
 		kb.AddRow(tg.NewBtn(name, disabledCmd))
 	}
 
-	kb.AddRow(tg.NewBtn(i18n2.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
+	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
 
 	text := fmt.Sprintf("Configure quick panel (%s = add to panel, %s = to remove):", addBtn, delBtn)
 	err = b.showHTML(text, &kb)
@@ -282,7 +306,7 @@ func (b *Bot) moveToBtns(msgIndex int) []tg.Btn {
 	}
 
 	for _, cmd := range cmds {
-		for _, btn := range userconfig.AvailableMoveToBtns {
+		for _, btn := range AvailableMoveToBtns {
 			if btn.Cmd.Name == cmd {
 				btn.Cmd.Params = []string{strconv.Itoa(msgIndex)}
 				moveToBtns = append(moveToBtns, btn)

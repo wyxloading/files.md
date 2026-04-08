@@ -2,23 +2,7 @@ package userconfig
 
 import (
 	"fmt"
-
-	"github.com/zakirullin/files.md/server/consts"
-	"github.com/zakirullin/files.md/server/i18n"
-	"github.com/zakirullin/files.md/server/pkg/tg"
 )
-
-var AvailableMoveToBtns = []tg.Btn{
-	tg.NewBtn(i18n.StrToTomorrow, tg.NewCmd(consts.CmdScheduleForTmrw, nil)),
-	tg.NewBtn(i18n.StrToLater, tg.NewCmd(consts.CmdMoveToLater, nil)),
-	tg.NewBtn(i18n.StrToADay, tg.NewCmd(consts.CmdShowScheduleForDay, nil)),
-	tg.NewBtn(i18n.StrToFile, tg.NewCmd(consts.CmdShowMoveToDirOrFile, nil)),
-	tg.NewBtn(i18n.StrToJournal, tg.NewCmd(consts.CmdMoveToJournal, nil)),
-	tg.NewBtn(i18n.StrToRead, tg.NewCmd(consts.CmdMoveToRead, nil)),
-	tg.NewBtn(i18n.StrToWatch, tg.NewCmd(consts.CmdMoveToWatch, nil)),
-	tg.NewBtn(i18n.StrToShop, tg.NewCmd(consts.CmdMoveToShop, nil)),
-	tg.NewBtn(i18n.StrToChecklist, tg.NewCmd(consts.CmdShowMoveToChecklist, nil)),
-}
 
 func (c *Config) AddMoveToCmd(cmd string) error {
 	lock := c.userLock()

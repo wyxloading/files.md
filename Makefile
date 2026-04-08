@@ -1,40 +1,13 @@
 .PHONY: server
+
 server:
 	go run ./cmd/server
-
-chat:
-	cd ./cmd/chat && wails build
 
 test:
 	go test ./...
 
-install:
-	go mod tidy
-
 check:
 	go fmt ./... && go vet ./... && go test ./...
-
-deploy: # deploy as systemd service, TODO make timestamps hussle in separate dir, add js/css minify before release
-	@GREEN='\e[32m'; \
-	YELLOW='\e[33m'; \
-	RESET='\e[0m'; \
-	COMMIT_HASH=$$(git rev-parse --short HEAD); \
-	printf "$${YELLOW}Building...$${RESET}\n" && \
-	make check && \
-	GOOS=linux GOARCH=amd64 go build -o /tmp/server ./cmd/server && \
-	printf "$${GREEN}Build Completed$${RESET}\n" && \
-	scp /tmp/server $(host):/app/server.new && printf "$${GREEN}The binary is copied on the server$${RESET}\n" && \
-	ssh $(host) "mv /app/server.new /app/server && systemctl daemon-reload && systemctl restart server.service" && \
-	rm /tmp/server && \
-	printf "$${YELLOW}Versioning current files with commit: $${COMMIT_HASH}$${RESET}\n" && \
-	find . -name "*.html" -exec grep -l "?v=" {} \; | xargs sed -i '' 's/?v=/?v='"$${COMMIT_HASH}"'/g' && \
-	tar --no-xattrs --disable-copyfile --no-fflags -czf web.tar.gz web && \
-	scp web.tar.gz files:/app/ && \
-	ssh files "cd /app && tar -xzf web.tar.gz && rm web.tar.gz" && \
-	rm web.tar.gz && \
-	printf "$${GREEN}Removing versioning$${RESET}\n" && \
-	find . -name "*.html" -exec grep -l "?v=$${COMMIT_HASH}" {} \; | xargs sed -i '' 's/?v='"$${COMMIT_HASH}"'/?v=/g' && \
-	printf "$${GREEN}Successfully deployed!$${RESET}\n"
 
 lint:
 	golangci-lint run
@@ -58,7 +31,6 @@ e2es: # run single test
 e2esh: # run single test headed
 	cd tests && npm run test:headed -- $(if $(test),-g "$(test)")
 
-
 sync:
 	killall server || true
 	go run ./cmd/server & \
@@ -71,21 +43,6 @@ synch:
 
 report:
 	cd tests && npx playwright show-report
-
-deploy_binary: # deploy as regular binary, kinda deprecated, but ok for simple setup
-	@GREEN='\e[32m'; \
-	YELLOW='\e[33m'; \
-	RESET='\e[0m'; \
-	printf "$${YELLOW}Building...$${RESET}\n" && \
-	make check && \
-	GOOS=linux GOARCH=amd64 go build -o /tmp/server ./cmd/server && \
-	printf "$${GREEN}Build Completed$${RESET}\n" && \
-	ssh $(host) "killall server || true" && \
-	scp /tmp/server $(host):/app/server && printf "$${GREEN}The binary is copied on the server$${RESET}\n" && \
-  	ssh $(host) "sudo setcap 'cap_net_bind_service=+ep' /app/server" && \
-	ssh $(host) "su -c \"cd /app && nohup ./server >> /app/log 2>>/app/err &\" -s /bin/sh www-data" && \
-	rm /tmp/server && \
-	printf "$${GREEN}Successfully deployed!$${RESET}\n"
 
 init_server: # create directories and configuration files on the service
 	ssh $(host) "\
@@ -123,3 +80,41 @@ init_server: # create directories and configuration files on the service
 		) || echo 'Failed to write service file. Check permissions.'; \
 		echo 'Directories created and permissions set successfully.' \
 	"
+
+deploy_systemd: # deploy as systemd service, TODO make timestamps hussle in separate dir, add js/css minify before release
+	@GREEN='\e[32m'; \
+	YELLOW='\e[33m'; \
+	RESET='\e[0m'; \
+	COMMIT_HASH=$$(git rev-parse --short HEAD); \
+	printf "$${YELLOW}Building...$${RESET}\n" && \
+	make check && \
+	GOOS=linux GOARCH=amd64 go build -o /tmp/server ./cmd/server && \
+	printf "$${GREEN}Build Completed$${RESET}\n" && \
+	scp /tmp/server $(host):/app/server.new && printf "$${GREEN}The binary is copied on the server$${RESET}\n" && \
+	ssh $(host) "mv /app/server.new /app/server && systemctl daemon-reload && systemctl restart server.service" && \
+	rm /tmp/server && \
+	printf "$${YELLOW}Versioning current files with commit: $${COMMIT_HASH}$${RESET}\n" && \
+	find . -name "*.html" -exec grep -l "?v=" {} \; | xargs sed -i '' 's/?v=/?v='"$${COMMIT_HASH}"'/g' && \
+	tar --no-xattrs --disable-copyfile --no-fflags -czf web.tar.gz web && \
+	scp web.tar.gz files:/app/ && \
+	ssh files "cd /app && tar -xzf web.tar.gz && rm web.tar.gz" && \
+	rm web.tar.gz && \
+	printf "$${GREEN}Removing versioning$${RESET}\n" && \
+	find . -name "*.html" -exec grep -l "?v=$${COMMIT_HASH}" {} \; | xargs sed -i '' 's/?v='"$${COMMIT_HASH}"'/?v=/g' && \
+	printf "$${GREEN}Successfully deployed!$${RESET}\n"
+
+deploy_binary: # deploy as regular binary, kinda deprecated, but ok for simple setup
+	@GREEN='\e[32m'; \
+	YELLOW='\e[33m'; \
+	RESET='\e[0m'; \
+	printf "$${YELLOW}Building...$${RESET}\n" && \
+	make check && \
+	GOOS=linux GOARCH=amd64 go build -o /tmp/server ./cmd/server && \
+	printf "$${GREEN}Build Completed$${RESET}\n" && \
+	ssh $(host) "killall server || true" && \
+	scp /tmp/server $(host):/app/server && printf "$${GREEN}The binary is copied on the server$${RESET}\n" && \
+  	ssh $(host) "sudo setcap 'cap_net_bind_service=+ep' /app/server" && \
+	ssh $(host) "su -c \"cd /app && nohup ./server >> /app/log 2>>/app/err &\" -s /bin/sh www-data" && \
+	rm /tmp/server && \
+	printf "$${GREEN}Successfully deployed!$${RESET}\n"
+

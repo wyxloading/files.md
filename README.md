@@ -10,7 +10,7 @@ You can store whole your life:
 - ✅ Tasks, Checklists
 - 💚 Journal, Habits
 
-All in plain `.md` files, locally.  
+All in plain `.md` files, locally. LLM-friendly. 
 
 You can try it out: [app.files.md](https://app.files.md)
 

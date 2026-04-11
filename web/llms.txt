@@ -1,13 +1,13 @@
-# Files.md — Knowledge Base Structure
+# Files.md - Files Structure
 
 This document describes the file structure of a Files.md knowledge base.
-All files are plain Markdown (.md) or plain text (.txt), stored locally.
+All files are plain Markdown (.md) stored locally.
 
 ## Directory Layout
 
 ```
 /
-├── <any_dir>/            # Note directories (brain/, happiness/, ...)
+├── <category>/           # Note directories (brain/, happiness/, ...)
 │   └── *.md              # e.g. brain/Memory.md
 ├── *.md                  # Projects, important notes, index notes
 │
@@ -49,7 +49,7 @@ Checklist format. Each task is a checklist item.
 - [x] Send email
 ```
 
-### Notes (/<dir>/*.md)
+### Notes (/<category>/*.md)
 One idea per file. The filename is the title. Files can link to each other using `[Other Note]` syntax.
 ```
 Relations among ideas are far more important than the ideas themselves.
@@ -81,6 +81,6 @@ Images referenced in notes via standard Markdown: `![alt](media/photo.jpg)`
 ## Conventions
 - One level of directory nesting only
 - Filenames are capitalized: `My note.md`, not `my note.md`
-- Links between notes use bracket syntax: `[Note Title]`
-- Supported file extensions: .md, .txt, .png, .jpg, .jpeg, .webp, .gif
-- System directories: media, archive, today, later, journal, habits, insights, _read_, _watch_, _shop_
+- Links between notes use default markdown syntax: `[Note Title](Note path)`
+- Supported file extensions: .md, .png, .jpg, .jpeg, .webp, .gif
+- System directories: media, archive, journal, habits, insights

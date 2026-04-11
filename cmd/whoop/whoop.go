@@ -58,10 +58,10 @@ func main() {
 		return d
 	}
 
-	// Parse sleeps — use wake onset date as the day, skip naps.
+	// Parse sleeps - use wake onset date as the day, skip naps.
 	parseSleeps(filepath.Join(dir, "sleeps.csv"), dayOf)
 
-	// Parse physiological cycles — recovery, HRV, RHR, strain.
+	// Parse physiological cycles - recovery, HRV, RHR, strain.
 	parseCycles(filepath.Join(dir, "physiological_cycles.csv"), dayOf)
 
 	// Parse workouts.

@@ -30,22 +30,22 @@ Maybe. But this time:
 ## Are there enough features and plugins?
 Enough to do the real work.  
 
-1) I used `files.md` to grow my knowledge about Software Development and Brain.
-2) I added new notes to the base. One idea per note.
-3) I made connections between notes. Everything should be connected, just as in our brain.
-4) I spend time travelling through the notes and thinking it through.
-5) At some point, software development and brain-related notes suddenly appeared very related.
-6) **I got the insight**.
-7) I wrote an article about [Cognitive Load in Software Development](https://github.com/zakirullin/cognitive-load).
+1) I used `files.md` to grow my knowledge about brain and software development
+2) I added new notes to either `brain` or `dev` folders. One idea per note
+3) I made connections between the notes. Everything is connected, just as in our brain
+4) I spend time travelling through the notes and thinking it through
+5) At some point, brain-related and software development notes suddenly appeared very related
+6) **I got the insight**
+7) I wrote an article about [Cognitive Load in Software Development](https://github.com/zakirullin/cognitive-load)
 
 Many considered it a great write-up.  
 
 All this activity helped me to:
 - **Think deeply** (which is very important in AI-age)
-- **Develop a systemic understanding across domains**
+- **Think in systems and see the bigger picture**
 - **Write insightful texts**
 
-To achieve all that, **you'll have to use your brain**. Not advanced workflows or AI automations.  
+To achieve all that, **you'll have to use your brain**. Not advanced templates or AI workflows.  
 
 ## How to take notes 🗒️
 You read a book, you stumble upon an interesting idea.  
@@ -70,6 +70,23 @@ Later you can open [app.files.md](https://app.files.md) and make some connection
 
 ## Checklists 🛒
 
+## Files structure
+You don't have to think about the structure, it is predefined.  
+
+- Notes: `/brain/Note.md` (`/<category>/*.md`)
+- Projects: `/My project.md` (`/*.md`) - project, important or index notes
+- Inbox: `/Inbox.md` - incoming messages, append-only chat log
+- Tasks: `/Today.md`, `/Later.md` - checklist-based task lists
+- Checklists: `/Read.md`, `/Watch.md`, `/Shop.md` - built-in checklists
+- Journal: `/journal/2024.08 August.md` (`/journal/<YYYY>.<MM> <Month>.md`)
+- Habits: `/habits/Morning workout.md` (`/habits/*.md`)
+- Insights: `/insights/2024 Habits.md` (`/insights/<YYYY> Habits.md`)
+- Media: `/media/*` - images (png, jpg, webp, gif)
+- Archive: `/archive/*`, `/archive/Done.md` - completed items
+- Config: `/config.json` - per-user settings
+
+Scheme is also available at [files.md](files.md/llms.txt).
+
 ## Telegram Bot 🤖
 <img src="https://github.com/zakirullin/files.md/raw/main/web/bot.png" alt="Telegram Bot screenshot" title="Telegram Bot"/>
 
@@ -87,7 +104,7 @@ Convert `[[wikilinks]]` to standard markdown links `[Name](/path.md)` (`--dry-ru
 go run /abs/path/to/files.md/cmd/tomdlinks/tomdlinks.go .
 ```
 
-Insert backlinks into notes — adds links back to referencing files (`--dry-run` available):
+Insert backlinks into notes - adds links back to referencing files (`--dry-run` available):
 ```
 go run /abs/path/to/files.md/cmd/backlink/backlink.go
 ```
@@ -120,22 +137,6 @@ go run /abs/path/to/files.md/cmd/whoop/whoop.go
 | `Cmd/Ctrl` + `Click` | Copy inline text / open link |
 | `Ctrl+Cmd+Space` | Insert emoji (macOS) |
 | `[` | Trigger file link autocomplete |  
-
-## Files structure
-We differentiate the following types of files (with `/` denoting your root folder):
-- Inbox: `/Inbox.md` — incoming messages, append-only chat log
-- Tasks: `/Today.md`, `/Later.md` — checklist-based task lists
-- Notes: `/brain/Brain is the most complex object.md` (`/<any_dir>/*.md`)
-- Projects: `/My project.md` (`/*.md`) — project, important or index notes
-- Checklists: `/Read.md`, `/Watch.md`, `/Shop.md` — built-in checklists
-- Journal: `/journal/2024.08 August.md` (`/journal/<YYYY>.<MM> <Month>.md`)
-- Habits: `/habits/Morning workout.md` (`/habits/*.md`)
-- Insights: `/insights/2024 Habits.md` (`/insights/<YYYY> Habits.md`)
-- Media: `/media/*` — images (png, jpg, webp, gif)
-- Archive: `/archive/*`, `/archive/Done.md` — completed items
-- Config: `/config.json` — per-user settings
-
-Scheme is also available at [files.md](files.md/llms.txt).
 
 ## Deploy on your own server
 Prepare server (tested on Debian-based systems):

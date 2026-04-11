@@ -2364,7 +2364,7 @@ func (b *Bot) addToJournalAndContinue(params []string) error {
 		return fmt.Errorf("failed to move to journal: can't add note: %w", err)
 	}
 
-	// Don't return — continue to save to inbox as well.
+	// Don't return - continue to save to inbox as well.
 	msgIndex, err := b.saveToInbox(content, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("save to inbox: %w", err)

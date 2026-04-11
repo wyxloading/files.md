@@ -1,5 +1,3 @@
-// In-memory FS that mimics the File System Access API.
-// Used when OPFS is unavailable (e.g. file:// protocol).
 class MemFile {
     constructor(name, content = '') {
         this.kind = 'file';
@@ -179,7 +177,7 @@ const DEFAULT_FILES = {
             isFile: true,
         },
         "Brain is the most complex object in known universe.md": {
-            "content": "Nothing will make you appreciate human intelligence like learning about how unbelievably challenging it is to try to create a computer as smart as we are. Building skyscrapers, putting humans in space, figuring out the details of how the Big Bang went down—all far easier than understanding our own brain or how to make something as cool as it\n\n[We think that we understand, but in reality we just know](/brain/We%20think%20that%20we%20understand%2C%20but%20in%20reality%20we%20just%20know.md)",
+            "content": "Nothing will make you appreciate human intelligence like learning about how unbelievably challenging it is to try to create a computer as smart as we are. Building skyscrapers, putting humans in space, figuring out the details of how the Big Bang went down - all far easier than understanding our own brain or how to make something as cool as it\n\n[We think that we understand, but in reality we just know](/brain/We%20think%20that%20we%20understand%2C%20but%20in%20reality%20we%20just%20know.md)",
             isFile: true,
         },
         "Change your environment instead of using willpower.md": {

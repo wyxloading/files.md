@@ -248,7 +248,7 @@
                 while (iNodeHint < nodeCount && map[iNodeHint * 3 + 1] < spanBeginCharInCurrentLine)
                     iNodeHint++;
                 var shallHideTokens = true;
-                // PATCHED, always hide linkHref when path ends with .md — internal links.
+                // PATCHED, always hide linkHref when path ends with .md - internal links.
                 var isHiddenLinkHref = span.type === 'linkHref' && /\.md\)?$/.test(span.text);
                 if (!isHiddenLinkHref) {
                     for (var iLineRange = 0; iLineRange < rangesInLine.length; iLineRange++) {

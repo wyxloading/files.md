@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+var emojisByKeyword map[string]string
+
 //go:embed emojis.json
 var emojisJSON string
 

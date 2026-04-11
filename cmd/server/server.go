@@ -16,7 +16,6 @@ import (
 	"github.com/zakirullin/files.md/server/config"
 	"github.com/zakirullin/files.md/server/db"
 	"github.com/zakirullin/files.md/server/fs"
-	"github.com/zakirullin/files.md/server/i18n"
 	"github.com/zakirullin/files.md/server/pkg/tg"
 	"github.com/zakirullin/files.md/server/sched/worker"
 	"github.com/zakirullin/files.md/server/sync"
@@ -32,13 +31,6 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Error loading cfg: %s\n", err))
 	}
-
-	// TODO move to embed
-	err = i18n.LoadLangFile("i18n/ru.json")
-	if err != nil {
-		panic(fmt.Sprintf("Error loading i18n: %s\n", err))
-	}
-
 	// Save all renames and deletes to an append-only log.
 	fs.LogRename = sync.LogRename
 	fs.LogDelete = sync.LogDelete
@@ -54,7 +46,7 @@ func main() {
 		)
 	}
 
-	// Telegram bot is optional — server can run as web-only.
+	// Telegram bot is optional - server can run as web-only.
 	api, err := tgbotapi.NewBotAPI(config.ServerCfg.BotAPIToken)
 	if err != nil {
 		fmt.Printf("No Telegram bot token found, running web server only: %s\n", err)

@@ -103,17 +103,19 @@ $ make init_server host=<YOUR_SSH_HOST> salt=<YOUR_SECRET_SALT>
 `ctrl + cmd + space` to show emoji dialog.  
 
 ## Storage file structure
-~~We differentiate the following types of files (with `/` denoting your root folder):
-- Tasks: `/today/Pay the bills.md` (`/today/*.md`, `/later/*.md`)
-- Notes: `/brain/Brain is the most complex object.md` (`/*/*.md`)
+We differentiate the following types of files (with `/` denoting your root folder):
+- Inbox: `/Inbox.md` — incoming messages, append-only chat log
+- Tasks: `/Today.md`, `/Later.md` — checklist-based task lists
+- Task files: `/today/Pay the bills.md`, `/later/Someday.md` (`/today/*.md`, `/later/*.md`)
+- Notes: `/brain/Brain is the most complex object.md` (`/<custom_dir>/*.md`)
 - Files: `/My project.md` (`/*.md`)
-- Checklists: `/_read_/How to Take Smart Notes.md` (`/_[read|watch|shop]_/*.md`)
-- Journal: `/Journal/2024.08 August.md` (`/journal/<YEAR>.<MONTH> <MONTH NAME>.md`)
-- Habits: `/habits/2 minute morning workout.md` (`/habits/*.md`)
-- Insights: `/insights/2024 Habits.md` (`/insights/<YEAR> Habits.md`)
-- Images: `/img/*`
-- Pomodoro: `/today/Finished a break.md`
-- Archive: `/archive/*`
+- Checklists: `/Read.md`, `/Watch.md`, `/Shop.md` — built-in checklists
+- Journal: `/journal/2024.08 August.md` (`/journal/<YYYY>.<MM> <Month>.md`)
+- Habits: `/habits/Morning workout.md` (`/habits/*.md`)
+- Insights: `/insights/2024 Habits.md` (`/insights/<YYYY> Habits.md`)
+- Media: `/media/*` — images (png, jpg, webp, gif)
+- Archive: `/archive/*`, `/archive/Done.md` — completed items
+- Config: `/config.json` — per-user settings
 
 ## How we contribute
 - No long-lived branches except `main`

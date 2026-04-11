@@ -1,0 +1,91 @@
+# Files.md — Knowledge Base Structure
+
+This document describes the file structure of a Files.md knowledge base.
+All files are plain Markdown (.md) or plain text (.txt), stored locally.
+
+## Directory Layout
+
+```
+/
+├── Inbox.md              # Incoming messages, append-only log
+├── Today.md              # Today's tasks (checklist format)
+├── Later.md              # Postponed tasks (checklist format)
+├── Read.md               # Reading list (checklist)
+├── Watch.md              # Watch list (checklist)
+├── Shop.md               # Shopping list (checklist)
+├── config.json           # User settings
+├── *.md                  # Root-level files (projects, standalone notes)
+│
+├── today/                # Task files for today
+│   └── *.md
+├── later/                # Task files for later
+│   └── *.md
+├── archive/              # Completed/archived items
+│   └── Done.md           # Log of completed tasks
+│
+├── journal/              # Daily journal
+│   └── YYYY.MM Month.md  # e.g. 2024.08 August.md
+├── habits/               # Habit definitions
+│   └── *.md              # e.g. Morning workout.md
+├── insights/             # Yearly summaries
+│   └── YYYY Habits.md    # e.g. 2024 Habits.md
+│
+├── media/                # Images (png, jpg, webp, gif)
+│
+└── <custom_dir>/         # User-created note directories
+    └── *.md              # e.g. brain/Memory.md
+```
+
+## File Types
+
+### Inbox (Inbox.md)
+Append-only chat log. New messages are appended with timestamps under daily headers.
+```
+#### 15 August, Friday
+`10:30` First message of the day
+`14:22` Another thought
+```
+
+### Tasks (Today.md, Later.md)
+Checklist format. Each task is a checklist item.
+```
+- [ ] Pay the bills
+- [ ] Buy groceries
+- [x] Send email
+```
+
+### Notes (/<dir>/*.md)
+One idea per file. The filename is the title. Files can link to each other using `[Other Note]` syntax.
+```
+Relations among ideas are far more important than the ideas themselves.
+
+[Another Note]
+[Some Other Idea]
+```
+
+### Checklists (Read.md, Watch.md, Shop.md)
+Same checklist format as tasks, for tracking reading/watching/shopping lists.
+
+### Journal (journal/YYYY.MM Month.md)
+Monthly files with daily entries. Each day has a header followed by timestamped records.
+```
+#### 15 August, Friday
+`10:30` Morning walk
+`14:00` Deep work session
+```
+
+### Habits (habits/*.md)
+One file per habit. The filename is the habit name.
+
+### Insights (insights/YYYY Habits.md)
+Auto-generated yearly habit tracking summaries.
+
+### Media (media/*)
+Images referenced in notes via standard Markdown: `![alt](media/photo.jpg)`
+
+## Conventions
+- One level of directory nesting only
+- Filenames are capitalized: `My note.md`, not `my note.md`
+- Links between notes use bracket syntax: `[Note Title]`
+- Supported file extensions: .md, .txt, .png, .jpg, .jpeg, .webp, .gif
+- System directories: media, archive, today, later, journal, habits, insights, _read_, _watch_, _shop_

@@ -48,7 +48,7 @@ func main() {
 	}
 
 	days := map[string]*day{}
-	getDay := func(t time.Time) *day {
+	dayOf := func(t time.Time) *day {
 		key := t.Format("2006-01-02")
 		if d, ok := days[key]; ok {
 			return d
@@ -59,13 +59,13 @@ func main() {
 	}
 
 	// Parse sleeps — use wake onset date as the day, skip naps.
-	parseSleeps(filepath.Join(dir, "sleeps.csv"), getDay)
+	parseSleeps(filepath.Join(dir, "sleeps.csv"), dayOf)
 
 	// Parse physiological cycles — recovery, HRV, RHR, strain.
-	parseCycles(filepath.Join(dir, "physiological_cycles.csv"), getDay)
+	parseCycles(filepath.Join(dir, "physiological_cycles.csv"), dayOf)
 
 	// Parse workouts.
-	parseWorkouts(filepath.Join(dir, "workouts.csv"), getDay)
+	parseWorkouts(filepath.Join(dir, "workouts.csv"), dayOf)
 
 	// Collect and sort days descending.
 	var sorted []*day
@@ -87,7 +87,7 @@ func main() {
 	}
 }
 
-func parseSleeps(path string, getDay func(time.Time) *day) {
+func parseSleeps(path string, dayOf func(time.Time) *day) {
 	rows := readCSV(path)
 	if len(rows) < 2 {
 		return
@@ -95,23 +95,23 @@ func parseSleeps(path string, getDay func(time.Time) *day) {
 	header := indexHeader(rows[0])
 
 	for _, row := range rows[1:] {
-		if getField(row, header, "Nap") == "true" {
+		if field(row, header, "Nap") == "true" {
 			continue
 		}
 
-		wake, err := parseTime(getField(row, header, "Wake onset"))
+		wake, err := parseTime(field(row, header, "Wake onset"))
 		if err != nil {
 			continue
 		}
 
-		d := getDay(wake)
+		d := dayOf(wake)
 		d.Sleep.Present = true
-		d.Sleep.Performance = atoi(getField(row, header, "Sleep performance %"))
-		d.Sleep.AsleepMin = atoi(getField(row, header, "Asleep duration (min)"))
+		d.Sleep.Performance = atoi(field(row, header, "Sleep performance %"))
+		d.Sleep.AsleepMin = atoi(field(row, header, "Asleep duration (min)"))
 	}
 }
 
-func parseCycles(path string, getDay func(time.Time) *day) {
+func parseCycles(path string, dayOf func(time.Time) *day) {
 	rows := readCSV(path)
 	if len(rows) < 2 {
 		return
@@ -119,21 +119,21 @@ func parseCycles(path string, getDay func(time.Time) *day) {
 	header := indexHeader(rows[0])
 
 	for _, row := range rows[1:] {
-		wake, err := parseTime(getField(row, header, "Wake onset"))
+		wake, err := parseTime(field(row, header, "Wake onset"))
 		if err != nil {
 			continue
 		}
 
-		d := getDay(wake)
+		d := dayOf(wake)
 		d.Recovery.Present = true
-		d.Recovery.Score = atoi(getField(row, header, "Recovery score %"))
-		d.Recovery.HRV = atoi(getField(row, header, "Heart rate variability (ms)"))
-		d.Recovery.RHR = atoi(getField(row, header, "Resting heart rate (bpm)"))
-		d.Recovery.Strain = atof(getField(row, header, "Day Strain"))
+		d.Recovery.Score = atoi(field(row, header, "Recovery score %"))
+		d.Recovery.HRV = atoi(field(row, header, "Heart rate variability (ms)"))
+		d.Recovery.RHR = atoi(field(row, header, "Resting heart rate (bpm)"))
+		d.Recovery.Strain = atof(field(row, header, "Day Strain"))
 	}
 }
 
-func parseWorkouts(path string, getDay func(time.Time) *day) {
+func parseWorkouts(path string, dayOf func(time.Time) *day) {
 	rows := readCSV(path)
 	if len(rows) < 2 {
 		return
@@ -141,15 +141,15 @@ func parseWorkouts(path string, getDay func(time.Time) *day) {
 	header := indexHeader(rows[0])
 
 	for _, row := range rows[1:] {
-		start, err := parseTime(getField(row, header, "Workout start time"))
+		start, err := parseTime(field(row, header, "Workout start time"))
 		if err != nil {
 			continue
 		}
 
-		d := getDay(start)
+		d := dayOf(start)
 		d.Workouts = append(d.Workouts, workout{
-			Activity:    getField(row, header, "Activity name"),
-			DurationMin: atoi(getField(row, header, "Duration (min)")),
+			Activity:    field(row, header, "Activity name"),
+			DurationMin: atoi(field(row, header, "Duration (min)")),
 		})
 	}
 }
@@ -202,7 +202,7 @@ func indexHeader(row []string) map[string]int {
 	return m
 }
 
-func getField(row []string, header map[string]int, name string) string {
+func field(row []string, header map[string]int, name string) string {
 	i, ok := header[name]
 	if !ok || i >= len(row) {
 		return ""

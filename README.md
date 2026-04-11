@@ -47,7 +47,7 @@ All this activity helped me to:
 
 To achieve all that, **you'll have to use your brain**. Not advanced workflows or AI automations.  
 
-## How?
+## How
 I reuse long-learned pattern - messaging with a friend.  
 
 Only now I send notes and ideas to the bot.  
@@ -69,35 +69,53 @@ To do that, just send whatever is distracting you to the bot. Then choose how yo
 It works like a regular chat, so it's easier to use because there's less resistance.  
 We're used to sending messages to friends, now we're going to send stuff to the bot.
 
-## Useful scripts for your files ✨ 
-All scripts are in `cmd/` and can be run **inside your files directory**:
-```bash
-# Parse Whoop CSV export and print 10-day journal summary. Put your whoop csvs files into whoop folder
-go run /abs/path/to/files.md/cmd/whoop/whoop.go 
+## Useful scripts for your files
+All scripts are in `cmd/` and can be run **inside your files directory**. Install [Go](https://go.dev/doc/install) first.
 
-# Convert [[wikilinks]] to standard markdown links [Name](/path.md)
+Convert `[[wikilinks]]` to standard markdown links `[Name](/path.md)`:
+```
 go run /abs/path/to/files.md/cmd/tomdlinks/tomdlinks.go --dry-run .
+```
+```
 go run /abs/path/to/files.md/cmd/tomdlinks/tomdlinks.go .
-
-# Insert backlinks into notes (adds links back to referencing files)
-go run /abs/path/to/files.md/cmd/backlink/backlink.go --dry-run
-go run /abs/path/to/files.md/cmd/backlink/backlink.go
-
-# Shift timestamps in journal files by N hours (useful after timezone change)
-go run /abs/path/to/files.md/cmd/shifttime/shifttime.go
-
 ```
 
-Install [Go](https://go.dev/doc/install) for scripts to run.
+Insert backlinks into notes (adds links back to referencing files):
+```
+go run /abs/path/to/files.md/cmd/backlink/backlink.go --dry-run
+```
+```
+go run /abs/path/to/files.md/cmd/backlink/backlink.go
+```
 
-## App 📝
-[app.files.md](https://app.files.md), is a standalone application for viewing/editing files, alpha version. Works offline. See `/web/index.html` for more details.
+Shift timestamps in journal files by N hours (useful after timezone change):
+```
+go run /abs/path/to/files.md/cmd/shifttime/shifttime.go
+```
 
-`cmd + k` for command palette.  
-`cmd + [` to move back in history, `cmd + ]` to move forward.  
-`cmd + enter` to hide/show sidebar.  
-`[` to create a link.  
-`ctrl + cmd + space` to show emoji dialog.  
+Parse Whoop CSV export and print a 10-day journal summary. Put your whoop csv files into a `whoop/` folder:
+```
+go run /abs/path/to/files.md/cmd/whoop/whoop.go
+```
+
+## Hotkeys
+
+| Hotkey | Action |
+| -------- |-------- |
+| `Cmd+K` / `Ctrl+K` | Open file search modal |
+| `Cmd+N` / `Ctrl+N` | New file |
+| `Cmd+M` / `Ctrl+M` | Move file |
+| `Cmd+D` / `Ctrl+D` | Delete file |
+| `Cmd+Enter` / `Ctrl+Enter` | Toggle chat mode |
+| `Cmd+[` / `Ctrl+[` | Go to previous file |
+| `Cmd+]` / `Ctrl+]` | Go to next file |
+| `Cmd+\` / `Ctrl+\` | Toggle sidebar |
+| `Cmd+B` / `Ctrl+B` | Toggle **bold** |
+| `Cmd+I` / `Ctrl+I` | Toggle *italic* |
+| `Cmd+Y` / `Ctrl+Y` | Insert checkbox |
+| `Cmd/Ctrl` + `Click` | Copy inline text / open link |
+| `Ctrl+Cmd+Space` | Insert emoji (macOS) |
+| `[` | Trigger file link autocomplete |  
 
 ## Files structure
 We differentiate the following types of files (with `/` denoting your root folder):
@@ -112,6 +130,8 @@ We differentiate the following types of files (with `/` denoting your root folde
 - Media: `/media/*` — images (png, jpg, webp, gif)
 - Archive: `/archive/*`, `/archive/Done.md` — completed items
 - Config: `/config.json` — per-user settings
+
+Scheme is also available at [files.md](files.md/llms.txt).
 
 ## Deploy on your own server
 Prepare server (tested on Debian-based systems):

@@ -4,6 +4,11 @@
 // DESCRIPTION: Auto show/hide markdown tokens like `##` or `*`
 //
 // Only works with `hypermd` mode, require special CSS rules
+//
+// PATCHED:
+// - linkHref (url) in internal links (*.md) is always hidden, even when cursor is on the line
+// - Arrow keys skip over hidden linkHref spans
+// - Shift+Arrow at hidden linkHref selects to start/end of line
 
 (function (mod){ //[HyperMD] UMD patched!
     /*commonjs*/  ("object"==typeof exports&&"undefined"!=typeof module) ? mod(null, exports, require("codemirror"), require("../core"), require("../core"), require("../core")) :
@@ -88,7 +93,6 @@
             // PATCHED, skip cursor over always-hidden linkHref spans.
             this._skipLinkHref = function (cm, e) {
                 if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-                if (cm.somethingSelected()) return;
                 var cursor = cm.getCursor();
                 var spans = line_spans_1.getLineSpanExtractor(cm).extract(cursor.line);
                 for (var i = 0; i < spans.length; i++) {
@@ -96,12 +100,25 @@
                     if (span.type !== 'linkHref' || !/\.md\)?$/.test(span.text)) continue;
                     if (e.key === 'ArrowRight' && cursor.ch >= span.begin && cursor.ch < span.end) {
                         e.preventDefault();
-                        cm.setCursor({ line: cursor.line, ch: span.end });
+                        // PATCHED, shift+arrow at hidden linkHref selects to end/start of line.
+                        if (e.shiftKey) {
+                            var lineLen = cm.getLine(cursor.line).length;
+                            cm.setSelection(cm.getCursor('anchor'), { line: cursor.line, ch: lineLen });
+                        } else {
+                            if (cm.somethingSelected()) return;
+                            cm.setCursor({ line: cursor.line, ch: span.end });
+                        }
                         return;
                     }
                     if (e.key === 'ArrowLeft' && cursor.ch > span.begin && cursor.ch <= span.end) {
                         e.preventDefault();
-                        cm.setCursor({ line: cursor.line, ch: span.begin });
+                        // PATCHED, shift+arrow at hidden linkHref selects to end/start of line.
+                        if (e.shiftKey) {
+                            cm.setSelection(cm.getCursor('anchor'), { line: cursor.line, ch: 0 });
+                        } else {
+                            if (cm.somethingSelected()) return;
+                            cm.setCursor({ line: cursor.line, ch: span.begin });
+                        }
                         return;
                     }
                 }

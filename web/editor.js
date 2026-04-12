@@ -92,6 +92,12 @@ function initEditor(el) {
         path = path.replace(/\|.*]$/, '');
         path = path.replace('[', '').replace(']', '');
 
+        // Handle action links
+        if (path === 'cmd:openDir') {
+            openDir();
+            return;
+        }
+
         // If it is a web link open window blank
         if (/^(http|https):\/\//.test(path)) {
             window.open(path, '_blank');

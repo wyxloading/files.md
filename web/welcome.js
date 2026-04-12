@@ -197,8 +197,9 @@ const DEFAULT_FILES = {
     },
     "🪴 Welcome.md": {
         "content": "Only essential features. No distractions.\n\n" +
-            "You don't need fancy tools to take notes...\n\n"
-            + "[Markdown Guide](/Markdown%20Guide.md)\n[Hotkeys](/Hotkeys.md)\n[Links](/Links.md)",
+            "You don't need fancy tools to take notes...\n\n" +
+            "[🗂️ Open local folder](cmd:openDir)\n" +
+            "[Markdown Guide](/Markdown%20Guide.md)\n[Hotkeys](/Hotkeys.md)\n[Links](/Links.md)",
         isFile: true,
     },
     "Links.md": {

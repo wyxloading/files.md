@@ -25,7 +25,9 @@ Maybe. But this time:
 - Portable, no build systems, just open `web/index.html` 
 - Out of the box synchronization
 - The server is just one binary (or use iCloud/Dropbox/Google Drive for sync)
-- Telegram Bot as an on-the-go entry point to your files
+- Telegram bot for on-the-go access to your files
+- Oh, and there’s also tasks, checklists, a journal, and habit tracking
+- All stored in plain `.md` files
 
 ## Are there enough features and plugins?
 Enough to do the real work.  
@@ -85,7 +87,7 @@ You don't have to think about the structure, it is predefined.
 - Inbox: `Inbox.md` - incoming messages, append-only chat log
 - Config: `config.json` - per-user settings
 
-Scheme is also available at [files.md/llms.txt](files.md/llms.txt).
+Scheme is also available at [files.md/llms.txt](https://files.md/llms.txt).
 
 ## Telegram Bot 🤖
 <img src="https://github.com/zakirullin/files.md/raw/main/web/bot.png" alt="Telegram Bot screenshot" title="Telegram Bot"/>

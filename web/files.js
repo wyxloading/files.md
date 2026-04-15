@@ -246,7 +246,7 @@ async function syncTextsWithServer() {
                 log('SYNC texts: write file: ', path);
                 setServerFile(path, content, lastModified, lastClientModified);
                 // Unfortunately rename is not working, so we have to delete the old file
-                const shouldRemoveOldFile = relPath in response.renames;
+                const shouldRemoveOldFile = response.renames !== null && relPath in response.renames;
                 // TODO write e2e for renames
                 if (shouldRemoveOldFile) {
                     const oldPath = joinPath('/', response.renames[relPath]);

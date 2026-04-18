@@ -478,7 +478,7 @@ func (fs FS) SearchFiles(query string) ([]File, error) {
 	for _, dir := range searchInDirs {
 		// We can tolerate incomplete search
 		files, _ := fs.FilesAndDirs(dir)
-		files = OnlyMDFiles(files)
+		files = OnlyUserMDFiles(files)
 		notes = append(notes, files...)
 	}
 	notes = SortByCtimeDesc(notes)

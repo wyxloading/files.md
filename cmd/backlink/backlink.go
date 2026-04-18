@@ -50,7 +50,7 @@ func main() {
 			fmt.Printf("Can't get notes: %s", err)
 		}
 
-		notes = fs.OnlyMDFiles(notes)
+		notes = fs.OnlyUserMDFiles(notes)
 		for _, note := range notes {
 			if filepath.Ext(note.Name) != fs.MDExt {
 				continue

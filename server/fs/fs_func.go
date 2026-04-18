@@ -148,20 +148,30 @@ func OnlyChecklists(dirs []File) []File {
 	return checklists
 }
 
-func OnlyMDFiles(entries []File) []File {
+func OnlyUserMDFiles(entries []File) []File {
+	systemFiles := []string{
+		TodayFilename,
+		LaterFilename,
+		DoneFilename,
+		InboxFilename,
+		ShopFilename,
+		WatchFilename,
+		ReadFilename,
+	}
+
 	var files []File
 	for _, file := range entries {
 		if file.IsDir {
 			continue
 		}
-
 		if filepath.Ext(file.Name) != MDExt {
 			continue
 		}
-
+		if slices.Contains(systemFiles, file.Name) {
+			continue
+		}
 		files = append(files, file)
 	}
-
 	return files
 }
 

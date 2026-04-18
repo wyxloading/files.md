@@ -1270,7 +1270,7 @@ func (b *Bot) showFiles(_ []string) error {
 	}
 
 	var kb tg.Keyboard
-	mdFiles := fs.ExcludeConfig(fs.OnlyMDFiles(files))
+	mdFiles := fs.ExcludeConfig(fs.OnlyUserMDFiles(files))
 	var fileBtns []tg.Btn
 	for _, file := range mdFiles {
 		cmd := tg.NewCmd(CmdShowFile, []string{fs.DirUserRoot, fs.Hash(file.Name)})
@@ -2768,7 +2768,7 @@ func (b *Bot) moveToFileBtns(msgIndex int) ([]tg.Btn, error) {
 	if err != nil {
 		return nil, fmt.Errorf("to doc keyboard: %w", err)
 	}
-	files = fs.OnlyMDFiles(files)
+	files = fs.OnlyUserMDFiles(files)
 	files = fs.SortByCtimeDesc(files)
 	if len(files) == 0 {
 		return nil, nil

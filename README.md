@@ -58,12 +58,12 @@ I'll quote [I Deleted My Second Brain](https://www.joanwestenberg.com/i-deleted-
 
 The “Second Brain” is exciting. It sounds fancy. _It is thrilling._
 
-You invest a lot in structure, guru templates, AI workflows, plugins, tweaking.
-You are very motivated to scrape the wisdom of the whole internet into your second brain.
-You get dopamine spikes every time your second brain becomes smarter and bigger.
-There’s some beauty in your system and neatly organized notes. _You feel good._
+You invest a lot in structure, guru templates, AI workflows, plugins, tweaking.  
+You are very motivated to scrape the wisdom of the whole internet into your second brain.  
+You get dopamine spikes every time your second brain becomes smarter and bigger.  
+There’s some beauty in your system and neatly organized notes. _You feel good._  
 
-However, your first brain never actually gets smarter. _The actual job is postponed._
+However, your first brain never actually gets smarter. _The actual job is postponed._  
 
 There's another path.  
 

@@ -1006,11 +1006,14 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
 
     const start = performance.now();
 
-    // Check if we're loading the same file and save cursor position
+    // Check if we're loading the same file — save cursor + exact scroll position
+    // so a same-file reload (external sync) doesn't jump the viewport.
     let cursorPos = null;
+    let scrollTop = null;
     if (currentEditor.path === path) {
         log('saving cursor');
-        cursorPos = editor.getCursor();
+        cursorPos = currentEditor.getCursor();
+        scrollTop = currentEditor.getScrollInfo().top;
     }
 
     let filename = toFilename(path);
@@ -1051,10 +1054,17 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
 
     if (cursorPos !== null) {
         log('cursor not null');
-        currentEditor.setCursor(cursorPos);
-        currentEditor.scrollTo(null, 0);
+        // {scroll: false} — setCursor would otherwise scroll the cursor into view
+        // and clobber the scrollTo below.
+        currentEditor.setCursor(cursorPos.line, cursorPos.ch, {scroll: false});
         // TODO only focus if there's no quick dialogue
         currentEditor.focus();
+        if (scrollTop !== null) {
+            currentEditor.refresh();
+            currentEditor.scrollTo(null, scrollTop);
+        } else {
+            currentEditor.scrollTo(null, 0);
+        }
     } else {
         focusLastLine();
     }

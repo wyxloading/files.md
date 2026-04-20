@@ -521,22 +521,6 @@ function hideEditor2() {
     }, 300);
 }
 
-let topLineNumber;
-function rememberEditorPos() {
-    const scrollInfo = editor.getScrollInfo();
-    const topCoords = editor.coordsChar({ left: 0, top: scrollInfo.top }, "local");
-    topLineNumber = topCoords.line;
-}
-
-function restoreEditorPos() {
-    if (topLineNumber === undefined) {
-        return;
-    }
-    editor.refresh();
-    const newTopLineY = editor.charCoords({ line: topLineNumber, ch: 0 }, "local").top;
-    editor.scrollTo(null, newTopLineY);
-}
-
 function isChrome() {
     var winNav = window.navigator;
     var vendorName = winNav.vendor;

@@ -2,7 +2,7 @@
 // we ask user where to save the messages. We save messages
 // to plain markdown files locally.
 
-package internal
+package server
 
 import (
 	"bytes"

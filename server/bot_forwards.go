@@ -19,7 +19,7 @@
 // the messages don't have "is_forwarded" flag, so we can only
 // distinguish them by using this time-based heuristic.
 
-package internal
+package server
 
 import (
 	"sync"

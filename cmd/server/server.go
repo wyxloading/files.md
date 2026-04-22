@@ -12,7 +12,6 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/spf13/afero"
 
-	"github.com/zakirullin/files.md/server"
 	"github.com/zakirullin/files.md/server/config"
 	"github.com/zakirullin/files.md/server/db"
 	"github.com/zakirullin/files.md/server/fs"
@@ -160,7 +159,7 @@ func processUserUpdates(userID int64, updates <-chan tgbotapi.Update, telegram *
 	}
 }
 
-func newBot(telegram *tg.TG, userID int64) (*internal.Bot, error) {
+func newBot(telegram *tg.TG, userID int64) (*server.Bot, error) {
 	userFS, err := fs.NewUserFS(userID)
 	if err != nil {
 		return nil, fmt.Errorf("can't create fs: %w", err)
@@ -177,7 +176,7 @@ func newBot(telegram *tg.TG, userID int64) (*internal.Bot, error) {
 		return nil, fmt.Errorf("can't create default user config: %w", err)
 	}
 
-	bot := internal.NewBot(userID, telegram, userFS, db.NewDB(userID), userconf)
+	bot := server.NewBot(userID, telegram, userFS, db.NewDB(userID), userconf)
 
 	return bot, nil
 }

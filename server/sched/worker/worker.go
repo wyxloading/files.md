@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/afero"
 	"golang.org/x/exp/slog"
 
-	"github.com/zakirullin/files.md/server"
 	"github.com/zakirullin/files.md/server/db"
 	"github.com/zakirullin/files.md/server/fs"
 	"github.com/zakirullin/files.md/server/journal"
@@ -35,7 +34,7 @@ func MoveDueTasks(
 	storagePath,
 	configFilename string,
 	fsBackend afero.Fs,
-	telegram internal.Chat,
+	telegram server.Chat,
 ) error {
 	infolog := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
@@ -89,7 +88,7 @@ func MoveDueTasks(
 
 			infolog.Info("scheduled task moved to today", schedule.Filename, "filename")
 
-			bot := internal.NewBot(userID, telegram, userFS, db.NewDB(userID), userconf)
+			bot := server.NewBot(userID, telegram, userFS, db.NewDB(userID), userconf)
 			_ = bot.ShowToday(nil)
 
 			// Schedule a recurring task if cron is not empty

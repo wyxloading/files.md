@@ -65,7 +65,7 @@ func (b *Bot) saveToInbox(content string, timezone *time.Location) (int, error) 
 	//	content = strings.TrimSpace(strings.Replace(content, imgLink, "", 1))
 	//	content = fmt.Sprintf("%s\n%s %s\n", imgLink, timestamp, strings.TrimSpace(content))
 	//} else {
-	content = fmt.Sprintf("%s %s\n", timestamp, content)
+	content = fmt.Sprintf("- [ ] %s %s\n", timestamp, content)
 	//}
 
 	md += content
@@ -142,22 +142,18 @@ func (b *Bot) moveFromInbox(
 			}
 		}
 
-		// Extract time and get full content
-		timestampRegex := regexp.MustCompile(`^` + "`" + `(\d{2}:\d{2})` + "`" + ` `)
-		if !timestampRegex.MatchString(block) {
+		// Extract time and get full content. Tolerate optional Markdown-task
+		// prefix `- [ ] ` / `- [x] ` (new inbox format); legacy entries without
+		// the prefix also match.
+		timestampRegex := regexp.MustCompile(`^(?:- \[[ xX]\] )?` + "`" + `(\d{2}:\d{2})` + "`" + ` `)
+		timeMatch := timestampRegex.FindStringSubmatch(block)
+		if len(timeMatch) < 2 {
 			return fmt.Errorf("failed to parse msg timestamp for msgIndex %d", msgIndex)
 		}
 
-		// Extract timestamp
-		timeMatch := regexp.MustCompile(`^` + "`" + `(\d{2}:\d{2})` + "`").FindStringSubmatch(block)
-		if len(timeMatch) < 2 {
-			return fmt.Errorf("failed to extract timestamp for msgIndex %d", msgIndex)
-		}
-
 		timeStr := timeMatch[1]
-		// Remove timestamp prefix to get full content (including newlines)
-		timestampPrefix := "`" + timeStr + "` "
-		recordContent := strings.TrimPrefix(block, timestampPrefix)
+		// Remove the full matched prefix (optional checkbox + timestamp + space).
+		recordContent := block[len(timeMatch[0]):]
 
 		// Parse full timestamp from header date + time
 		dateRegex := regexp.MustCompile(`^#### (\d{1,2}) ([A-Za-z]+), [A-Za-z]+`)
@@ -226,7 +222,7 @@ func readBlocks(content string) []string {
 	lines := strings.Split(content, "\n")
 
 	headerRegex := regexp.MustCompile(`^#### `)
-	timestampRegex := regexp.MustCompile(`^` + "`" + `\d{2}:\d{2}` + "`" + ` `)
+	timestampRegex := regexp.MustCompile(`^(?:- \[[ xX]\] )?` + "`" + `\d{2}:\d{2}` + "`" + ` `)
 
 	var blocks []string
 	var currentBlock strings.Builder

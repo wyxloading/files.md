@@ -101,7 +101,7 @@ func TestSaveToChatNewFile(t *testing.T) {
 
 	content, err := userFS.Read(fs.DirUserRoot, fs.InboxFilename)
 	r.NoError(err)
-	r.Equal("#### 27 June, Thursday\n`01:01` Test content\n", content)
+	r.Equal("#### 27 June, Thursday\n- [ ] `01:01` Test content\n", content)
 }
 
 func TestSaveToChatExistingFile(t *testing.T) {
@@ -127,7 +127,7 @@ func TestSaveToChatExistingFile(t *testing.T) {
 
 	content, err := userFS.Read(fs.DirUserRoot, fs.InboxFilename)
 	r.NoError(err)
-	r.Equal("#### 27 June, Thursday\n`00:30` Existing content\n`01:01` New content\n", content)
+	r.Equal("#### 27 June, Thursday\n`00:30` Existing content\n- [ ] `01:01` New content\n", content)
 }
 
 func TestSaveToChatNewDay(t *testing.T) {
@@ -153,7 +153,7 @@ func TestSaveToChatNewDay(t *testing.T) {
 
 	content, err := userFS.Read(fs.DirUserRoot, fs.InboxFilename)
 	r.NoError(err)
-	r.Equal("#### 27 June, Thursday\n`00:30` Yesterday content\n#### 28 June, Friday\n`01:01` Today content\n", content)
+	r.Equal("#### 27 June, Thursday\n`00:30` Yesterday content\n#### 28 June, Friday\n- [ ] `01:01` Today content\n", content)
 }
 
 func TestSaveToChatWithImage(t *testing.T) {
@@ -176,7 +176,7 @@ func TestSaveToChatWithImage(t *testing.T) {
 
 	content, err := userFS.Read(fs.DirUserRoot, fs.InboxFilename)
 	r.NoError(err)
-	r.Equal("#### 27 June, Thursday\n`01:01` ![](image.jpg) Image description\n", content)
+	r.Equal("#### 27 June, Thursday\n- [ ] `01:01` ![](image.jpg) Image description\n", content)
 }
 
 func TestSaveToChatEmptyFile(t *testing.T) {
@@ -202,7 +202,7 @@ func TestSaveToChatEmptyFile(t *testing.T) {
 
 	content, err := userFS.Read(fs.DirUserRoot, fs.InboxFilename)
 	r.NoError(err)
-	r.Equal("#### 27 June, Thursday\n`01:01` Test content\n", content)
+	r.Equal("#### 27 June, Thursday\n- [ ] `01:01` Test content\n", content)
 }
 
 //func TestSaveToChatWithTimezone(t *testing.T) {

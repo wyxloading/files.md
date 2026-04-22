@@ -56,7 +56,7 @@ func TestSaveFromTextMsg(t *testing.T) {
 	chat, err := bot.fs.Read("/", "Inbox.md")
 	r.NoError(err)
 
-	r.Equal("#### 29 June, Sunday\n`12:00` New task\n", chat)
+	r.Equal("#### 29 June, Sunday\n- [ ] `12:00` New task\n", chat)
 }
 
 func TestSaveFromLongTextMsg(t *testing.T) {
@@ -420,7 +420,7 @@ func TestSaveFromPhotoWithCaption(t *testing.T) {
 
 	content, err := userFS.Read("/", "Inbox.md")
 	r.NoError(err)
-	r.Equal("#### 11 August, Sunday\n`09:54` ![](media/tg_PHOTO_ID)\nCaption\n", content)
+	r.Equal("#### 11 August, Sunday\n- [ ] `09:54` ![](media/tg_PHOTO_ID)\nCaption\n", content)
 
 	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
 	r.NoError(err)
@@ -463,7 +463,7 @@ func TestSaveFromPhotoWithLongCaption(t *testing.T) {
 
 	content, err := userFS.Read("/", "Inbox.md")
 	r.NoError(err)
-	r.Equal("#### 11 August, Sunday\n`09:54` ![](media/tg_PHOTO_ID)\nAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n", content)
+	r.Equal("#### 11 August, Sunday\n- [ ] `09:54` ![](media/tg_PHOTO_ID)\nAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n", content)
 
 	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
 	r.NoError(err)
@@ -500,7 +500,7 @@ func TestSaveFromPhotoWithSanitizedCaption(t *testing.T) {
 
 	content, err := userFS.Read("/", "Inbox.md")
 	r.NoError(err)
-	r.Equal("#### 11 August, Sunday\n`09:54` ![](media/tg_PHOTO_ID)\nCaption/\n", content)
+	r.Equal("#### 11 August, Sunday\n- [ ] `09:54` ![](media/tg_PHOTO_ID)\nCaption/\n", content)
 
 	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
 	r.NoError(err)
@@ -548,7 +548,7 @@ func TestSaveFromPhotoWithoutCaption(t *testing.T) {
 
 	content, err := userFS.Read("/", "Inbox.md")
 	r.NoError(err)
-	r.Equal("#### 11 August, Sunday\n`09:54` ![](media/tg_PHOTO_ID)\n", content)
+	r.Equal("#### 11 August, Sunday\n- [ ] `09:54` ![](media/tg_PHOTO_ID)\n", content)
 
 	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
 	r.NoError(err)
@@ -1744,7 +1744,7 @@ func TestMoveToChecklistSplittable(t *testing.T) {
 
 	content, err := userFS.Read("/", "Inbox.md")
 	r.NoError(err)
-	r.Equal("#### 11 August, Sunday\n`09:54` Item1\nitem2\n", content)
+	r.Equal("#### 11 August, Sunday\n- [ ] `09:54` Item1\nitem2\n", content)
 
 	err = bot.moveToDirChecklist([]string{"0", "-checklist-"})
 	r.NoError(err)
@@ -2773,7 +2773,7 @@ func TestSaveToNewFile(t *testing.T) {
 
 	content, err := userFS.Read("/", "Inbox.md")
 	r.NoError(err)
-	r.Equal("#### 1 January, Thursday\n`01:01` New\ncontent\n`00:00` Text\n", content)
+	r.Equal("#### 1 January, Thursday\n`01:01` New\ncontent\n- [ ] `00:00` Text\n", content)
 
 	kb := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
@@ -3446,7 +3446,7 @@ func TestCollapseForwardedMessages(t *testing.T) {
 
 	content, err := userFS.Read("/", "Inbox.md")
 	r.NoError(err)
-	r.Equal("#### 1 January, Thursday\n`00:00` First msg\nSecond msg\nThird msg\n`00:00` Fourth msg\n", content)
+	r.Equal("#### 1 January, Thursday\n- [ ] `00:00` First msg\nSecond msg\nThird msg\n- [ ] `00:00` Fourth msg\n", content)
 
 	// Clean
 	firstMsgIndicies.Range(func(key, value interface{}) bool {
@@ -3682,7 +3682,7 @@ func TestSaveFromImage_MultilineCaption(t *testing.T) {
 
 	content, err := userFS.Read("/", "Inbox.md")
 	r.NoError(err)
-	r.Equal("#### 11 August, Sunday\n`09:54` ![](media/tg_PHOTO_ID)\nAbc\ndef\n", content)
+	r.Equal("#### 11 August, Sunday\n- [ ] `09:54` ![](media/tg_PHOTO_ID)\nAbc\ndef\n", content)
 
 	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
 	r.NoError(err)

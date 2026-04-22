@@ -2462,24 +2462,59 @@ func (b *Bot) complete(params []string) error {
 	return b.ShowToday(nil)
 }
 
+// completeFromChat toggles the Markdown task marker on a single Inbox.md entry
+// in place. `- [ ]` ↔ `- [x]`. Legacy entries without a prefix are upgraded to
+// `- [x]`. The entry stays in the file; it is no longer archived.
 func (b *Bot) completeFromChat(params []string) error {
 	msgIndex, err := strconv.Atoi(params[0])
 	if err != nil {
 		return fmt.Errorf("complete: can't parse msgIndex from params: %w", err)
 	}
 
-	err = b.moveFromInbox(func(content string, timestamp time.Time) error {
-		sanitizedTitle, _, err := b.extractHeaderAndBody(content, maxHeaderLength)
-		if err != nil {
-			return fmt.Errorf("complete: %w", err)
-		}
-		filename := fs.Filename(sanitizedTitle)
-
-		// Write to archive, no rename
-		return b.fs.Write(fs.DirArchive, filename, content)
-	}, false, msgIndex)
+	key, err := b.fs.SafePath(fs.DirUserRoot, "")
 	if err != nil {
-		return fmt.Errorf("complete: can't read content from chat: %w", err)
+		return fmt.Errorf("complete: %w", err)
+	}
+	lock := userLock(key)
+	lock.Lock()
+	defer lock.Unlock()
+
+	content, err := b.fs.Read(fs.DirUserRoot, fs.InboxFilename)
+	if err != nil {
+		return fmt.Errorf("complete: can't read inbox: %w", err)
+	}
+
+	blocks := readBlocks(content)
+	headerRegex := regexp.MustCompile(`^#### `)
+	msgBlockIdx, msgCount := -1, 0
+	for i, block := range blocks {
+		if headerRegex.MatchString(block) {
+			continue
+		}
+		if msgCount == msgIndex {
+			msgBlockIdx = i
+			break
+		}
+		msgCount++
+	}
+	if msgBlockIdx == -1 {
+		return fmt.Errorf("complete: msgIndex %d out of bounds", msgIndex)
+	}
+
+	block := blocks[msgBlockIdx]
+	switch {
+	case strings.HasPrefix(block, "- [ ] "):
+		blocks[msgBlockIdx] = "- [x] " + block[6:]
+	case strings.HasPrefix(block, "- [x] "), strings.HasPrefix(block, "- [X] "):
+		blocks[msgBlockIdx] = "- [ ] " + block[6:]
+	default:
+		// Legacy entry without a task prefix — upgrade to completed form.
+		blocks[msgBlockIdx] = "- [x] " + block
+	}
+
+	newContent := strings.TrimSpace(strings.Join(blocks, "\n"))
+	if err := b.fs.Write(fs.DirUserRoot, fs.InboxFilename, newContent); err != nil {
+		return fmt.Errorf("complete: can't write inbox: %w", err)
 	}
 
 	return b.ShowToday(nil)

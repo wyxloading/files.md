@@ -34,7 +34,7 @@ async function addToInbox() {
         hour: '2-digit',
         minute: '2-digit'
     });
-    const formattedContent = `\n\`${timestamp}\` ${text}\n`;
+    const formattedContent = `\n- [ ] \`${timestamp}\` ${text}\n`;
     await writeAtEnd(INBOX_PATH, formattedContent);
 
     chatInput.value = '';
@@ -116,7 +116,7 @@ async function parseMessagesFromInbox() {
     const lines = chat.split('\n');
 
     const headerRegex = /^#### /;
-    const timestampRegex = /^`\d{2}:\d{2}` /;
+    const timestampRegex = /^(?:- \[[ xX]\] )?`\d{2}:\d{2}` /;
 
     const blocks = [];
     let currentBlock = '';
@@ -164,13 +164,15 @@ async function parseMessagesFromInbox() {
         }
 
         // Check if block is a timestamped message
-        const timeMatch = block.match(/^`(\d{2}:\d{2})`\s*([\s\S]*)$/);
+        const timeMatch = block.match(/^(?:- \[([ xX])\] )?`(\d{2}:\d{2})`\s*([\s\S]*)$/);
         if (timeMatch) {
-            const [, timestamp, text] = timeMatch;
+            const [, mark, timestamp, text] = timeMatch;
+            const done = mark === 'x' || mark === 'X';
 
             if (text.trim()) {
                 messages.push({
                     index: i - numblocks,
+                    done: done,
                     text: text.trim(),
                     timestamp: timestamp,
                     date: currentDate || new Date().toDateString()
@@ -198,11 +200,41 @@ async function saveMessagesToInbox(messages) {
         if (content) content += '\n';
         content += `#### ${date}\n`;
         msgs.forEach(msg => {
-            content += `\`${msg.timestamp}\` ${msg.text}\n`;
+            content += `- [${msg.done ? 'x' : ' '}] \`${msg.timestamp}\` ${msg.text}\n`;
         });
     });
 
     await write(INBOX_PATH, content);
+}
+
+// Toggle the checkbox marker on a single inbox line in place.
+// Matches any of the three shapes the line might be in on disk:
+//   `HH:MM` text          (legacy)
+//   - [ ] `HH:MM` text    (new, not done)
+//   - [x] `HH:MM` text    (new, done)
+// and rewrites it to the requested done/undone marker.
+async function toggleInboxLine(timestamp, text, done) {
+    const handle = await getFileHandle(INBOX_PATH, true);
+    const file = await handle.getFile();
+    let content = await file.text();
+
+    const escapeRegex = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(
+        `^(?:- \\[[ xX]\\] )?\`${escapeRegex(timestamp)}\` ${escapeRegex(text)}\\s*$`,
+        'm'
+    );
+    const marker = done ? 'x' : ' ';
+    const replacement = `- [${marker}] \`${timestamp}\` ${text}`;
+
+    if (!re.test(content)) {
+        logError('toggleInboxLine: line not found', {timestamp, text});
+        return;
+    }
+    content = content.replace(re, replacement);
+
+    const writable = await handle.createWritable();
+    await writable.write(content);
+    await writable.close();
 }
 
 function initInbox() {
@@ -577,9 +609,17 @@ function attachEventListeners() {
     // });
 
     inbox.querySelectorAll('.complete-btn').forEach(btn => {
-        btn.addEventListener('click', function (e) {
+        btn.addEventListener('click', async function (e) {
             e.stopPropagation();
-            btn.closest('.message').classList.toggle('completed');
+            const el = btn.closest('.message');
+            el.classList.toggle('completed');
+            const done = el.classList.contains('completed');
+            try {
+                await toggleInboxLine(el.dataset.timestamp, el.dataset.text, done);
+            } catch (err) {
+                logError('Failed to toggle inbox line:', err);
+                el.classList.toggle('completed'); // revert
+            }
         });
     });
 
@@ -792,7 +832,7 @@ async function renderMessages() {
 
     // add own class every other message
     inbox.innerHTML = messages.map((message, i) => `
-        <div class="message ${i % 2 === 1 ? 'own' : ''}" data-text="${escapeHtml(message.text)}">
+        <div class="message ${i % 2 === 1 ? 'own' : ''}${message.done ? ' completed' : ''}" data-text="${escapeHtml(message.text)}" data-timestamp="${message.timestamp}">
             <button class="complete-btn" title="Mark as done">
                 <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.5 17l6 6 13-13"/>

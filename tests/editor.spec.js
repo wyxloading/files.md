@@ -165,7 +165,7 @@ test('should handle text selection for word-wrap content', async ({page}) => {
 test('opening link in editor2 should not clobber main editor when stale editor2 has out-of-sync content', async ({page}) => {
     await page.evaluate(async () => {
         // Seed OPFS once, so external modifications aren't clobbered by repeated setup.
-        window.isMemFS = true; const seedRoot = getMemFSRoot();
+        const seedRoot = await navigator.storage.getDirectory();
         const hapDir = await seedRoot.getDirectoryHandle('hap', {create: true});
         const lifeDir = await seedRoot.getDirectoryHandle('life', {create: true});
 
@@ -182,7 +182,7 @@ test('opening link in editor2 should not clobber main editor when stale editor2 
         await write(lifeDir, 'Recipes.md', 'Recipes list [Pilaf](Pilaf.md)');
 
         window.getRootDirHandle = async function () {
-            window.isMemFS = true; return getMemFSRoot();
+            return await navigator.storage.getDirectory();
         };
     });
 
@@ -217,7 +217,7 @@ test('opening link in editor2 should not clobber main editor when stale editor2 
 
     // 4) Modify Pilaf on disk from outside the editor (simulates server sync)
     await page.evaluate(async () => {
-        window.isMemFS = true; const root = getMemFSRoot();
+        const root = await navigator.storage.getDirectory();
         const lifeDir = await root.getDirectoryHandle('life');
         const handle = await lifeDir.getFileHandle('Pilaf.md');
         const writable = await handle.createWritable();

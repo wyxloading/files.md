@@ -44,25 +44,29 @@ async function setup(page) {
 
     await page.goto('/index.html');
 
-    await page.evaluate(() => {
-        // Use the in-memory FS (see welcome.js getMemFSRoot) instead of OPFS
-        // so sync tests don't depend on the browser's persistent storage.
-        window.isMemFS = true;
-        const root = getMemFSRoot();
-
-        async function ensureFile(dirHandle, name, content) {
-            const fileHandle = await dirHandle.getFileHandle(name, { create: true });
-            const writable = await fileHandle.createWritable();
-            await writable.write(content);
-            await writable.close();
-        }
-
-        window.getRootDirHandle = async function () {
+    await page.evaluate(()=> {
+        window.getRootDirHandle = async function() {
+            const root = await navigator.storage.getDirectory();
             const subdir = await root.getDirectoryHandle('subdir', { create: true });
-            await ensureFile(root, 'README.md', 'Hello world');
-            await ensureFile(root, 'Notes.md', 'Some Text');
+
+            const files = [
+                { name: 'README.md', content: 'Hello world' },
+                { name: 'Notes.md', content: 'Some Text' }
+            ];
+
+            for (const file of files) {
+                const fileHandle = await root.getFileHandle(file.name, { create: true });
+                const writable = await fileHandle.createWritable();
+                await writable.write(file.content);
+                await writable.close();
+            }
+
             await root.getFileHandle('Inbox.md', { create: true });
-            await ensureFile(root, 'config.json', '{}');
+            const fileHandle =  await root.getFileHandle('config.json', { create: true });
+            const writable = await fileHandle.createWritable()
+            await writable.write('{}');
+            await writable.close();
+
             return root;
         };
     })

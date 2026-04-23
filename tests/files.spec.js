@@ -10,7 +10,7 @@ test.beforeEach(async ({page}) => {
 test('should load files', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            window.isMemFS = true; const root = getMemFSRoot();
+            const root = await navigator.storage.getDirectory();
             const testDir = await root.getDirectoryHandle('test-files', { create: true });
 
             const testFiles = [
@@ -41,7 +41,7 @@ test('should load files', async ({ page }) => {
 test('create new in subfolder', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            window.isMemFS = true; const root = getMemFSRoot();
+            const root = await navigator.storage.getDirectory();
             const subDir = await root.getDirectoryHandle('dir', { create: true });
 
             const testFiles = [
@@ -89,7 +89,7 @@ test('create new in subfolder', async ({ page }) => {
 test('create new in root', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            window.isMemFS = true; const root = getMemFSRoot();
+            const root = await navigator.storage.getDirectory();
             const subDir = await root.getDirectoryHandle('dir', { create: true });
 
             const testFiles = [
@@ -136,7 +136,7 @@ test('create new in root', async ({ page }) => {
 test('file is not renamed on select all and change', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            window.isMemFS = true; const root = getMemFSRoot();
+            const root = await navigator.storage.getDirectory();
             const subDir = await root.getDirectoryHandle('dir', { create: true });
 
             const testFiles = [
@@ -229,7 +229,7 @@ test('rename to empty name saves to untitled', async ({ page }) => {
 test('create file and move', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            window.isMemFS = true; const root = getMemFSRoot();
+            const root = await navigator.storage.getDirectory();
             const subDir = await root.getDirectoryHandle('dir', { create: true });
 
             const testFiles = [
@@ -276,7 +276,7 @@ test('create file and move', async ({ page }) => {
 test('rename should not create multiply files', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            window.isMemFS = true; const root = getMemFSRoot();
+            const root = await navigator.storage.getDirectory();
             const subDir = await root.getDirectoryHandle('dir', { create: true });
 
             const testFiles = [
@@ -344,7 +344,7 @@ test('rename should not create multiply files', async ({ page }) => {
 test('create new file, move to new dir, create new file is subdir, move to root', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            window.isMemFS = true; const root = getMemFSRoot();
+            const root = await navigator.storage.getDirectory();
 
             return root;
         };
@@ -404,7 +404,7 @@ test("create new in root with empty name so that it won't remove previous file",
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
             // Your mock code here
-            window.isMemFS = true; const root = getMemFSRoot();
+            const root = await navigator.storage.getDirectory();
             const subDir = await root.getDirectoryHandle('dir', { create: true });
 
             const testFiles = [
@@ -464,7 +464,7 @@ test("create new in root with empty name so that it won't remove previous file",
 test('create new lower case', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            window.isMemFS = true; const root = getMemFSRoot();
+            const root = await navigator.storage.getDirectory();
             const testDir = await root.getDirectoryHandle('test-files', { create: true });
 
             const testFiles = [
@@ -513,7 +513,7 @@ test('create new lower case', async ({ page }) => {
 test('move file between directories', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            window.isMemFS = true; const root = getMemFSRoot();
+            const root = await navigator.storage.getDirectory();
             const testDir = await root.getDirectoryHandle('test-files', { create: true });
 
             const projectsDir = await testDir.getDirectoryHandle('projects', { create: true });
@@ -636,7 +636,7 @@ test('move file between directories', async ({ page }) => {
 test('move file using keyboard navigation', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            window.isMemFS = true; const root = getMemFSRoot();
+            const root = await navigator.storage.getDirectory();
             const testDir = await root.getDirectoryHandle('test-files', { create: true });
 
             // Create directories
@@ -698,7 +698,7 @@ test('move file using keyboard navigation', async ({ page }) => {
 test('create file in selected folder', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
-            window.isMemFS = true; const root = getMemFSRoot();
+            const root = await navigator.storage.getDirectory();
             const testDir = await root.getDirectoryHandle('files', { create: true });
             await root.getDirectoryHandle('projects', { create: true });
             const rootFiles = [
@@ -857,7 +857,7 @@ test('create file in selected folder', async ({ page }) => {
 // currentEditor during P's await would poison again.
 test('pilaf should not be copied to happiness when opening link in editor2 after stale editor2 drift', async ({page}) => {
     await page.evaluate(async () => {
-        window.isMemFS = true; const seedRoot = getMemFSRoot();
+        const seedRoot = await navigator.storage.getDirectory();
         const hapDir = await seedRoot.getDirectoryHandle('hap', {create: true});
         const lifeDir = await seedRoot.getDirectoryHandle('life', {create: true});
 
@@ -874,7 +874,7 @@ test('pilaf should not be copied to happiness when opening link in editor2 after
         await write(lifeDir, 'Recipes.md', 'Recipes list [Pilaf](Pilaf.md)');
 
         window.getRootDirHandle = async function () {
-            window.isMemFS = true; return getMemFSRoot();
+            return await navigator.storage.getDirectory();
         };
     });
 
@@ -905,7 +905,7 @@ test('pilaf should not be copied to happiness when opening link in editor2 after
     await page.waitForTimeout(300);
 
     await page.evaluate(async () => {
-        window.isMemFS = true; const root = getMemFSRoot();
+        const root = await navigator.storage.getDirectory();
         const lifeDir = await root.getDirectoryHandle('life');
         const handle = await lifeDir.getFileHandle('Pilaf.md');
         const writable = await handle.createWritable();
@@ -925,7 +925,7 @@ test('pilaf should not be copied to happiness when opening link in editor2 after
     await page.waitForTimeout(2000);
 
     const disk = await page.evaluate(async () => {
-        window.isMemFS = true; const root = getMemFSRoot();
+        const root = await navigator.storage.getDirectory();
         const listDir = async (name) => {
             const dir = await root.getDirectoryHandle(name);
             const names = [];
@@ -980,7 +980,7 @@ async function setup(page) {
 
     await page.evaluate(()=> {
         window.getRootDirHandle = async function() {
-            window.isMemFS = true; const root = getMemFSRoot();
+            const root = await navigator.storage.getDirectory();
 
             const files = [
                 { name: 'README.md', content: 'Hello world' },

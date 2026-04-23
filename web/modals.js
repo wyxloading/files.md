@@ -257,6 +257,22 @@ class SearchModal {
         const list = document.getElementById('search-results');
         list.innerHTML = '';
 
+        // When moving an inbox message, offer a "Create new file" shortcut
+        // at the top of results. The first line of the message becomes the
+        // filename; the rest becomes the body.
+        if (this.selectedMsgText !== null) {
+            const newItem = document.createElement('li');
+            newItem.textContent = '➕ Create new file';
+            newItem.setAttribute('data-new-file', '1');
+            newItem.onclick = () => this.createNewFileFromMsg();
+            newItem.onmousemove = () => {
+                document.querySelectorAll('#search-results li').forEach(li => li.classList.remove('focused'));
+                newItem.classList.add('focused');
+                this.focusedIndex = 0;
+            };
+            list.appendChild(newItem);
+        }
+
         results.forEach(({path}, index) => {
             if (path === CONFIG_PATH) {
                 return;
@@ -279,13 +295,57 @@ class SearchModal {
             listItem.onmousemove = () => {
                 document.querySelectorAll('#search-results li').forEach(li => li.classList.remove('focused'));
                 listItem.classList.add('focused');
-                this.focusedIndex = index;
+                this.focusedIndex = this.selectedMsgText !== null ? index + 1 : index;
             };
             list.appendChild(listItem);
         });
 
         this.focusedIndex = 0;
         this.updateFocusedItem();
+    }
+
+    async createNewFileFromMsg() {
+        if (this.selectedMsgText === null) return;
+
+        const selectedMessages = document.querySelectorAll('.message.selected');
+        let msgs = [];
+        let messagesToRemove = [];
+        if (selectedMessages.length > 0) {
+            msgs = Array.from(selectedMessages).map(m => m.querySelector('.message-content').textContent);
+            messagesToRemove = selectedMessages;
+        } else {
+            const message = Array.from(document.querySelectorAll('.message'))
+                .find(el => el.dataset.text === this.selectedMsgText);
+            msgs = [this.selectedMsgText];
+            messagesToRemove = [message];
+        }
+
+        for (const msg of msgs) {
+            const [header, body] = extractHeaderAndBody(msg, MAX_TITLE_LENGTH);
+            const path = joinPath('/', sanitizeFilename(header)) + '.md';
+            await moveFromInbox(msg, async () => {
+                await write(path, body);
+                addMemFile(path, {
+                    isFile: true,
+                    content: body,
+                    lastModified: 0,
+                    path: path,
+                    handle: await getFileHandle(path),
+                });
+                setServerFile(path, body, 0);
+                saveServerFiles();
+            });
+            await renderMessages();
+        }
+
+        messagesToRemove.forEach(message => {
+            if (!message) return;
+            message.classList.add('removing');
+            setTimeout(() => message.remove(), 300);
+        });
+        chatInput.focus();
+        renderSidebar();
+        this.close();
     }
 
     async moveToFile(path) {
@@ -328,10 +388,14 @@ class SearchModal {
 
     handleEnterKey() {
         const resultsList = document.getElementById('search-results').querySelectorAll('li');
-        if (resultsList[this.focusedIndex]) {
-            const path = resultsList[this.focusedIndex].getAttribute('data-path');
-            this.moveToFile(path);
+        const item = resultsList[this.focusedIndex];
+        if (!item) return;
+        if (item.getAttribute('data-new-file')) {
+            this.createNewFileFromMsg();
+            return;
         }
+        const path = item.getAttribute('data-path');
+        this.moveToFile(path);
     }
 
     updateFocusedItem() {

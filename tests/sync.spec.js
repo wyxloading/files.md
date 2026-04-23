@@ -34,6 +34,27 @@ test.beforeEach(async ({page}, testInfo) => {
     await fs.mkdir(getTokensDir(), { recursive: true });
 
     await fs.writeFile(getTokensDir() + `/` + saltToken(currentWorkerIndex), currentWorkerIndex, 'utf8');
+
+    // Capture page console output and attach it to the Playwright report so
+    // failures show what the browser was logging. Each line ends up in the
+    // per-test "stdout" attachment, visible in the HTML report.
+    const logs = [];
+    page.on('console', (msg) => {
+        logs.push(`[${msg.type()}] ${msg.text()}`);
+    });
+    page.on('pageerror', (err) => {
+        logs.push(`[pageerror] ${err.message}`);
+    });
+    testInfo.__pageLogs = logs;
+});
+
+test.afterEach(async ({}, testInfo) => {
+    const logs = testInfo.__pageLogs;
+    if (!logs || logs.length === 0) return;
+    await testInfo.attach('page-console.log', {
+        body: logs.join('\n'),
+        contentType: 'text/plain',
+    });
 });
 
 async function setup(page) {
@@ -46,7 +67,7 @@ async function setup(page) {
     // and the API's (localhost:8080) requests.
     await page.context().addCookies([{
         name: 'token',
-        value: currentWorkerIndex,
+        value: String(currentWorkerIndex),
         domain: 'localhost',
         path: '/',
     }]);
@@ -205,6 +226,7 @@ test('send changes from current file to server', async ({ page }) => {
     await clickAndExpectContent(page, 'file', '# File\ntest content');
     await expectCurrentContent(page, '# File\ntest content');
 
+    // Update file on server, check that changes received
     await createFileOnServer('File.md', 'test content\nadded');
     await page.waitForTimeout(2000);
     await expectCurrentContent(page, '# File\ntest content\nadded');
@@ -213,9 +235,9 @@ test('send changes from current file to server', async ({ page }) => {
     await page.keyboard.press('Meta+ArrowDown');
     await page.keyboard.press('Enter');
 
-    await page.keyboard.type('addded from client');
+    await page.keyboard.type('added from client');
     await page.waitForTimeout(2000);
-    await expectFileOnServer(page, 'file.md', 'test content\nadded\naddded from client');
+    await expectFileOnServer(page, 'file.md', 'test content\nadded\nadded from client');
 });
 
 test('changed on both client and serve, should merge', async ({ page }) => {
@@ -225,8 +247,12 @@ test('changed on both client and serve, should merge', async ({ page }) => {
 
     await clickAndExpectContent(page, 'file', '# File\ntest content');
 
-    // Disable sync
-    await page.context().clearCookies({ name: 'token' });
+    // Disable sync by intercepting every API call and aborting it. Cleaner
+    // than clearing the auth cookie — no "Wrong token" noise on the server,
+    // and the client just gets a network error (which syncLocalFileWithServer
+    // already handles silently).
+    const API_HOST = 'localhost:8080';
+    await page.route(`http://${API_HOST}/**`, (route) => route.abort());
 
     // Modify on server
     await createFileOnServer('File.md', 'test content\nadded from server');
@@ -238,12 +264,7 @@ test('changed on both client and serve, should merge', async ({ page }) => {
     await page.keyboard.type('addded from client');
 
     // Enable sync
-    await page.context().addCookies([{
-        name: 'token',
-        value: currentWorkerIndex,
-        domain: 'localhost',
-        path: '/',
-    }]);
+    await page.unroute(`http://${API_HOST}/**`);
 
     await page.waitForTimeout(2000);
     await expectFileOnServer(page, 'File.md', 'test content\nadded from server\naddded from client');

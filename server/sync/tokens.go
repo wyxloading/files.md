@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"log"
 	"log/slog"
 	"net"
@@ -147,9 +148,12 @@ func tokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			blockedIPs[ip] = time.Now().Add(10 * time.Minute)
 			blockedIPsMutex.Unlock()
 
+			fmt.Printf("Wrong token: %q on %s %s (unauthenticated request)\n", token, r.Method, r.URL.Path)
+
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
+		fmt.Printf("correct token: %s for user id %d\n", token, userID)
 
 		// Migrate old clients from Authorization header to cookie.
 		if !fromCookie {

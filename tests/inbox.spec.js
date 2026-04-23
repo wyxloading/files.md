@@ -8,21 +8,7 @@ test.beforeEach(async ({page}) => {
 });
 
 test('send message to chat', async ({ page }) => {
-    const consoleMessages = [];
-    page.on('console', msg => {
-        consoleMessages.push({
-            type: msg.type(),
-            text: msg.text()
-        });
-    });
-    page.on('pageerror', error => {
-        consoleMessages.push({
-            type: 'error',
-            text: error.message,
-            stack: error.stack
-        });
-    });
-
+    await page.click(`#tree .tj_description:has-text('today')`);
     await page.waitForSelector('#inbox');
     await page.keyboard.type('My message');
     await page.waitForTimeout(300);
@@ -51,6 +37,7 @@ test('send to chat and move to recent file', async ({ page }) => {
         init(document.getElementById("editor"));
     });
 
+    await page.click(`#tree .tj_description:has-text('today')`);
     await page.waitForSelector('#inbox');
     await page.keyboard.type('My message');
     await page.waitForTimeout(300);

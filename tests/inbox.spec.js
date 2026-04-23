@@ -39,7 +39,7 @@ test('send message to chat', async ({ page }) => {
 
 test('send to chat and move to recent file', async ({ page }) => {
     await page.evaluate(() => {
-        window.getRootDirHandle = async function() {
+        window.getTemporaryStorageDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
             const fileHandle = await root.getFileHandle('File.md', { create: true });
 

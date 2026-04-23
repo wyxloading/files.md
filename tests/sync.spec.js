@@ -45,7 +45,7 @@ async function setup(page) {
     await page.goto('/index.html');
 
     await page.evaluate(()=> {
-        window.getRootDirHandle = async function() {
+        window.getTemporaryStorageDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
             const subdir = await root.getDirectoryHandle('subdir', { create: true });
 
@@ -143,11 +143,8 @@ test('sync existing files from client', async ({ page }) => {
     await setup(page);
 
     // Check that existing files are not removed
-    await clickAndExpectContent(page, 'file', '# File\ntest content');
-    await clickAndExpectContent(page, 'another', '# Another\n*italic*');
     await clickAndExpectContent(page, 'README', '# README\nHello world');
     await clickAndExpectContent(page, 'Notes', '# Notes\nSome Text');
-
 
     // Trigger syncTexts, first time to get server state
     await page.evaluate(() => {

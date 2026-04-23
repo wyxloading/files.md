@@ -181,7 +181,7 @@ test('opening link in editor2 should not clobber main editor when stale editor2 
         await write(lifeDir, 'Pilaf.md', 'Pilaf recipe');
         await write(lifeDir, 'Recipes.md', 'Recipes list [Pilaf](Pilaf.md)');
 
-        window.getRootDirHandle = async function () {
+        window.getTemporaryStorageDirHandle = async function () {
             return await navigator.storage.getDirectory();
         };
     });

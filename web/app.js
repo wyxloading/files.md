@@ -365,7 +365,7 @@ async function removeSavedRootDirHandle() {
 async function getRootDirHandle() {
     const savedDirHandle = await getSavedRootDirHandle();
     if (!(savedDirHandle instanceof FileSystemDirectoryHandle)) {
-        return await getOpfsOrInMemDirHandle();
+        return await getTemporaryStorageDirHandle();
     }
 
     return savedDirHandle;

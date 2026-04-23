@@ -9,7 +9,7 @@ test.beforeEach(async ({page}) => {
 
 test('should load files', async ({ page }) => {
     await page.evaluate(() => {
-        window.getRootDirHandle = async function() {
+        window.getTemporaryStorageDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
             const testDir = await root.getDirectoryHandle('test-files', { create: true });
 
@@ -40,7 +40,7 @@ test('should load files', async ({ page }) => {
 
 test('create new in subfolder', async ({ page }) => {
     await page.evaluate(() => {
-        window.getRootDirHandle = async function() {
+        window.getTemporaryStorageDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
             const subDir = await root.getDirectoryHandle('dir', { create: true });
 
@@ -88,7 +88,7 @@ test('create new in subfolder', async ({ page }) => {
 
 test('create new in root', async ({ page }) => {
     await page.evaluate(() => {
-        window.getRootDirHandle = async function() {
+        window.getTemporaryStorageDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
             const subDir = await root.getDirectoryHandle('dir', { create: true });
 
@@ -135,7 +135,7 @@ test('create new in root', async ({ page }) => {
 
 test('file is not renamed on select all and change', async ({ page }) => {
     await page.evaluate(() => {
-        window.getRootDirHandle = async function() {
+        window.getTemporaryStorageDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
             const subDir = await root.getDirectoryHandle('dir', { create: true });
 
@@ -228,7 +228,7 @@ test('rename to empty name saves to untitled', async ({ page }) => {
 
 test('create file and move', async ({ page }) => {
     await page.evaluate(() => {
-        window.getRootDirHandle = async function() {
+        window.getTemporaryStorageDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
             const subDir = await root.getDirectoryHandle('dir', { create: true });
 
@@ -275,7 +275,7 @@ test('create file and move', async ({ page }) => {
 
 test('rename should not create multiply files', async ({ page }) => {
     await page.evaluate(() => {
-        window.getRootDirHandle = async function() {
+        window.getTemporaryStorageDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
             const subDir = await root.getDirectoryHandle('dir', { create: true });
 
@@ -343,7 +343,7 @@ test('rename should not create multiply files', async ({ page }) => {
 
 test('create new file, move to new dir, create new file is subdir, move to root', async ({ page }) => {
     await page.evaluate(() => {
-        window.getRootDirHandle = async function() {
+        window.getTemporaryStorageDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
 
             return root;
@@ -402,7 +402,7 @@ test('create new file, move to new dir, create new file is subdir, move to root'
 
 test("create new in root with empty name so that it won't remove previous file", async ({ page }) => {
     await page.evaluate(() => {
-        window.getRootDirHandle = async function() {
+        window.getTemporaryStorageDirHandle = async function() {
             // Your mock code here
             const root = await navigator.storage.getDirectory();
             const subDir = await root.getDirectoryHandle('dir', { create: true });
@@ -463,7 +463,7 @@ test("create new in root with empty name so that it won't remove previous file",
 
 test('create new lower case', async ({ page }) => {
     await page.evaluate(() => {
-        window.getRootDirHandle = async function() {
+        window.getTemporaryStorageDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
             const testDir = await root.getDirectoryHandle('test-files', { create: true });
 
@@ -512,7 +512,7 @@ test('create new lower case', async ({ page }) => {
 
 test('move file between directories', async ({ page }) => {
     await page.evaluate(() => {
-        window.getRootDirHandle = async function() {
+        window.getTemporaryStorageDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
             const testDir = await root.getDirectoryHandle('test-files', { create: true });
 
@@ -635,7 +635,7 @@ test('move file between directories', async ({ page }) => {
 
 test('move file using keyboard navigation', async ({ page }) => {
     await page.evaluate(() => {
-        window.getRootDirHandle = async function() {
+        window.getTemporaryStorageDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
             const testDir = await root.getDirectoryHandle('test-files', { create: true });
 
@@ -697,7 +697,7 @@ test('move file using keyboard navigation', async ({ page }) => {
 
 test('create file in selected folder', async ({ page }) => {
     await page.evaluate(() => {
-        window.getRootDirHandle = async function() {
+        window.getTemporaryStorageDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
             const testDir = await root.getDirectoryHandle('files', { create: true });
             await root.getDirectoryHandle('projects', { create: true });
@@ -873,7 +873,7 @@ test('pilaf should not be copied to happiness when opening link in editor2 after
         await write(lifeDir, 'Pilaf.md', 'Pilaf recipe');
         await write(lifeDir, 'Recipes.md', 'Recipes list [Pilaf](Pilaf.md)');
 
-        window.getRootDirHandle = async function () {
+        window.getTemporaryStorageDirHandle = async function () {
             return await navigator.storage.getDirectory();
         };
     });
@@ -979,7 +979,7 @@ async function setup(page) {
     await page.goto('/index.html');
 
     await page.evaluate(()=> {
-        window.getRootDirHandle = async function() {
+        window.getTemporaryStorageDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
 
             const files = [

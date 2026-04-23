@@ -2,7 +2,7 @@
 // Temporary FS includes welcome files, so to demonstrate the app.
 // First we try to create OPFS storage, fallback to our own in-memory FS on failure.
 
-async function getOpfsOrInMemDirHandle() {
+async function getTemporaryStorageDirHandle() {
     // OPFS requires a secure context (https or localhost), not available on file://
     try {
         const root = await navigator.storage.getDirectory();

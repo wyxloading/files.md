@@ -64,7 +64,7 @@ func (b *Bot) showTimezone(_ []string) error {
 	var kb tg.Keyboard
 	timezones := []string{
 		"UTC",
-		
+
 		// Europe
 		"Europe/Belgrade",
 		"Europe/Berlin",

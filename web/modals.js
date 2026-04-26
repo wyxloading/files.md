@@ -257,20 +257,27 @@ class SearchModal {
         const list = document.getElementById('search-results');
         list.innerHTML = '';
 
-        // When moving an inbox message, offer a "Create new file" shortcut
-        // at the top of results. The first line of the message becomes the
-        // filename; the rest becomes the body.
+        // When moving an inbox message, prepend dir entries (dirs first, then
+        // files). Click a dir → message becomes a new file inside it.
+        // Click a file → message is appended to it.
+        let dirCount = 0;
         if (this.selectedMsgText !== null) {
-            const newItem = document.createElement('li');
-            newItem.textContent = '➕ Create new file';
-            newItem.setAttribute('data-new-file', '1');
-            newItem.onclick = () => this.createNewFileFromMsg();
-            newItem.onmousemove = () => {
-                document.querySelectorAll('#search-results li').forEach(li => li.classList.remove('focused'));
-                newItem.classList.add('focused');
-                this.focusedIndex = 0;
-            };
-            list.appendChild(newItem);
+            const searchVal = (document.getElementById('search-input').value || '').toLowerCase();
+            const dirs = this.getDirs().filter(d => searchVal === '' || d.toLowerCase().includes(searchVal));
+            dirs.forEach((dir) => {
+                const dataDir = dir === '/' ? '' : dir;
+                const listItem = document.createElement('li');
+                listItem.textContent = dir === '/' ? '/' : (dir + '/');
+                listItem.setAttribute('data-dir', dataDir);
+                listItem.onclick = () => this.moveToDir(dataDir);
+                listItem.onmousemove = () => {
+                    document.querySelectorAll('#search-results li').forEach(li => li.classList.remove('focused'));
+                    listItem.classList.add('focused');
+                    this.focusedIndex = Array.from(list.children).indexOf(listItem);
+                };
+                list.appendChild(listItem);
+            });
+            dirCount = dirs.length;
         }
 
         results.forEach(({path}, index) => {
@@ -295,7 +302,7 @@ class SearchModal {
             listItem.onmousemove = () => {
                 document.querySelectorAll('#search-results li').forEach(li => li.classList.remove('focused'));
                 listItem.classList.add('focused');
-                this.focusedIndex = this.selectedMsgText !== null ? index + 1 : index;
+                this.focusedIndex = dirCount + index;
             };
             list.appendChild(listItem);
         });
@@ -304,8 +311,25 @@ class SearchModal {
         this.updateFocusedItem();
     }
 
-    async createNewFileFromMsg() {
-        if (this.selectedMsgText === null) return;
+    getDirs() {
+        let dirs = ['/'];
+        for (const dir of Object.keys(files)) {
+            if (!dir.endsWith('/')) continue;
+            const name = trimPostfix(dir, '/');
+            if (SYSTEM_DIRS.includes(name)) continue;
+            dirs.push(name);
+        }
+        dirs.sort((a, b) => {
+            return a.includes('_') - b.includes('_') || a.localeCompare(b);
+        });
+        return dirs;
+    }
+
+    async moveToDir(toDir) {
+        if (this.selectedMsgText === null) {
+            this.close();
+            return;
+        }
 
         const selectedMessages = document.querySelectorAll('.message.selected');
         let msgs = [];
@@ -322,7 +346,7 @@ class SearchModal {
 
         for (const msg of msgs) {
             const [header, body] = extractHeaderAndBody(msg, MAX_TITLE_LENGTH);
-            const path = joinPath('/', sanitizeFilename(header)) + '.md';
+            const path = joinPath('/', toDir, sanitizeFilename(header)) + '.md';
             await moveFromInbox(msg, async () => {
                 await write(path, body);
                 addMemFile(path, {
@@ -390,8 +414,9 @@ class SearchModal {
         const resultsList = document.getElementById('search-results').querySelectorAll('li');
         const item = resultsList[this.focusedIndex];
         if (!item) return;
-        if (item.getAttribute('data-new-file')) {
-            this.createNewFileFromMsg();
+        const dir = item.getAttribute('data-dir');
+        if (dir !== null) {
+            this.moveToDir(dir);
             return;
         }
         const path = item.getAttribute('data-path');

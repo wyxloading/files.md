@@ -11,6 +11,7 @@ const SHOP_PATH = '/Shop.md';
 const WATCH_PATH = '/Watch.md';
 
 const MAX_TITLE_LENGTH = 100;
+const RECENT_FILES = 2;
 
 // Cache of the last Inbox.md content we rendered from. renderMessages skips
 // work when the file's content hasn't changed.
@@ -289,7 +290,7 @@ function sendCmd(cmd, params) {
     wasmReplyCmd(JSON.stringify(cmdObj));
 }
 
-function getRecentlyModifiedFiles() {
+function getRecentlyModifiedFiles(n) {
     if (files === undefined) return [];
 
     const entries = [];
@@ -324,7 +325,7 @@ function getRecentlyModifiedFiles() {
 
     // Take first 3 and extract filenames
     const result = [];
-    const limit = Math.min(3, entries.length);
+    const limit = Math.min(n, entries.length);
     for (let i = 0; i < limit; i++) {
         result.push(entries[i][0]);
     }
@@ -769,7 +770,7 @@ async function renderMessages() {
         return;
     }
 
-    const recentFiles = getRecentlyModifiedFiles();
+    const recentFiles = getRecentlyModifiedFiles(RECENT_FILES);
     const recentFilesButtons = recentFiles.map(filename => `
     <div class="btn-wrapper">
        <button class="action-btn to-recent-btn" data-filename="${filename}">

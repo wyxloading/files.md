@@ -197,6 +197,7 @@ const (
 	CmdInlineQuerySearchEveryWhere     = "search"
 	CmdInlineQuerySearchInDir          = "search_dir"
 	CmdWebAppHabits                    = "habits"
+	CmdRandomNote                      = "random_note"
 	CmdAddToJournalShortcut            = "j"
 	CmdAddToJournalAndContinueShortcut = "ja"
 	CmdAddToRecentFileShortcut         = "+"
@@ -337,6 +338,7 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		CmdShowRename:          b.showRename,
 		CmdShowStats:           b.showStats,
 		CmdShowReadChecklist:   b.showRead,
+		CmdRandomNote:          b.randomNote,
 		CmdShowWatchChecklist:  b.showWatch,
 		CmdShowShopChecklist:   b.showShop,
 		CmdShowSchedule:        b.showSchedule,
@@ -1253,6 +1255,19 @@ func (b *Bot) todayLabel(msgsCount ...int) string {
 	}
 
 	return statusBar + fmt.Sprintf(i18n.Tr("<b>%d</b> left%s"), tasksCount, wideSpacer)
+}
+
+func (b *Bot) randomNote(_ []string) error {
+	files, err := b.fs.FilesAndDirs(fs.DirUserRoot)
+	if err != nil {
+		return fmt.Errorf("random note: can't get files: %w", err)
+	}
+	notes := fs.ExcludeConfig(fs.OnlyUserMDFiles(files))
+	if len(notes) == 0 {
+		return b.ShowToday(nil)
+	}
+	note := notes[rand.Intn(len(notes))]
+	return b.showFile([]string{fs.DirUserRoot, fs.Hash(note.Name)})
 }
 
 func (b *Bot) showFiles(_ []string) error {

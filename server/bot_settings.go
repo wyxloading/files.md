@@ -37,6 +37,7 @@ var AvailableQuickBtns = []tg.Btn{
 	tg.NewBtn("Shop", tg.NewCmd(CmdShowShopChecklist, nil)),
 	tg.NewBtn("Schedule", tg.NewCmd(CmdShowSchedule, nil)),
 	tg.NewBtn("Habits", tg.NewCustomCmd(CmdWebAppHabits, nil, tg.CmdTypeWebApp)),
+	tg.NewBtn("Random", tg.NewCmd(CmdRandomNote, nil)),
 }
 
 func (b *Bot) showSettings(params []string) error {

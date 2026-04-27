@@ -108,7 +108,7 @@ func TestMoveDueTasksFromArchive(t *testing.T) {
 	fsBackend := afero.NewMemMapFs()
 	userFS, err := fs.NewFS("/-1", fsBackend)
 	r.NoError(err)
-	err = userFS.CreateDirsIfNotExist()
+	err = userFS.CreateSystemDirs()
 	r.NoError(err)
 	_ = userFS.Write(fs.DirArchive, fs.DoneFilename, "- [ ] due task")
 
@@ -152,7 +152,7 @@ func TestMoveDueTasksFromLater(t *testing.T) {
 	fsBackend := afero.NewMemMapFs()
 	userFS, err := fs.NewFS("/-1", fsBackend)
 	r.NoError(err)
-	err = userFS.CreateDirsIfNotExist()
+	err = userFS.CreateSystemDirs()
 	r.NoError(err)
 	_ = userFS.Write(fs.DirUserRoot, fs.LaterFilename, "- [ ] due task")
 
@@ -192,7 +192,7 @@ func TestMoveDueTasksDoesntMove(t *testing.T) {
 	fsBackend := afero.NewMemMapFs()
 	userFS, err := fs.NewFS("/-1", fsBackend)
 	r.NoError(err)
-	err = userFS.CreateDirsIfNotExist()
+	err = userFS.CreateSystemDirs()
 	r.NoError(err)
 	err = userFS.Write("archive", "due task.md", "")
 	r.NoError(err)

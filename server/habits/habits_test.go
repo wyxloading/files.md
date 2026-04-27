@@ -35,7 +35,7 @@ func TestHabits(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
-	err = userFS.CreateDirsIfNotExist()
+	err = userFS.CreateSystemDirs()
 	r.NoError(err)
 	_ = userFS.Write(fs.DirInsights, "1970 Habits.md", monthMD)
 
@@ -56,7 +56,7 @@ func TestHabitsForTwoMonths(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
-	err = userFS.CreateDirsIfNotExist()
+	err = userFS.CreateSystemDirs()
 	r.NoError(err)
 	_ = userFS.Write(fs.DirInsights, "1970 Habits.md", twoMonthsMD)
 
@@ -77,7 +77,7 @@ func TestLastMonthHabits(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
-	err = userFS.CreateDirsIfNotExist()
+	err = userFS.CreateSystemDirs()
 	r.NoError(err)
 	_ = userFS.Write(fs.DirInsights, "1970 Habits.md", lastMonthMD)
 
@@ -104,7 +104,7 @@ func TestLastWeekHabitsWhenWeekFallsIntoTwoMonths(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
-	err = userFS.CreateDirsIfNotExist()
+	err = userFS.CreateSystemDirs()
 	r.NoError(err)
 	_ = userFS.Write(fs.DirInsights, "1970 Habits.md", twoMonthsMD)
 	_ = userFS.Write(fs.DirHabits, "Habit.md", "")
@@ -130,7 +130,7 @@ func TestLastMonthHabitsMoods(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
-	err = userFS.CreateDirsIfNotExist()
+	err = userFS.CreateSystemDirs()
 	r.NoError(err)
 	_ = userFS.Write(fs.DirInsights, "1970 Habits.md", monthMD)
 
@@ -150,7 +150,7 @@ func TestWrite(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
-	err = userFS.CreateDirsIfNotExist()
+	err = userFS.CreateSystemDirs()
 	r.NoError(err)
 	_ = userFS.Write("insights", "2024 Habits.md", monthMD)
 
@@ -171,7 +171,7 @@ func TestWritePreserveMoodsForPreviousMonth(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
-	err = userFS.CreateDirsIfNotExist()
+	err = userFS.CreateSystemDirs()
 	r.NoError(err)
 	_ = userFS.Write("insights", "1970 Habits.md", twoMonthsMD)
 

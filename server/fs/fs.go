@@ -39,8 +39,8 @@ var (
 const (
 	DirUserRoot = "/"
 	DirArchive  = "archive"
-	DirToday    = "today"
-	DirLater    = "later"
+	DirToday    = "today" // TODO remove
+	DirLater    = "later" // TODO remove
 	DirMedia    = "media"
 	DirJournal  = "journal"
 	DirHabits   = "habits"
@@ -130,13 +130,6 @@ func NewFile(name, hash, displayName string, ctime int64, isMultiline, isDir boo
 // CreateDirsIfNotExist creates specified directories for a user if they do not exist.
 // If dirs are not specified, it creates default directories.
 func (fs FS) CreateDirsIfNotExist(dirs ...string) error {
-	if len(dirs) == 0 {
-		dirs = []string{
-			DirArchive,
-			DirMedia,
-			DirJournal,
-		}
-	}
 	for _, dir := range dirs {
 		if dir == DirUserRoot {
 			continue
@@ -157,6 +150,10 @@ func (fs FS) CreateDirsIfNotExist(dirs ...string) error {
 	}
 
 	return nil
+}
+
+func (fs FS) CreateSystemDirs() error {
+	return fs.CreateDirsIfNotExist(DirArchive, DirMedia, DirJournal)
 }
 
 func (fs FS) Exists(dir, filename string) (bool, error) {

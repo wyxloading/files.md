@@ -12,7 +12,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/spf13/afero"
 
-	server "github.com/zakirullin/files.md/server"
+	"github.com/zakirullin/files.md/server"
 	"github.com/zakirullin/files.md/server/config"
 	"github.com/zakirullin/files.md/server/db"
 	"github.com/zakirullin/files.md/server/fs"
@@ -164,7 +164,7 @@ func newBot(telegram *tg.TG, userID int64) (*server.Bot, error) {
 	if err != nil {
 		return nil, fmt.Errorf("can't create fs: %w", err)
 	}
-	err = userFS.CreateDirsIfNotExist()
+	err = userFS.CreateSystemDirs()
 	if err != nil {
 		return nil, fmt.Errorf("can't create user dirs: %w", err)
 	}

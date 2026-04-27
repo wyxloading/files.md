@@ -117,9 +117,9 @@ func TestCreateBaseDirs(t *testing.T) {
 
 	fs, err := NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
-	r.NoError(fs.CreateDirsIfNotExist())
+	r.NoError(fs.CreateSystemDirs())
 
-	err = fs.CreateDirsIfNotExist()
+	err = fs.CreateSystemDirs()
 	r.NoError(err)
 
 	dirs, err := fs.FilesAndDirs("/")
@@ -127,7 +127,7 @@ func TestCreateBaseDirs(t *testing.T) {
 	dirs = OnlyDirs(dirs)
 	dirNames := OnlyFilenames(dirs)
 
-	r.ElementsMatch([]string{"later", "today", "archive", "_read_", "_shop_", "_watch_", "media", "habits", "journal", "insights"}, dirNames)
+	r.ElementsMatch([]string{"archive", "media", "journal"}, dirNames)
 }
 
 func TestSortByCtimeDesc(t *testing.T) {

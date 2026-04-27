@@ -3039,7 +3039,7 @@ func (b *Bot) setFullMode(_ []string) error {
 		}
 	}
 
-	err = b.fs.CreateDirsIfNotExist()
+	err = b.fs.CreateSystemDirs()
 	if err != nil {
 		return fmt.Errorf("full mode: can't create dirs: %w", err)
 	}

@@ -95,9 +95,17 @@ My friends and I have been using this setup for five years and it works well.
 
 Telegram bot: [@FilesMDBot](https://t.me/FilesMDBot) (other messengers will follow).  
 
-You can do the same in the web app.  
+## Taking notes in the web app
+Open `today`, type in a message:  
+<div align="center">
+    <img src="https://github.com/zakirullin/files.md/raw/main/web/img/note1.png" alt="Taking notes" title="Taking notes" width="350"/>
+</div>
 
-P.S. A really good book on the topic: *How to Take Smart Notes* by Sönke Ahrens.   
+Then hover a message (it can be done later):  
+<div align="center">
+    <img src="https://github.com/zakirullin/files.md/raw/main/web/img/note2.png" alt="Taking notes" title="Taking notes" width="350"/>
+</div>
+Click "To File", then select "brain" directory.  
 
 ## Self-help through reading and taking notes?
 **Harm caused at the emotional level must be healed at the emotional level.**  

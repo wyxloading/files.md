@@ -1,3 +1,10 @@
+// Forbidden chars on Windows / PWA / Unix.
+const FORBIDDEN_FILENAME_CHARS = ['<', '>', ':', '"', '|', '\\', '?', '*', '\x00', '/'];
+
+function sanitizeFilename(filename) {
+    return FORBIDDEN_FILENAME_CHARS.reduce((result, ch) => result.replaceAll(ch, ''), filename);
+}
+
 async function getFileHandle(path, create = false) {
     let dir, filename;
     if (path.includes('/')) {
@@ -291,11 +298,4 @@ function generateSafeFilename(originalName) {
     const now = new Date();
     const timestamp = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     return `${timestamp}-${originalName}`.replace(/[<>:"/\\|?*\s]/g, '-');
-}
-
-// Forbidden chars on Windows / PWA / Unix.
-const FORBIDDEN_FILENAME_CHARS = ['<', '>', ':', '"', '|', '\\', '?', '*', '\x00', '/'];
-
-function sanitizeFilename(filename) {
-    return FORBIDDEN_FILENAME_CHARS.reduce((result, ch) => result.replaceAll(ch, ''), filename);
 }

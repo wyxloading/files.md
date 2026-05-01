@@ -6,9 +6,14 @@
 // Only works with `hypermd` mode, require special CSS rules
 //
 // PATCHED:
-// - linkHref (url) in internal links (*.md) is always hidden, even when cursor is on the line
+// - linkHref (url) in internal links (*.md) and http(s) URLs is always hidden, even when cursor is on the line
 // - Arrow keys skip over hidden linkHref spans
 // - Shift+Arrow at hidden linkHref selects to start/end of line
+
+// Hide linkHref `(url)` when it points to an internal .md file or an http(s) URL.
+function isAlwaysHiddenLinkHref(text) {
+    return /\.md\)?$/.test(text) || /^\(?https?:\/\//i.test(text);
+}
 
 (function (mod){ //[HyperMD] UMD patched!
     /*commonjs*/  ("object"==typeof exports&&"undefined"!=typeof module) ? mod(null, exports, require("codemirror"), require("../core"), require("../core"), require("../core")) :
@@ -97,7 +102,7 @@
                 var spans = line_spans_1.getLineSpanExtractor(cm).extract(cursor.line);
                 for (var i = 0; i < spans.length; i++) {
                     var span = spans[i];
-                    if (span.type !== 'linkHref' || !/\.md\)?$/.test(span.text)) continue;
+                    if (span.type !== 'linkHref' || !isAlwaysHiddenLinkHref(span.text)) continue;
                     if (e.key === 'ArrowRight' && cursor.ch >= span.begin && cursor.ch < span.end) {
                         e.preventDefault();
                         // PATCHED, shift+arrow at hidden linkHref selects to end/start of line.
@@ -248,8 +253,8 @@
                 while (iNodeHint < nodeCount && map[iNodeHint * 3 + 1] < spanBeginCharInCurrentLine)
                     iNodeHint++;
                 var shallHideTokens = true;
-                // PATCHED, always hide linkHref when path ends with .md - internal links.
-                var isHiddenLinkHref = span.type === 'linkHref' && /\.md\)?$/.test(span.text);
+                // PATCHED, always hide linkHref for internal .md links and http(s) URLs.
+                var isHiddenLinkHref = span.type === 'linkHref' && isAlwaysHiddenLinkHref(span.text);
                 if (!isHiddenLinkHref) {
                     for (var iLineRange = 0; iLineRange < rangesInLine.length; iLineRange++) {
                         var userRange = rangesInLine[iLineRange];

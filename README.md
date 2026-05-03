@@ -286,8 +286,11 @@ Shift timestamps in journal files by N hours (useful after timezone change):
 go run /abs/path/to/files.md/cmd/shifttime/shifttime.go
 ```
 
-## Deploy on your own server
-See [docs/your-own-server.md](docs/your-own-server.md).
+## Documentation
+[Deploy on your own server](docs/your-own-server.md).
+[Bot](docs/bot.md).
+[Integration tests](docs/integration-tests.md)
+[Sync flow](docs/sync-flow.md)
 
 ## Repository structure
 - `web` - web app (PWA), `index.html` is an entrypoint

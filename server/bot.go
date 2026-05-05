@@ -1675,7 +1675,7 @@ func (b *Bot) showStart(params []string) error {
 		}
 	}
 
-	_, err := b.tg.Send(b.userID, "Welcome! 👋\n\nSend me anything, and I’ll save it to files!\n\nBy default <b>Full Mode</b> is enabled, which can feel a bit overwhelming. You can switch to <b>Notes Only</b> or <b>Tasks Only</b> mode in /settings menu.", nil, tg.MarkupHTML)
+	_, err := b.tg.Send(b.userID, "Welcome! 👋\n\n<b>Send me anything, and I’ll save it to files!</b>\n\nClick /app to connect the web app.\n\nBy default <b>Full Mode</b> is enabled, which can feel a bit overwhelming. You can switch to <b>Notes Only</b> or <b>Tasks Only</b> mode in /settings menu.", nil, tg.MarkupHTML)
 
 	return err
 }

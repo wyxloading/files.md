@@ -24,6 +24,7 @@ import (
 const (
 	TokenLength            = 32
 	OneTimeTokenExpiration = 10 * time.Minute
+	BanForInvalidToken     = 10 * time.Minute
 	AuthCookieName         = "token"
 	AuthCookieMaxAge       = 10 * 365 * 24 * 60 * 60 // ~10 years
 )
@@ -61,7 +62,7 @@ func findUserID(token string) (int64, bool) {
 		return 0, false
 	}
 
-	data, err := tokens.Read(fs.DirUserRoot, hashToken(token))
+	data, err := tokens.Read("/", hashToken(token))
 	if err != nil {
 		return 0, false
 	}
@@ -144,7 +145,7 @@ func tokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		userID, ok := findUserID(token)
 		if !ok {
 			blockedIPsMutex.Lock()
-			blockedIPs[ip] = time.Now().Add(10 * time.Minute)
+			blockedIPs[ip] = time.Now().Add(BanForInvalidToken)
 			blockedIPsMutex.Unlock()
 
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)

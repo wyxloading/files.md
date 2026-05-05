@@ -182,6 +182,12 @@ async function loadLocalFiles(rootDirHandle, slowMode = false) {
 
 // config.json is currently only synced from server, no local changes are propogated.
 async function syncTextsWithServer() {
+    // We should have at least one 200 response from service.
+    // The first 200 response we get from /token, meaning that
+    // our application is linked to the server for sync.
+    if (!hasLastServerOk()) {
+        return;
+    }
     if (files === undefined || Object.keys(files).length === 0) {
         return;
     }
@@ -383,6 +389,12 @@ async function syncLocalFileWithServer(path) {
 }
 
 async function syncMedia() {
+    // We should have at least one 200 response from service.
+    // The first 200 response we get from /token, meaning that
+    // our application is linked to the server for sync.
+    if (!hasLastServerOk()) {
+        return;
+    }
     if (files === undefined) {
         return;
     }
@@ -988,7 +1000,7 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
     let thereIsPreviousEditorToSync = currentEditor.path !== undefined && currentEditor.path !== path;
     if (thereIsPreviousEditorToSync) {
         log('Began syncing previous file');
-        await syncCurrentEditor(true);
+        await syncCurrentText(true);
         log('Finished syncing previous file');
     }
 
@@ -1108,7 +1120,13 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
 // TODO It should be atomic.
 // If currentEditor is changed during the execution of this function, we'll have RC.
 // So, wherever we change currentEditor reference, we should lock via isMessingWithCurrentEditor.
-async function syncCurrentEditor(switchAwayEditor = false) {
+async function syncCurrentText(switchAwayEditor = false) {
+    // We should have at least one 200 response from service.
+    // The first 200 response we get from /token, meaning that
+    // our application is linked to the server for sync.
+    if (!hasLastServerOk()) {
+        return;
+    }
     if (files === undefined || debug || currentEditor.path === undefined) {
         return;
     }

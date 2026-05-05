@@ -197,9 +197,9 @@ Only then I added this useful insight to my knowledge base.
 This experience helped me to discover that I don't like taking notes with traditional applications, too much resistance.   
 At the same time, chatting with friends is effortless for me. That's how the bot for taking notes appeared.  
 
-## No productivity, no complexity, no stress
+## No productivity, no complexity. Relax
 The only thing that matters is your calmness.  
-**We reuse same well-familiar messaging pattern for everything.**     
+**We reuse same well-familiar messaging pattern for everything.**    
 
 ## Tasks ✅
 You're in the flow.  

@@ -1227,7 +1227,8 @@ var TreeConfig = {
 
 // openContextMenu renders a small floating menu at (e.clientX, e.clientY) and
 // calls build(addItem) where addItem(label, onClick) appends a row. The menu
-// closes on outside click or Esc.
+// closes on outside click or Esc. If the menu would overflow the bottom of
+// the viewport, it flips up so its bottom edge sits at the cursor instead.
 function openContextMenu(e, build, onClose) {
     const menu = document.createElement('div');
     menu.className = 'sidebar-ctx-menu';
@@ -1257,6 +1258,15 @@ function openContextMenu(e, build, onClose) {
     build(addItem);
 
     document.body.appendChild(menu);
+
+    // Flip upward if the menu would clip past the viewport bottom. Measure
+    // after append so offsetHeight reflects the rendered rows.
+    const overflowY = e.clientY + menu.offsetHeight - window.innerHeight;
+    if (overflowY > 0) {
+        const top = Math.max(0, e.clientY - menu.offsetHeight);
+        menu.style.top = top + 'px';
+    }
+
     setTimeout(() => {
         document.addEventListener('mousedown', onOutside, true);
         document.addEventListener('keydown', onEsc, true);

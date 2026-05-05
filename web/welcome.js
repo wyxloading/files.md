@@ -2,15 +2,24 @@
 // Temporary FS includes welcome files, so to demonstrate the app.
 // First we try to create OPFS storage, fallback to our own in-memory FS on failure.
 
+// Returns true only when the browser exposes every FileSystemFileHandle
+// method the app relies on. Used by both the temporary-storage path and
+// app.js's getRootDirHandle to decide between OPFS and the in-memory FS.
+function opfsIsFullyUsable() {
+    if (typeof FileSystemFileHandle === 'undefined') return false;
+    const proto = FileSystemFileHandle.prototype;
+    return typeof proto.createWritable === 'function'
+        && typeof proto.remove === 'function';
+}
+
 async function getTemporaryStorageDirHandle() {
     // Safari ships OPFS but its FileSystemFileHandle exposes only
-    // createSyncAccessHandle (worker-only) - no createWritable, which the
-    // rest of the app relies on. Fall back to the in-memory FS so writes
-    // don't blow up at the first send-to-today.
-    const supportsWritable = typeof FileSystemFileHandle !== 'undefined'
-        && typeof FileSystemFileHandle.prototype.createWritable === 'function';
-    if (!supportsWritable) {
-        console.warn('FileSystemFileHandle.createWritable unavailable, using in-memory FS');
+    // createSyncAccessHandle (worker-only). Older Chromium has no
+    // FileSystemFileHandle.remove(). Fall back to the in-memory FS if
+    // either of those write/delete entry points is missing so app code
+    // doesn't blow up mid-flow.
+    if (!opfsIsFullyUsable()) {
+        console.warn('OPFS missing createWritable or remove, using in-memory FS');
         isMemFS = true;
         return getMemFSRoot();
     }
@@ -138,6 +147,21 @@ class MemDir {
             this.entries[name] = file;
         }
         return this.entries[name];
+    }
+
+    // Mirrors FileSystemDirectoryHandle.removeEntry. Required by fs.js's
+    // remove(path) and removeDir(dirPath); the non-standard
+    // fileHandle.remove() isn't available on Safari OPFS or this in-memory
+    // FS, so fs.js prefers the parent-directory form.
+    async removeEntry(name, opts = {}) {
+        const entry = this.entries[name];
+        if (!entry) {
+            throw new DOMException(`"${name}" not found`, 'NotFoundError');
+        }
+        if (entry.kind === 'directory' && Object.keys(entry.entries).length > 0 && !opts.recursive) {
+            throw new DOMException('Directory not empty', 'InvalidModificationError');
+        }
+        delete this.entries[name];
     }
 
     async *values() {

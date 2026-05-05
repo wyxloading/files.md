@@ -80,7 +80,7 @@ init_server: # create directories and configuration files on the server
 	ssh $(host) 'sudo mkdir -p /app/storage /var/log/files.md /opt/files.md /opt/files.md/tokens && \
 		sudo chown -R www-data:www-data /app /var/log/files.md /opt/files.md'
 	echo "$$ENV_FILE" | ssh $(host) 'sudo tee /app/.env > /dev/null && sudo chown www-data:www-data /app/.env'
-	echo "$$SERVICE_FILE" | ssh $(host) 'sudo tee /etc/systemd/system/server.service > /dev/null'
+	echo "$$SERVICE_FILE" | ssh $(host) 'sudo tee /etc/systemd/system/filesmd.service > /dev/null'
 	@echo 'Directories created and permissions set successfully.'
 
 deploy_systemd: # deploy as systemd service
@@ -93,7 +93,7 @@ deploy_systemd: # deploy as systemd service
 	GOOS=linux GOARCH=amd64 go build -o /tmp/server ./cmd/server && \
 	printf "$${GREEN}Build Completed$${RESET}\n" && \
 	scp /tmp/server $(host):/tmp/server.new && printf "$${GREEN}The binary is copied on the server$${RESET}\n" && \
-	ssh $(host) "sudo mv /tmp/server.new /app/server && sudo systemctl daemon-reload && sudo systemctl restart server.service" && \
+	ssh $(host) "sudo mv /tmp/server.new /app/server && sudo systemctl daemon-reload && sudo systemctl restart filesmd.service" && \
 	rm /tmp/server && \
 	printf "$${YELLOW}Versioning current files with commit: $${COMMIT_HASH}$${RESET}\n" && \
 	TMPWEB=$$(mktemp -d) && \

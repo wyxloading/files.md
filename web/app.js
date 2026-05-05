@@ -378,12 +378,10 @@ async function removeSavedRootDirHandle() {
 
 async function getRootDirHandle() {
     const savedDirHandle = await getSavedRootDirHandle();
-    // Safari's FileSystemFileHandle has no createWritable - if the saved
-    // handle is from such an environment, fall back to the in-memory FS
-    // instead of letting later writes blow up.
-    const supportsWritable = typeof FileSystemFileHandle !== 'undefined'
-        && typeof FileSystemFileHandle.prototype.createWritable === 'function';
-    if (!(savedDirHandle instanceof FileSystemDirectoryHandle) || !supportsWritable) {
+    // If the saved handle is from a browser missing createWritable or
+    // remove (Safari OPFS, older Chromium), fall back to the in-memory FS
+    // instead of letting later writes/deletes blow up.
+    if (!(savedDirHandle instanceof FileSystemDirectoryHandle) || !opfsIsFullyUsable()) {
         return await getTemporaryStorageDirHandle();
     }
 
@@ -742,7 +740,7 @@ window.addEventListener('focus', async () => {
 
     // Sync media first, so that new images for current file would be loaded
     await syncMedia();
-    await syncCurrentEditor();
+    await syncCurrentText();
 
     const start = performance.now();
     files = await loadLocalFiles(savedDirectoryHandle, true);
@@ -769,7 +767,7 @@ window.addEventListener('blur', async function() {
         return;
     }
     await syncMedia();
-    await syncCurrentEditor();
+    await syncCurrentText();
 
     const savedDirectoryHandle = await getRootDirHandle();
 
@@ -802,6 +800,6 @@ window.addEventListener('beforeunload', function() {
 // Worker to process the saving queue
 window.saver = setInterval(() => {
     if (document.hasFocus()) {
-        syncCurrentEditor();
+        syncCurrentText();
     }
 }, CURRENT_FILE_SYNC_INTERVAL);

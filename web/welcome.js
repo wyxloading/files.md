@@ -195,9 +195,9 @@ const WELCOME_FILES = {
         },
     },
     "🪴 Welcome.md": {
-        "content": "Only essential features. No distractions.\n\n" +
-            "You don't need fancy tools to take notes...\n\n" +
-            "[🗂️ Open local folder](cmd:openDir)\n" +
+        "content":
+            "Open [today](cmd:openToday) to dump whatever's on your mind.\n\n" +
+            "Select local [folder](cmd:openDir) to persist files.\n\n" +
             "[Markdown Guide](/Markdown%20Guide.md)\n[Hotkeys](/Hotkeys.md)\n[Links](/Links.md)",
         isFile: true,
     },
@@ -290,14 +290,6 @@ const WELCOME_FILES = {
         "content": "You can dump project related thoughts here.",
         isFile: true,
     },
-    "CustomChecklist_.md": {
-        "content":
-            "Any file with a trailing `_` is treated as a checklist.\n\n" +
-            "- [ ] Add your own item\n" +
-            "- [ ] Tick this when done\n" +
-            "- [x] Already finished",
-        isFile: true,
-    }
 }
 
 function getHelpContent() {

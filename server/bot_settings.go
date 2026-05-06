@@ -44,10 +44,10 @@ var AvailableQuickBtns = []tg.Btn{
 func (b *Bot) showSettings(params []string) error {
 	var kb tg.Keyboard
 	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("brain"), b.tr("Full mode")), tg.NewCmd(CmdFullMode, nil)))
-	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("chat"), b.tr("Inbox mode")), tg.NewCmd(CmdChatMode, nil)))
+	//kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("chat"), b.tr("Inbox mode")), tg.NewCmd(CmdChatMode, nil)))
 	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("notes"), b.tr("Notes mode")), tg.NewCmd(CmdNotesOnlyMode, nil)))
 	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("tasks"), b.tr("Tasks mode")), tg.NewCmd(CmdTasksOnlyMode, nil)))
-	kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("journal"), b.tr("Journal mode")), tg.NewCmd(CmdJournalOnlyMode, nil)))
+	//kb.AddRow(tg.NewBtn(txt.Emoji(i18n.Emoji("journal"), b.tr("Journal mode")), tg.NewCmd(CmdJournalOnlyMode, nil)))
 	kb.AddRow(tg.NewBtn("-", tg.NewCmd(CmdDoNothing, nil)))
 	kb.AddRow(tg.NewBtn(i18n.StrQuickBtns, tg.NewCmd(CmdShowQuickBtnsSettings, nil)))
 	kb.AddRow(tg.NewBtn(i18n.StrMoveToBtns, tg.NewCmd(CmdShowMoveToBtnsSettings, nil)))

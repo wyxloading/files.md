@@ -49,7 +49,7 @@ Maybe. But this time:
 - Open a local folder to persist changes  
 - Occasionally hit force-refresh (`Cmd`+`Shift`+`R`) to get new updates.  
 
-## Telegram bot 
+## Telegram bot 🤖
 1) Open [@FilesMDBot](https://t.me/FilesMDBot)
 2) Execute the `/app` command
 3) Open the link in your Chrome browser
@@ -61,7 +61,7 @@ Pin the bot in your contact list, so that it is easily accessible.
 Leonardo da Vinci, Charles Darwin, Jules Verne and many others took notes using just pen and paper.
 
 You don't need to learn anything new to start taking notes.   
-It is going to be a well-familiar pattern: chatting with friends.  
+It is going to be a well-familiar pattern: chatting.  
 
 We are going to send messages to the bot (or to the web app):  
 
@@ -326,6 +326,7 @@ Refer to [this guide](https://github.com/zakirullin/cognitive-load) for more com
 - Use `PATCHED` keyword if you modify libs in-place
 - **It would be fantastic if, one day, we replaced `CodeMirror` with our own tiny implementation**
 - No build systems, **in 10 years we will open `/web/index.html` and it should just work**
+- Don't forget that awaits between lock check and lock acquire can cause race condition
 
 ## Glossary
 - `filename` - a filename with extension, like "note.md" (USE THIS AS ID)

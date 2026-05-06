@@ -103,6 +103,10 @@ function initEditor(el) {
             openDir();
             return;
         }
+        if (path === 'cmd:openToday') {
+            openToday();
+            return;
+        }
 
         // If it is a web link open window blank
         if (/^(http|https):\/\//.test(path)) {

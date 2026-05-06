@@ -60,13 +60,16 @@ async function loadLocalFiles(rootDirHandle, slowMode = false) {
     if (isLoadingLocalFiles) {
         return;
     }
+    isLoadingLocalFiles = true;
 
+    // TODO should we wait for editor2 as well?
+    // What if "cleanes" is changed mid-through? We have awaits.
+    // Better check per/file right before loading?
     while (!editor.isClean()) {
         await new Promise(r => setTimeout(r, 50));
     }
 
     let newFiles = {};
-    isLoadingLocalFiles = true;
 
     // Loads files recursively
     async function loadDir(dirHandle, path = '/', depth = 3) {

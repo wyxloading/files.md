@@ -22,6 +22,16 @@ let debug = false;
 // let debug = {dir: '', file: 'File.md', loaded: false};
 
 async function init() {
+    // Ask the browser to mark our origin as persistent so the quota
+    // manager can't evict the auth cookie + localStorage under disk
+    // pressure. Chrome auto-grants for installed PWAs / high-engagement
+    // sites; otherwise resolves false and we run on best-effort storage.
+    // Idempotent - safe to call on every load.
+    if (navigator.storage && navigator.storage.persist) {
+        const persisted = await navigator.storage.persist();
+        log('Storage persisted:', persisted);
+    }
+
     // Authorize if we have one-time token in URL.
     const urlParams = new URLSearchParams(window.location.search);
     const oneTimeToken = urlParams.get('token');

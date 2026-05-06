@@ -60,6 +60,7 @@ test.afterEach(async ({}, testInfo) => {
 async function setup(page) {
     await page.addInitScript(() => {
         localStorage.setItem('apiUrl', 'http://localhost:8080');
+        localStorage.setItem('lastServerOk', 1);
     });
 
     // Token is read from a cookie by the server; set it on the shared

@@ -186,7 +186,7 @@ const WELCOME_FILES = {
     },
     "happiness/": {
         "Meditation.md": {
-            "content": "Once you are relaxed, picture yourself living in an abundant world. In this abundant world, there are no restraints or limitations. Good things flow past you continuously. Imagine every abundant thing you have ever desired–car, home, friends, love, joy, wealth, success, peace of mind, challenge. Visualize yourself living your life surrounded by this abundance. Repeat this visualization several times a day until it begins to feel real to you. Open your arms, your heart, and your mind. Get out of the way, and let it happen.\n\n[Boredom is just an emotion](/happiness/Boredom%20is%20just%20an%20emotion.md)",
+            "content": "Once you are relaxed, picture yourself living in an abundant world. In this abundant world, there are no restraints or limitations. Good things flow past you continuously. Imagine every abundant thing you have ever desired – car, home, friends, love, joy, wealth, success, peace of mind, challenge. Visualize yourself living your life surrounded by this abundance. Repeat this visualization several times a day until it begins to feel real to you. Open your arms, your heart, and your mind. Get out of the way, and let it happen.\n\n[Boredom is just an emotion](/happiness/Boredom%20is%20just%20an%20emotion.md)",
             isFile: true,
         },
         "Boredom is just an emotion.md": {

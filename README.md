@@ -144,37 +144,12 @@ When it comes to real personal changes, collecting too many notes **can prevent 
 - We think we understand, but in reality **we just know**  
 - **At some point our "knowing" is so good, that we start feeling that we actually do it (or at least tried)**
 
-Having good knowledge about something can create a false sense of competence or accomplishment, leading people to believe they understand or can perform a task even if they haven't practically applied that knowledge.  
-
-> People may have a declarative representation of the instruction - they can state it, remember it, explain it.
->
-> But that does not mean the instruction has become procedural memory - something they can reliably act on.
-
 The worst thing is that **we don’t let new experiences emerge because we already have knowledge**. It's a knowledge barrier. Life gives us opportunities to live through new experiences, but we refuse, because "we already know".
 
-When you read or listen, there is a small chance to turn an insight into experience.  
-**Don't spend your energy for just writing it down in the hope that one day you'll actually try it.**  
-
-## First experience then notes
-
-I was reading `Atomic Habits` the other day, and I stumbled upon an insight:
-
-> Progress is not about strong willpower, is the result of smart environment that avoid resistance in the first place.
-
-_Wow! That's a great insight._
-
-I feel the urge to take a note.   
-Instead, I used this impulse to stop and think it through. How I can apply this knowledge right now?    
-
-_I had an issue with the gym. I like working out. What I don't like was the preparation and changing clothes at the gym._   
-_The preparation and changing clothes at the gym were a resistance for me. My resistance to those things can't be changed._   
-_What I could change, is the environment. I reduced my equipment to the bare minimum and started getting dressed in my workout clothes at home._  
-
-After a few weeks, the habit stuck. I got feedback from reality. _I experienced it._  
-
-Only then I added this useful insight to my knowledge base.  
-This experience helped me to discover that I don't like taking notes with traditional applications, too much resistance.   
-At the same time, chatting with friends is effortless for me. That's how the bot for taking notes appeared.  
+You loved an idea.  
+You can use the initial impulse and actually try it.    
+Or, you can spend your energy on writing it down.   
+In the hope that **one day, you'll actually try it**.   
 
 ## No productivity, no complexity. Relax
 The only thing that matters is your calmness.  

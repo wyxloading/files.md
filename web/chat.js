@@ -45,7 +45,6 @@ async function sendToChat() {
 async function openChat() {
     closeChatModal();
     chatContainer.style.display = 'flex';
-    // chatButton.classList.add('hidden');
 
     if (currentEditor.path !== CHAT_PATH) {
         const state = {path: editor.path};
@@ -72,7 +71,6 @@ async function openChat() {
 async function openChatModal() {
     chatContainer.classList.add('modal');
     chatContainer.style.display = 'flex';
-    // chatButton.classList.add('hidden');
     chat.style.display = 'block';
     chatInput.style.display = 'block';
     chat.style.display = 'flex';
@@ -89,7 +87,6 @@ function closeChatModal() {
         chatContainer.style.display = 'none';
         chat.style.display = 'none';
         chatInput.style.display = 'none';
-        // chatButton.classList.remove('hidden');
     }
 }
 

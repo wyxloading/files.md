@@ -13,7 +13,7 @@ const READ_PATH = '/Read.md';
 const SHOP_PATH = '/Shop.md';
 const WATCH_PATH = '/Watch.md';
 const LOG_PATH = '/archive/Log.txt';
-const OPEN_INBOX_AFTER_IDLE = 1 * 60 * 60 * 1000; // ms
+const OPEN_INBOX_AFTER_IDLE = 60 * 60 * 1000; // ms
 
 let openInboxIdleTimer = null;
 let isInbox = false;

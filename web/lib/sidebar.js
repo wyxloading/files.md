@@ -209,6 +209,15 @@ function renderSidebar(focusDir = '', modifiedPaths) {
         }
     }
 
+    // Archive is always the last folder, sitting just above the top-level
+    // files added by the second pass below. It's the catch-all for things
+    // the user has put away, so it shouldn't push active folders down.
+    const archiveLastNode = dirNodes['/archive'];
+    if (archiveLastNode && archiveLastNode.parent === root) {
+        root.removeChild(archiveLastNode);
+        root.addChild(archiveLastNode);
+    }
+
     // Second pass: add all files
     walk(files, (path, isFile) => {
         if (path === '/media' || path.startsWith('/media/')) {
@@ -1031,9 +1040,9 @@ function TreeView(root, container, options) {
             } else if ((icon = TreeUtil.getProperty(options, "leaf_icon", "")) != "") {
                 ret += '<span class="tree-icon">' + icon + '</span>';
             } else if (node.toString() === 'today') {
-                ret += '<span class="tree-mod_icon">' + TreeConfig.tasks_icon + '</span>';
+                ret += '<span class="tree-mod_icon">' + TreeConfig.later_icon + '</span>';
             } else if (node.toString() === 'later') {
-                ret += '<span class="tree-mod_icon">' + TreeConfig.tasks_icon + '</span>';
+                ret += '<span class="tree-mod_icon">' + TreeConfig.later_icon + '</span>';
             } else if (node.toString().endsWith('_') || node.toString() === 'read' || node.toString() === 'watch' || node.toString() === 'shop') {
                 ret += '<span class="tree-mod_icon">' + TreeConfig.checklists_icon + '</span>';
             } else {
@@ -1055,7 +1064,9 @@ function TreeView(root, container, options) {
                 if (node.toString().startsWith('_') && node.toString().endsWith('_')) {
                     ret += '<span class="tree-mod_icon">' + TreeConfig.checklists_icon + '</span>';
                 } else if (node.toString() === 'today' || node.toString() === 'later') {
-                    ret += '<span class="tree-mod_icon">' + TreeConfig.tasks_icon + '</span>';
+                    ret += '<span class="tree-mod_icon">' + TreeConfig.later_icon + '</span>';
+                } else if (node.toString() === 'journal') {
+                    ret += '<span class="tree-mod_icon">' + TreeConfig.journal_icon + '</span>';
                 } else {
                     ret += '<span class="tree-mod_icon">' + TreeConfig.close_icon + '</span>';
                 }
@@ -1102,14 +1113,17 @@ function TreeView(root, container, options) {
 /*
 * Util-Methods
 */
+
 const TreeUtil = {
     default_leaf_icon: "<span>&#128441;</span>",
     default_parent_icon: "<span>&#128449;</span>",
     default_open_icon: "<svg width=\"22px\" height=\"22px\" viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\"> <path stroke-linecap=\"round\" stroke-width=\"2\" d=\"M4 26V8a2 2 0 012-2h6c3 0 3 3 5 3h7a2 2 0 012 2v2M4 26l3.783-12.294A1 1 0 018.739 13H26M4 26h19.523a2 2 0 001.911-1.412l3.168-10.294A1 1 0 0027.646 13H26\"/> </svg>",
     default_close_icon: "<svg width=\"22px\" height=\"22px\" viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\"> <path stroke-linecap=\"round\" stroke-width=\"2\" d=\"M28 11v13a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h6c3 0 3 3 5 3h9.003C27.108 9 28 9.895 28 11z\"/> </svg>",
-    tasks_icon: "<svg width=\"22px\" height=\"22px\" fill=\"none\" viewBox=\"0 0 32 32\"> <path  stroke-linecap=\"round\" stroke-width=\"2\" d=\"M28 11v13a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h6c3 0 3 3 5 3h9.003C27.108 9 28 9.895 28 11zM12 15h8M12 19h8\"/> </svg>",
-    checklists_icon: "<svg width=\"22px\" height=\"22px\" fill=\"none\" viewBox=\"0 0 32 32\"> <path stroke-linecap=\"round\" stroke-width=\"2\" d=\"M28 11v13a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h6c3 0 3 3 5 3h9.003C27.108 9 28 9.895 28 11z\"/> <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 17.5l3 3 6-6\"/> </svg>",
+    later_icon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" fill=\"none\" viewBox=\"0 0 32 32\"><circle cx=\"16\" cy=\"16\" r=\"13\"  stroke-width=\"2\"/> <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M16 8v8l4 4\"/></svg>\n",
+    checklists_icon: "\n" +
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" fill=\"none\" viewBox=\"0 0 32 32\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M29 16a13 13 0 11-26 0 13 13 0 0126 0h0z\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M11.5 16l3.5 3.5 6-6\"/></svg>\n",
     chat_icon: "<svg xmlns=\"http://www.w3.org/2000/svg\" style=\"transform: translateX(-3px);\" width=\"25px\" height=\"25px\" fill=\"none\" viewBox=\"0 0 30 30\"> <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M 25 7 H 11 a 4 4 0 0 0 -4 4 v 10 a 4 4 0 0 0 4 4 h 7 l 6 4 v -4 h 1 a 4 4 0 0 0 4 -4 V 11 a 4 4 0 0 0 -4 -4 z\"/> </svg>",
+    journal_icon: "<svg width=\"22px\" height=\"22px\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M12 6.00019C10.2006 3.90317 7.19377 3.2551 4.93923 5.17534C2.68468 7.09558 2.36727 10.3061 4.13778 12.5772C5.60984 14.4654 10.0648 18.4479 11.5249 19.7369C11.6882 19.8811 11.7699 19.9532 11.8652 19.9815C11.9483 20.0062 12.0393 20.0062 12.1225 19.9815C12.2178 19.9532 12.2994 19.8811 12.4628 19.7369C13.9229 18.4479 18.3778 14.4654 19.8499 12.5772C21.6204 10.3061 21.3417 7.07538 19.0484 5.17534C16.7551 3.2753 13.7994 3.90317 12 6.00019Z\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>",
 
     isDOM: function (obj) {
         try {
@@ -1221,10 +1235,13 @@ var TreeConfig = {
     parent_icon: TreeUtil.default_parent_icon,
     open_icon: TreeUtil.default_open_icon,
     close_icon: TreeUtil.default_close_icon,
-    tasks_icon: TreeUtil.tasks_icon,
+    later_icon: TreeUtil.later_icon,
     chat_icon: TreeUtil.chat_icon,
     checklists_icon: TreeUtil.checklists_icon,
-    context_menu: function (e, node) { return folderContextMenu(e, node); }
+    journal_icon: TreeUtil.journal_icon,
+    context_menu: function (e, node) {
+        return folderContextMenu(e, node);
+    }
 };
 
 // openContextMenu renders a small floating menu at (e.clientX, e.clientY) and
@@ -1248,14 +1265,21 @@ function openContextMenu(e, build, onClose) {
         });
         menu.appendChild(el);
     }
+
     function close() {
         menu.remove();
         document.removeEventListener('mousedown', onOutside, true);
         document.removeEventListener('keydown', onEsc, true);
         if (typeof onClose === 'function') onClose();
     }
-    function onOutside(ev) { if (!menu.contains(ev.target)) close(); }
-    function onEsc(ev) { if (ev.key === 'Escape') close(); }
+
+    function onOutside(ev) {
+        if (!menu.contains(ev.target)) close();
+    }
+
+    function onEsc(ev) {
+        if (ev.key === 'Escape') close();
+    }
 
     build(addItem);
 
@@ -1322,7 +1346,10 @@ function addNewDirItem(item, parentDir) {
         if (name === null) return;
         const trimmed = name.trim().replace(/^\/+|\/+$/g, '');
         if (!trimmed) return;
-        if (trimmed.includes('/')) { alert('Folder name cannot contain "/"'); return; }
+        if (trimmed.includes('/')) {
+            alert('Folder name cannot contain "/"');
+            return;
+        }
         const newDirPath = (parentDir === '/' ? '' : parentDir) + '/' + trimmed;
         try {
             await createDir(newDirPath);
@@ -1443,8 +1470,8 @@ function buildFileMenu(item, filePath) {
                 if (firstLine !== newHeader) {
                     currentEditor.replaceRange(
                         newHeader,
-                        { line: 0, ch: 0 },
-                        { line: 0, ch: firstLine.length }
+                        {line: 0, ch: 0},
+                        {line: 0, ch: firstLine.length}
                     );
                 }
             }

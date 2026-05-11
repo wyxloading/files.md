@@ -34,9 +34,21 @@ async function getTemporaryStorageDirHandle() {
             return root;
         }
 
+        // If a welcome file was archived (moved to /archive/), don't
+        // re-seed it. Archive flattens names, so a Set of names covers
+        // both root-level and nested welcome files.
+        const archived = new Set();
+        try {
+            const archiveDir = await root.getDirectoryHandle('archive');
+            for await (const entry of archiveDir.values()) {
+                if (entry.kind === 'file') archived.add(entry.name);
+            }
+        } catch { /* no archive dir yet */ }
+
         async function createFiles(obj, dirHandle) {
             for (const [name, data] of Object.entries(obj)) {
                 if (data.isFile) {
+                    if (archived.has(name)) continue;
                     const fileHandle = await dirHandle.getFileHandle(name, { create: true });
                     const writable = await fileHandle.createWritable();
                     await writable.write(data.content);

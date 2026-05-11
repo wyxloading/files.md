@@ -109,7 +109,7 @@ Drop them in chat, then sort into matching checklists.
 ## How to take notes
 1) I used [files.md](https://files.md) to grow my knowledge about brain and software development
 2) I added new notes to either `brain` or `dev` folders. One idea per note
-3) I made connections between the notes. Everything is connected, just as in our brain
+3) I made connections between the notes (type `[` in the web app). Everything is connected, just as in our brain
 4) **I spent time travelling through the notes and thinking it through**
 5) At some point, `brain` and `dev` notes appeared very related
 6) I interconnected the knowledge, **I got the insight**
@@ -184,6 +184,7 @@ The worst thing is that **we don’t let new experiences emerge because we alrea
 
 ## Files structure
 You don't have to think about the structure, it is predefined.  
+Although, you're free to use whatever structure you want.  
 
 - Chat: `Chat.md`
 - Notes: `brain/Note.md` (`<category>/*.md`, files in subfolder)

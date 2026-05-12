@@ -131,7 +131,7 @@ func todayJournalFilename(timezone *time.Location) string {
 
 func todayHeader(timezone *time.Location) string {
 	nowTZ := Now().In(timezone)
-	return fmt.Sprintf("#### %d %s, %s", nowTZ.Day(), nowTZ.Format("January"), nowTZ.Weekday())
+	return fmt.Sprintf("## %d %s, %s", nowTZ.Day(), nowTZ.Format("January"), nowTZ.Weekday())
 }
 
 func userLock(rootPath string) *sync.Mutex {

@@ -403,7 +403,8 @@ async function addToJournal(text) {
     text = text.trim();
     const journalFilename = todayJournalFilename();
     const journalPath = `journal/${journalFilename}`;
-    await addHeaderAndText(journalPath, todayHeader(), text);
+    const journalHeader = todayHeader().replace(/^#### /, '## ');
+    await addHeaderAndText(journalPath, journalHeader, text);
 }
 
 async function moveFromChat(text, callback) {

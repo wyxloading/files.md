@@ -8,7 +8,9 @@ import (
 )
 
 const (
-	header = `^#### \d+ \w+, \w+`
+	// Journal day headers used to be `#### 23 May, Friday`; new entries are
+	// `## 23 May, Friday`. Match both so cross-format journals still merge.
+	header = `^#+ \d+ \w+, \w+`
 )
 
 // Merge combines two strings (s1 and s2) by identifying longest sequences of common lines.
@@ -82,12 +84,12 @@ func backtrack(lines1, lines2 []string, lcsLength [][]int, i, j int) []string {
 }
 
 // Headers like this should be merged:
-// #### 23 May, Friday
-// #### 23 May, Friday 🤸‍
-// #### 23 May, Friday 🤸‍🍽
-// #### 23 May, Friday 🤸‍🍽💪
-// #### 23 May, Friday 🤸‍🍽💪💧
-// #### 23 May, Friday 🤸‍🍽💪💧🚶‍♂️
+// ## 23 May, Friday
+// ## 23 May, Friday 🤸‍
+// ## 23 May, Friday 🤸‍🍽
+// ## 23 May, Friday 🤸‍🍽💪
+// ## 23 May, Friday 🤸‍🍽💪💧
+// ## 23 May, Friday 🤸‍🍽💪💧🚶‍♂️
 func mergeEmojisInJournalHeaders(lines []string) []string {
 	var mergedLines []string
 	groups := groupConsecutiveHeaders(lines)

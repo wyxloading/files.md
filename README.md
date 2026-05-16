@@ -3,7 +3,7 @@
 # Files.md  
 A simple application for your `.md` files.
 
-<img src="https://github.com/zakirullin/files.md/raw/main/web/img/appsplit.png" alt="Files.md screenshot" title="Files.md"/>
+<img src="https://github.com/zakirullin/files.md/raw/main/web/img/applight.png" alt="Files.md screenshot" title="Files.md"/>
 
 You can store whole your life:
 - 📌 Notes

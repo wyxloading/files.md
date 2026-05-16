@@ -71,7 +71,7 @@
     }
 
     #close-chat:hover, #fullscreen-chat:hover {
-        color: var(--col-accent) !important;
+        color: var(--color-neo-orange) !important;
     }
 
     #open-inbox-modal svg {
@@ -83,9 +83,14 @@
         stroke: var(--col-tx-alt) !important;
     }
 
-    #close-sidebar:hover, #close-editor2:hover, #go-forward:hover svg, #go-backward:hover svg {
+    #close-sidebar:hover {
         color: var(--col-accent) !important;
         stroke: var(--col-accent) !important;
+    }
+
+    #close-editor2:hover, #go-forward:hover svg, #go-backward:hover svg {
+        color: var(--color-neo-orange) !important;
+        stroke: var(--color-neo-orange) !important;
     }
 
     #open-sidebar {
@@ -438,7 +443,9 @@
 #search, #move,
 #search-input, #move-input,
 #inbox,
+#inbox-container.modal,
 #inbox-input,
+#nav-buttons,
 .message,
 .message:first-child,
 .message:last-child,

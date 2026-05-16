@@ -23,7 +23,7 @@
     --col-tx: #E8E3D8 !important;
     --col-tx-alt: #A8A192 !important;
     --col-bg: #262624 !important;
-    --col-bg-alt: #1F1D1A !important;
+    --col-bg-alt: #1F1E1D !important;
     --col-inline-code: #1F1D1A !important; /* dark text on sage chip */
     --col-inline-code-bg: #2E2B25 !important;
     --col-link: #E8E3D8 !important;
@@ -357,8 +357,15 @@
     border-radius: 0 !important;
 }
 
+/* Whole-message hover: solid neo-orange to match the rest of the app's
+   "thing under the pointer" treatment. The descendant selector
+   `.message:hover .message-content` ensures the inner editable area
+   picks up the orange too, even when the cursor isn't directly over
+   the content (e.g. hovering the complete-btn or row padding). */
+.message:hover,
+.message:hover .message-content,
 .message-content:hover {
-    background: color-mix(in srgb, var(--col-tx) 5%, transparent) !important;
+    background: var(--color-neo-orange) !important;
 }
 .message-content.editing {
     background: color-mix(in srgb, var(--color-neo-lime) 25%, transparent) !important;
@@ -367,8 +374,10 @@
 .message-time {
     color: var(--col-tx-alt) !important;
 }
+/* Quick-action buttons inside chat messages: hover neo-blue, matching
+   the sidebar's "selected file" treatment. */
 .action-btn:hover {
-    background: var(--color-neo-orange) !important;
+    background: var(--color-neo-blue) !important;
 }
 .message.actions-pinned,
 .message.selected {

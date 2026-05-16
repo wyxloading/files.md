@@ -122,25 +122,31 @@
 
 .cm-s-hypermd-light pre.HyperMD-header.HyperMD-header-1 {
     padding-top: 18px !important;
-    /* No `border-bottom` and no `margin-bottom` (margins break CodeMirror
-       cursor placement). The horizontal rule is drawn as a 1.5px slice
-       inside a linear-gradient background, leaving ~14px of paper above
-       the line and another ~14px below before the next line begins. */
-    padding-bottom: 32px !important;
+    /* Selection trick: keep H1's own padding-bottom small (just the gap
+       above the HR line) and push the gap BELOW the HR onto the next
+       pre's padding-top. Otherwise selecting only the H1 highlights a
+       big empty rectangle under it. HR is drawn as the bottom 1.5px of
+       a linear-gradient so we still don't need a margin. */
+    padding-bottom: 14px !important;
     background-image: linear-gradient(
         to bottom,
         transparent 0,
-        transparent calc(100% - 15.5px),
-        var(--col-border) calc(100% - 15.5px),
-        var(--col-border) calc(100% - 14px),
-        transparent calc(100% - 14px)
+        transparent calc(100% - 1.5px),
+        var(--col-border) calc(100% - 1.5px),
+        var(--col-border) 100%
     ) !important;
+}
+
+/* Gap that USED to be H1's `padding-bottom: 32px` now lives on the next
+   line so the selection rectangle of the H1 stops at the rule. */
+.cm-s-hypermd-light pre.HyperMD-header.HyperMD-header-1 + pre {
+    padding-top: 14px !important;
 }
 
 .cm-s-hypermd-light .CodeMirror-code > pre.HyperMD-header.HyperMD-header-1:first-child,
 .cm-s-hypermd-light .CodeMirror-code > :first-child pre.HyperMD-header.HyperMD-header-1 {
     padding-top: 0 !important;
-    padding-bottom: 32px !important;
+    padding-bottom: 14px !important;
 }
 
 .cm-s-hypermd-light pre.HyperMD-header.HyperMD-header-2 {

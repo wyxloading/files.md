@@ -23,12 +23,12 @@ var openTags = map[string]string{
 	"__": "<b>",
 }
 
-// chatTimestampRE matches a leading `` `HH:MM` `` token used by chat
+// chatTimestampRE matches a leading “ `HH:MM` “ token used by chat
 // entries. Used to strip it before re-recording the body as a
 // journal/completion entry that already gets its own fresh timestamp.
 var chatTimestampRE = regexp.MustCompile("^`\\d{2}:\\d{2}` ")
 
-// StripChatTimestamp drops the leading `` `HH:MM` `` token from a chat
+// StripChatTimestamp drops the leading “ `HH:MM` “ token from a chat
 // entry body. Returns the input unchanged if no timestamp prefix is found.
 func StripChatTimestamp(s string) string {
 	return chatTimestampRE.ReplaceAllString(s, "")

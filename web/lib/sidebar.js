@@ -1086,9 +1086,10 @@ function TreeView(root, container, options) {
             if (node.toString() === 'journal') {
                 // Heart-folder icon stays for journal regardless of
                 // expand state - it's the "love letters to yourself"
-                // marker, swapping it for the generic open-folder icon
-                // breaks the visual cue.
-                ret += '<span class="tree-mod_icon">' + TreeConfig.journal_icon + '</span>';
+                // marker. When the journal is opened (expanded) we swap
+                // to the filled-heart variant.
+                const heart = node.isExpanded() ? TreeConfig.journal_icon_filled : TreeConfig.journal_icon;
+                ret += '<span class="tree-mod_icon">' + heart + '</span>';
             } else if (node.isExpanded()) {
                 ret += '<span class="tree-mod_icon">' + TreeConfig.open_icon + '</span>';
             } else {
@@ -1153,6 +1154,7 @@ const TreeUtil = {
         "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" fill=\"none\" viewBox=\"0 0 32 32\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M29 16a13 13 0 11-26 0 13 13 0 0126 0h0z\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M11.5 16l3.5 3.5 6-6\"/></svg>\n",
     chat_icon: "<svg xmlns=\"http://www.w3.org/2000/svg\" style=\"transform: translateX(-3px);\" width=\"25px\" height=\"25px\" fill=\"none\" viewBox=\"0 0 30 30\"> <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M 25 7 H 11 a 4 4 0 0 0 -4 4 v 10 a 4 4 0 0 0 4 4 h 7 l 6 4 v -4 h 1 a 4 4 0 0 0 4 -4 V 11 a 4 4 0 0 0 -4 -4 z\"/> </svg>",
     journal_icon: "<svg width=\"22px\" height=\"22px\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M12 6.00019C10.2006 3.90317 7.19377 3.2551 4.93923 5.17534C2.68468 7.09558 2.36727 10.3061 4.13778 12.5772C5.60984 14.4654 10.0648 18.4479 11.5249 19.7369C11.6882 19.8811 11.7699 19.9532 11.8652 19.9815C11.9483 20.0062 12.0393 20.0062 12.1225 19.9815C12.2178 19.9532 12.2994 19.8811 12.4628 19.7369C13.9229 18.4479 18.3778 14.4654 19.8499 12.5772C21.6204 10.3061 21.3417 7.07538 19.0484 5.17534C16.7551 3.2753 13.7994 3.90317 12 6.00019Z\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>",
+    journal_icon_filled: "<svg width=\"22px\" height=\"22px\" viewBox=\"0 0 24 24\" fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\"><path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M12 6.00019C10.2006 3.90317 7.19377 3.2551 4.93923 5.17534C2.68468 7.09558 2.36727 10.3061 4.13778 12.5772C5.60984 14.4654 10.0648 18.4479 11.5249 19.7369C11.6882 19.8811 11.7699 19.9532 11.8652 19.9815C11.9483 20.0062 12.0393 20.0062 12.1225 19.9815C12.2178 19.9532 12.2994 19.8811 12.4628 19.7369C13.9229 18.4479 18.3778 14.4654 19.8499 12.5772C21.6204 10.3061 21.3417 7.07538 19.0484 5.17534C16.7551 3.2753 13.7994 3.90317 12 6.00019Z\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>",
 
     isDOM: function (obj) {
         try {
@@ -1285,6 +1287,7 @@ var TreeConfig = {
     chat_icon: TreeUtil.chat_icon,
     checklists_icon: TreeUtil.checklists_icon,
     journal_icon: TreeUtil.journal_icon,
+    journal_icon_filled: TreeUtil.journal_icon_filled,
     context_menu: function (e, node) {
         return folderContextMenu(e, node);
     }

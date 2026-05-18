@@ -73,7 +73,7 @@ Choose where to save (can do later):
     <img src="https://github.com/zakirullin/files.md/raw/main/web/img/note2.png" width="350"/>
 </div>
 
-With this flow you can quickly save notes, journal and checklists.  
+**With this flow you can quickly save notes, tasks, journal records and checklists**.  
 
 ## Save things in the chatbot
 Open the chat, write something and press `Enter`:

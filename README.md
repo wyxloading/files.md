@@ -136,7 +136,8 @@ _Second Brain gets better and better._
 However, **the first brain never actually gets smarter.**  
 And that's an issue - in the AI age, your first brain is as valuable as ever.  
 
-Use **your brain** to think through the notes.
+Use **your brain** to think through the notes.  
+The tool you use is not important, your thinking is.  
 
 Before adding a new note, try to answer these questions:  
 - How this new knowledge can sharpen my judgment or expand my taxonomy?  

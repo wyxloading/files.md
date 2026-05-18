@@ -1477,6 +1477,10 @@ function buildFolderMenu(item, dirPath) {
     });
 }
 
+function isSystemChecklist(path) {
+    return /^\/?(Read|Watch|Shop)\.md$/i.test(path);
+}
+
 function buildFileMenu(item, filePath) {
     const fileName = filePath.split('/').filter(Boolean).pop();
     const parentDir = filePath.substring(0, filePath.length - fileName.length - 1) || '/';
@@ -1485,58 +1489,62 @@ function buildFileMenu(item, filePath) {
     addNewFileItem(item, parentDir);
     addNewDirItem(item, parentDir);
 
-    item('Rename', async () => {
-        const displayName = fileName.endsWith('.md') ? fileName.slice(0, -3) : fileName;
-        let attempt = displayName;
-        let trimmed;
-        while (true) {
-            const newName = prompt('Rename file:', attempt);
-            if (newName === null) return;
-            trimmed = newName.trim();
-            if (!trimmed) return;
-            const badFileChar = findForbiddenChar(trimmed);
-            if (badFileChar === null) break;
-            alert(`File name cannot contain "${badFileChar}"`);
-            attempt = trimmed;
-        }
-        const finalName = fileName.endsWith('.md') && !trimmed.endsWith('.md') ? trimmed + '.md' : trimmed;
-        if (finalName === fileName) return;
-        const newPath = (parentDir === '/' ? '' : parentDir) + '/' + finalName;
-        try {
-            await moveFile(filePath, newPath);
-            if (isCurrent) {
-                currentEditor.path = newPath;
-                // Editor still shows the old `# OldName` heading. The
-                // rename-from-header watcher in syncCurrentText will see
-                // the heading disagree with the new path and rename the
-                // file back, so rewrite line 0 to the new header.
-                const newHeader = toHeader(toFilename(newPath));
-                const firstLine = currentEditor.getLine(0) || '';
-                if (firstLine !== newHeader) {
-                    currentEditor.replaceRange(
-                        newHeader,
-                        {line: 0, ch: 0},
-                        {line: 0, ch: firstLine.length}
-                    );
-                }
+    if (!isSystemChecklist(filePath)) {
+        item('Rename', async () => {
+            const displayName = fileName.endsWith('.md') ? fileName.slice(0, -3) : fileName;
+            let attempt = displayName;
+            let trimmed;
+            while (true) {
+                const newName = prompt('Rename file:', attempt);
+                if (newName === null) return;
+                trimmed = newName.trim();
+                if (!trimmed) return;
+                const badFileChar = findForbiddenChar(trimmed);
+                if (badFileChar === null) break;
+                alert(`File name cannot contain "${badFileChar}"`);
+                attempt = trimmed;
             }
-            await renderSidebar();
-        } catch (err) {
-            logError('rename failed', err);
-            alert('Rename failed: ' + (err && err.message ? err.message : err));
-        }
-    });
+            const finalName = fileName.endsWith('.md') && !trimmed.endsWith('.md') ? trimmed + '.md' : trimmed;
+            if (finalName === fileName) return;
+            const newPath = (parentDir === '/' ? '' : parentDir) + '/' + finalName;
+            try {
+                await moveFile(filePath, newPath);
+                if (isCurrent) {
+                    currentEditor.path = newPath;
+                    // Editor still shows the old `# OldName` heading. The
+                    // rename-from-header watcher in syncCurrentText will see
+                    // the heading disagree with the new path and rename the
+                    // file back, so rewrite line 0 to the new header.
+                    const newHeader = toHeader(toFilename(newPath));
+                    const firstLine = currentEditor.getLine(0) || '';
+                    if (firstLine !== newHeader) {
+                        currentEditor.replaceRange(
+                            newHeader,
+                            {line: 0, ch: 0},
+                            {line: 0, ch: firstLine.length}
+                        );
+                    }
+                }
+                await renderSidebar();
+            } catch (err) {
+                logError('rename failed', err);
+                alert('Rename failed: ' + (err && err.message ? err.message : err));
+            }
+        });
+    }
 
-    item('Move', async () => {
-        try {
-            if (!isCurrent) await openFile(filePath);
-            document.getElementById('move-input').value = '';
-            moveModal.open();
-        } catch (err) {
-            logError('move failed', err);
-            alert('Move failed: ' + (err && err.message ? err.message : err));
-        }
-    });
+    if (!isSystemChecklist(filePath)) {
+        item('Move', async () => {
+            try {
+                if (!isCurrent) await openFile(filePath);
+                document.getElementById('move-input').value = '';
+                moveModal.open();
+            } catch (err) {
+                logError('move failed', err);
+                alert('Move failed: ' + (err && err.message ? err.message : err));
+            }
+        });
+    }
 
     item('Delete', async () => {
         if (!confirm(`Delete file "${fileName}"?`)) return;

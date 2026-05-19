@@ -38,15 +38,6 @@ Maybe. But this time:
 - The server is just one binary (or use iCloud/Dropbox/Google Drive for sync)
 - Telegram chatbot for on-the-go access to your files
 
-## Ways to use it
-
-| Setup                                                  | Where your files live                 | Sync across devices | Server needed         | Best for                                                              |
-|--------------------------------------------------------|---------------------------------------|-------------------|-----------------------|-----------------------------------------------------------------------|
-| **Local-first, no sync server**                        | A folder on your device               | No                | None                  | Maximum privacy, your data doesn't leave your device                  |
-| **Cloud-folder sync** (iCloud/Dropbox/Google Drive)    | Your existing cloud folder | Yes               | None (cloud provider) | Sync across devices without running a server                          |
-| **[Self-hosted sync server](docs/your-own-server.md)** | Your own (or local) server | Yes               | One Go binary         | Full control, sync between devices, optional Telegram bot integration |
-| **Hosted sync server**                                 | Our managed server         | Yes               | api.files.md          | Try it instantly, no setup                                            |
-
 ## How to use
 - Open [app.files.md](https://app.files.md) in Chrome browser
 - Click "Install files.md" on the right side of the address bar:
@@ -56,6 +47,14 @@ Maybe. But this time:
 
 - Open a local folder to persist changes  
 - Occasionally hit force-refresh (`Cmd+Shift+R`) to get new updates.  
+
+## How to sync
+| Setup                                                  | Where your files live                 | Sync across devices | Server needed         | Best for                                                              |
+|--------------------------------------------------------|---------------------------------------|-------------------|-----------------------|-----------------------------------------------------------------------|
+| **Local-first, no sync server**                        | A folder on your device               | No                | None                  | Maximum privacy, your data doesn't leave your device                  |
+| **Cloud-folder sync** (iCloud/Dropbox/Google Drive)    | Your existing cloud folder | Yes               | None (cloud provider) | Sync across devices without running a server                          |
+| **[Self-hosted sync server](docs/your-own-server.md)** | Your own (or local) server | Yes               | One Go binary         | Full control, sync between devices, optional Telegram bot integration |
+| **Hosted sync server**                                 | Our managed server         | Yes               | api.files.md          | Try it instantly, no setup                                            |
 
 ## Dump your thoughts
 You can use chat to quickly dump your thoughts.  

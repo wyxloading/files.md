@@ -192,6 +192,9 @@ pre.CodeMirror-line:has(.hmd-fold-code-stub.hmd-fold-code-mermaid) {
 .cm-s-hypermd-light pre.HyperMD-codeblock span.cm-keyword {
     color: var(--color-neo-orange);
 }
+.cm-s-hypermd-light pre.HyperMD-codeblock span.cm-builtin {
+    color: #1abc9c;
+}
 /* PATCHED end */
 .cm-s-hypermd-light span.cm-variable-2 {
     color: #0000C0;

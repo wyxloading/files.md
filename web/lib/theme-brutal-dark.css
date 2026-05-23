@@ -68,8 +68,8 @@
 }
 
 #close-sidebar:hover {
-    color: var(--col-accent) !important;
-    stroke: var(--col-accent) !important;
+    color: var(--color-neo-orange) !important;
+    stroke: var(--color-neo-orange) !important;
 }
 
 #close-editor2:hover, #go-forward:hover svg, #go-backward:hover svg {
@@ -135,6 +135,7 @@
 
 .cm-s-hypermd-light pre.HyperMD-header.HyperMD-header-2 {
     padding-top: 18px !important;
+    padding-bottom: 6px !important;
     font-size: 24px !important;
     line-height: 30px !important;
     font-weight: 700 !important;
@@ -142,6 +143,7 @@
 
 .cm-s-hypermd-light pre.HyperMD-header.HyperMD-header-3 {
     padding-top: 16px !important;
+    padding-bottom: 5px !important;
     font-size: 22px !important;
     line-height: 28px !important;
     font-weight: 700 !important;
@@ -149,6 +151,7 @@
 
 .cm-s-hypermd-light pre.HyperMD-header.HyperMD-header-4 {
     padding-top: 14px !important;
+    padding-bottom: 4px !important;
     font-size: 20px !important;
     line-height: 26px !important;
     font-weight: 700 !important;
@@ -156,6 +159,7 @@
 
 .cm-s-hypermd-light pre.HyperMD-header.HyperMD-header-5 {
     padding-top: 12px;
+    padding-bottom: 4px;
     font-size: 18px;
     line-height: 24px !important;
     font-weight: 700 !important;
@@ -163,6 +167,7 @@
 
 .cm-s-hypermd-light pre.HyperMD-header.HyperMD-header-6 .cm-header-6 {
     padding-top: 12px;
+    padding-bottom: 4px;
     font-size: 16px;
     font-weight: 700;
     line-height: 22px;
@@ -313,6 +318,10 @@
     font-family: var(--font-mono-brutal) !important;
     font-size: 0.9em !important;
     padding-left: 20px !important;
+    color: var(--col-tx) !important;
+}
+.cm-s-hypermd-light pre.HyperMD-codeblock span {
+    color: var(--col-tx) !important;
 }
 
 .cm-hmd-comment,
@@ -398,7 +407,7 @@
     transition: background 0.15s ease !important;
 }
 .message:hover {
-    background: var(--color-neo-blue) !important;
+    background: #000 !important;
 }
 .complete-btn:hover {
     background: transparent !important;
@@ -448,7 +457,6 @@
 #search, #move,
 #search-input, #move-input,
 #nav-buttons,
-#open-folder,
 .message-content,
 .message-actions,
 .CodeMirror-hints,
@@ -475,5 +483,28 @@
 .sidebar-ctx-menu-item:hover {
     background: var(--color-neo-orange) !important;
     color: #1F1D1A !important;
+}
+
+/* Tooltips in dark theme: solid black bubble + light text (rather than the
+   inverted off-white that --col-accent would give us). Stands out clearly
+   over the dark page. */
+#toolbar button::after,
+#close-sidebar::after,
+#go-backward::after,
+#go-forward::after,
+#close-editor2::after,
+.btn-label {
+    background: #000 !important;
+    color: #E8E3D8 !important;
+}
+#toolbar button::before,
+#close-sidebar::before,
+#go-backward::before,
+#go-forward::before,
+#close-editor2::before {
+    border-bottom-color: #000 !important;
+}
+.btn-label::after {
+    border-top-color: #000 !important;
 }
 } /* end @media (prefers-color-scheme: dark) */

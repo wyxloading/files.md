@@ -1,3 +1,14 @@
+// files.js - connects three worlds:
+// - the disk (File System Access API), an
+// - in-memory mirror (`files`)
+// - and a snapshot of what the server has (`server`, persisted to localStorage).
+//
+// Sync model: each batch round-trip sends modified
+// files, locally-deleted paths, per-dir timestamp cursors, and a global fslog
+// "commit offset" (`server.serverTime`); receives files to pull, renames, and
+// server-side deletes from the fslog newer than the watermark.
+
+// User can set his own server apiUrl through localstorage.
 const API_URL = localStorage.getItem('apiUrl') || 'https://api.files.md';
 const CURRENT_FILE_SYNC_INTERVAL = 1000; // ms, how often to save currently open file
 
@@ -9,6 +20,11 @@ let isSyncingFileWithServer = {}; // path -> bool, prevents concurrent server sy
 let needsResyncWithServer = {}; // path -> bool, flags that another sync was requested while one was in flight
 let isLoadingLocalFiles = false;
 
+// We should know if we had at least one successful
+// communication with the server (/token), so that
+// we run sync periodically. We won't run if the app
+// is not linked to the server. Unfortunately we can't just
+// check "token" cookie, because it is HttpOnly.
 const LAST_SERVER_OK_KEY = 'lastServerOk';
 const MAX_DIR_NESTING_LEVEL = 10;
 

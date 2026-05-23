@@ -1,9 +1,3 @@
-// Main application file.
-// We use HyperMD/Codemirror as an underlying text editor.
-// We read and save files using Local File System API (or in-memory FS in case of Safari).
-// We sync both text and media files with the server if there's a token key in local storage.
-// Token is stored implicitly in a http secure cookie. API server provides the cookie on first /token request.
-
 const sidebar = document.getElementById('sidebar');
 const content = document.getElementById('content')
 
@@ -70,8 +64,12 @@ async function init() {
     if (hasSavedLocalDir) {
         isMemFS = false;
         document.getElementById('open-folder').style.display = 'none';
-    } else {
+    } else if (typeof window.showDirectoryPicker === 'function') {
         document.getElementById('open-folder').style.display = 'flex';
+        isMemFS = true;
+    } else {
+        // Safari/Firefox have no File System Access API for now, hide CTA.
+        document.getElementById('open-folder').style.display = 'none';
         isMemFS = true;
     }
 
@@ -314,6 +312,7 @@ async function openDir() {
     }
 
     isMemFS = false;
+    document.getElementById('open-folder').style.display = 'none';
     renderSidebar();
     await openChat();
 }

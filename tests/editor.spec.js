@@ -44,7 +44,7 @@ test.afterEach(async ({}, testInfo) => {
 });
 
 test('should load the Files.md editor', async ({page}) => {
-    await expect(page).toHaveTitle('Files.md (Beta version)');
+    await expect(page).toHaveTitle('Files.md');
 
     await expect(page.locator('#sidebar')).toBeVisible();
     await expect(page.locator('#open-folder')).toBeVisible();

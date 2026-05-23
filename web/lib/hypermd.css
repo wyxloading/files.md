@@ -3,6 +3,10 @@
     display: inline-block;
     vertical-align: middle;
 }
+.CodeMirror .cm-math {
+    line-height: inherit;
+    vertical-align: middle;
+}
 
 .CodeMirror span.hmd-hidden-token.cm-formatting-em, .CodeMirror span.hmd-hidden-token.cm-formatting-strong, .CodeMirror span.hmd-hidden-token.cm-formatting-strikethrough, .CodeMirror span.hmd-hidden-token.cm-formatting-code, .CodeMirror span.hmd-hidden-token.cm-formatting-link {
     display: inline;
@@ -68,13 +72,25 @@
 .CodeMirror .hmd-fold-math.hmd-fold-math.math-2 {
     width: 100%;
 }
-/* Tighter line-height for lines whose entire token stream is math (raw
-   block math: $$ delimiters, \begin{...}, matrix rows, etc.). CodeMirror
-   wraps tokens in a class-less <span role="presentation"> inside the <pre>,
-   so we filter by spans that carry a `class` attribute - those are tokens.
-   Inline $x$ in prose lines has prose tokens (cm-text etc.) that lack
-   .cm-math, so the selector excludes them. */
-.CodeMirror pre.CodeMirror-line:has(.cm-math):not(:has(span[class]:not(.cm-math))) {
+pre.CodeMirror-line:has(.hmd-fold-code-stub.hmd-fold-code-mermaid) {
+    position: relative;
+}
+.hmd-fold-code-content.hmd-fold-code-selected {
+    background: color-mix(in srgb, var(--color-neo-blue), transparent 65%);
+}
+.hmd-fold-code-stub.hmd-fold-code-mermaid {
+    position: absolute;
+    right: 8px;
+    margin: 0 !important;
+    z-index: 1;
+    background: transparent !important;
+    border: none !important;
+    color: var(--color-neo-orange) !important;
+    padding: 0 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+.CodeMirror pre.CodeMirror-line:has(.cm-math):not(:has(.cm-math-1)) {
     line-height: 1.2 !important;
 }
 .CodeMirror img.hmd-emoji {

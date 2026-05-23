@@ -281,7 +281,7 @@ const WELCOME_FILES = {
             "```\n" +
             "\n" +
             "## Math\n" +
-            "LaTeX is fully supported: $E = mc^2$\n" +
+            "$\\LaTeX$ is fully supported: $e^{i\\pi} + 1 = 0$\n" +
             "\n" +
             "[Links](/Links.md)\n" +
             "[My project](/My%20project.md)",

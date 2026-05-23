@@ -49,6 +49,9 @@ function renderSidebar(focusDir = '', modifiedPaths) {
             await openFile(LATER_PATH);
         });
         root.addChild(laterNode);
+        if (currentEditor.path === LATER_PATH) {
+            laterNode.setSelected(true);
+        }
         if (modifiedPaths !== undefined && modifiedPaths.includes(LATER_PATH)) {
             laterNode.shouldBlink = true;
         }
@@ -145,6 +148,9 @@ function renderSidebar(focusDir = '', modifiedPaths) {
         });
         lastListNode = node;
         root.addChild(node);
+        if (currentEditor.path === path) {
+            node.setSelected(true);
+        }
         if (modifiedPaths !== undefined && modifiedPaths.includes(path)) {
             node.shouldBlink = true;
         }

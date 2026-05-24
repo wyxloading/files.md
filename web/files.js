@@ -1165,7 +1165,7 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
         // Artefacts can be observed during text selection (cmd+a).
         setTimeout(() => {
             currentEditor.setOption('viewportMargin', Infinity);
-        }, 500);
+        }, 200);
 
         selectSidebarItem(path);
     } catch (err) {

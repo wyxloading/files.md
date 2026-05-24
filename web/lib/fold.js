@@ -190,8 +190,9 @@ var __extends = (this && this.__extends) || (function () {
                 // on cursor activity instead of waiting for the 100ms
                 // debounced full-doc fold.
                 // Skip when a fold-stub click is in progress - the click handler
-                // restores scroll via rAF, and re-folding visible widgets here
-                // causes layout shifts that defeat the scroll restoration.
+                // restores scroll in a requestAnimationFrame callback, and
+                // re-folding visible widgets here causes layout shifts that
+                // defeat the scroll restoration.
                 if (cm._hmdSkipViewportFold) return;
                 var scroll = cm.getScrollInfo();
                 var from = cm.lineAtHeight(scroll.top, "local");

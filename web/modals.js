@@ -479,7 +479,6 @@ class SearchModal {
 
 class MoveModal {
     constructor() {
-        this.selectedMsgText = null;
         this.focusedIndex = 0;
         this.init();
     }
@@ -528,9 +527,8 @@ class MoveModal {
         });
     }
 
-    open(selectedMsgText = null, buttonElement = null) {
+    open() {
         searchModal.close();
-        this.selectedMsgText = selectedMsgText;
 
         let modal = document.getElementById('move');
         modal.style.display = 'flex';
@@ -538,43 +536,13 @@ class MoveModal {
         const inputField = document.getElementById('move-input');
         inputField.focus();
 
-        if (buttonElement && this.selectedMsgText !== null) {
-            const rect = buttonElement.getBoundingClientRect();
-            const modalHeight = 300;
-            const viewportHeight = window.innerHeight;
-            const spaceBelow = viewportHeight - rect.bottom;
-            const spaceAbove = rect.top;
-
-            const positionAbove = spaceBelow < modalHeight && spaceAbove > spaceBelow;
-            modal.style.position = 'fixed';
-
-            modal.style.left = '50%';
-            modal.style.transform = 'translateX(-50% + 150px)';
-
-            modal.style.transform = '';
-            modal.style.width = '320px';
-
-            if (positionAbove) {
-                modal.style.bottom = `${viewportHeight - rect.top + 5}px`;
-                modal.style.top = '';
-                // Reverse the order: results on top, input at bottom
-                modal.classList.add('modal-reversed');
-            } else {
-                modal.style.top = `${rect.bottom + 5}px`;
-                modal.style.bottom = '';
-                // Normal order: input on top, results below
-                modal.classList.remove('modal-reversed');
-            }
-        } else {
-            // Default center position
-            modal.style.position = 'fixed';
-            modal.style.top = '30%';
-            modal.style.left = '50%';
-            modal.style.right = '';
-            modal.style.transform = 'translate(-50%, 0)';
-            modal.style.width = '';
-            modal.classList.remove('modal-reversed');
-        }
+        modal.style.position = 'fixed';
+        modal.style.top = '30%';
+        modal.style.left = '50%';
+        modal.style.right = '';
+        modal.style.transform = 'translate(-50%, 0)';
+        modal.style.width = '';
+        modal.classList.remove('modal-reversed');
 
         this.focusedIndex = 0;
         const moveResults = document.getElementById('move-results');
@@ -585,7 +553,6 @@ class MoveModal {
     close() {
         document.getElementById('move').style.display = 'none';
         document.getElementById('move').classList.remove('modal-reversed');
-        this.selectedMsgText = null;
     }
 
     getMoveDestinations() {
@@ -672,51 +639,10 @@ class MoveModal {
     }
 
     moveToDir(toDir) {
-        if (this.selectedMsgText === null) {
-            log('CLICKED ON folder to move', toDir);
-            moveCurrentFile(toDir).then(() => {
-                this.close();
-            });
-            return;
-        }
-
-        const selectedMessages = document.querySelectorAll('.message.selected');
-        let msgs = [];
-        let messagesToRemove = [];
-        if (selectedMessages.length > 0) {
-            msgs = Array.from(selectedMessages).map(msg => msg.querySelector('.message-content').textContent);
-            messagesToRemove = selectedMessages;
-        } else {
-            // Find message by message-content
-            const msg = Array.from(document.querySelectorAll('.message'))
-                .find(el => el.dataset.text === this.selectedMsgText);
-            msgs = [this.selectedMsgText];
-            messagesToRemove = [msg];
-        }
-
-        (async () => {
-            for (const msg of msgs) {
-                const [header, body] = extractHeaderAndBody(msg, MAX_TITLE_LENGTH);
-                const path = joinPath('/', toDir, sanitizeFilename(header)) + '.md';
-                for (const msg of msgs) {
-                    await moveFromChat(msg, async () => {
-                        await write(path, body)
-                    });
-                    await renderMessages();
-                }
-            }
-            await renderMessages();
-        })();
-
-        messagesToRemove.forEach(message => {
-            message.classList.add('removing');
-            setTimeout(() => {
-                message.remove();
-            }, 300);
+        log('CLICKED ON folder to move', toDir);
+        moveCurrentFile(toDir).then(() => {
+            this.close();
         });
-        chatInput.focus();
-        renderSidebar();
-        this.close();
     }
 }
 

@@ -70,6 +70,34 @@ test('root ctx menu: new dir creates a root-level directory', async ({page}) => 
     await expect(page.locator('#tree .tree-item:text-is("MyRootDir")')).toBeVisible();
 });
 
+test('sidebar toggle hotkey works for backquote and ISO layouts', async ({page}) => {
+    await setupSidebar(page);
+
+    await expect(page.locator('#sidebar')).toBeVisible();
+
+    await page.evaluate(() => {
+        document.dispatchEvent(new KeyboardEvent('keydown', {
+            key: '`',
+            code: 'Backquote',
+            metaKey: true,
+            bubbles: true,
+            cancelable: true,
+        }));
+    });
+    await expect(page.locator('#sidebar')).toBeHidden();
+
+    await page.evaluate(() => {
+        document.dispatchEvent(new KeyboardEvent('keydown', {
+            key: '§',
+            code: 'IntlBackslash',
+            metaKey: true,
+            bubbles: true,
+            cancelable: true,
+        }));
+    });
+    await expect(page.locator('#sidebar')).toBeVisible();
+});
+
 // --- file context menu -------------------------------------------------------
 
 test('file ctx menu: new file creates sibling in parent dir', async ({page}) => {

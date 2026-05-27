@@ -246,6 +246,20 @@ function isMetaKey(event) {
     return event.metaKey || event.ctrlKey || event.altKey;
 }
 
+function isSidebarToggleShortcut(event) {
+    if (!isMetaKey(event)) {
+        return false;
+    }
+
+    // Match the physical shortcut key across ANSI/ISO keyboard layouts.
+    return event.code === 'Backquote'
+        || event.code === 'IntlBackslash'
+        || event.key === '`'
+        || event.key === '~'
+        || event.key === '§'
+        || event.key === '±';
+}
+
 async function openDir() {
     let dirHandle = null;
     try {
@@ -774,11 +788,7 @@ document.addEventListener('keydown', function(event) {
         }
         return;
     }
-    if (isMetaKey(event) && event.key === '~') {
-        event.preventDefault();
-        toggleSidebar();
-    }
-    if (isMetaKey(event) && event.key === '§') {
+    if (isSidebarToggleShortcut(event)) {
         event.preventDefault();
         toggleSidebar();
     }

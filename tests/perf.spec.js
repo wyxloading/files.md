@@ -210,3 +210,170 @@ test('open file with 50 images', async ({page}) => {
 
     console.log(`Images.md: ${median(samples).toFixed(1)} ms (samples: ${samples.map(s => s.toFixed(0)).join(', ')})`);
 });
+
+// Editing perf: seeds a file of `lines` lines, opens it, lets the editor
+// settle, then times 100 single-char inserts at the middle of the doc via
+// cm.replaceRange (the same path keystrokes hit). The measured number is
+// the *synchronous* per-edit cost - it isolates editor work (mode parsing,
+// fold scheduling, change handlers) from browser input pacing/paint.
+//
+// Compare across sizes: if all three are roughly equal, the lag is
+// per-keystroke overhead. If big scales much worse, lag is doc-size driven.
+async function benchTyping(page, filename, lines, label) {
+    await page.evaluate(async ({filename, lines}) => {
+        window.getTemporaryStorageDirHandle = async function () {
+            const root = await navigator.storage.getDirectory();
+            const fh = await root.getFileHandle(filename, {create: true});
+            const w = await fh.createWritable();
+            let buf = '';
+            for (let i = 0; i < lines; i++) {
+                buf += `Line ${i} with prose, **bold**, *italic*, and \`code\`.\n`;
+            }
+            await w.write(buf);
+            await w.close();
+            return root;
+        };
+    }, {filename, lines});
+    await page.evaluate(() => init(document.getElementById('editor')));
+    await page.waitForTimeout(300);
+    await page.evaluate(async (filename) => { await openFile('/' + filename); }, filename);
+    await page.waitForTimeout(500);
+
+    const samples = [];
+    for (let i = 0; i < RUNS; i++) {
+        const ms = await page.evaluate((lines) => {
+            const cm = document.querySelector('.CodeMirror').CodeMirror;
+            cm.setCursor({line: Math.floor(lines / 2), ch: 0});
+            const t = performance.now();
+            for (let i = 0; i < 100; i++) {
+                cm.replaceRange('x', cm.getCursor());
+            }
+            return performance.now() - t;
+        }, lines);
+        samples.push(ms);
+        // Undo the inserts so the next sample starts from the same state.
+        await page.evaluate(() => {
+            const cm = document.querySelector('.CodeMirror').CodeMirror;
+            for (let i = 0; i < 100; i++) cm.undo();
+        });
+        await page.waitForTimeout(50);
+    }
+
+    console.log(`${label} (100 char inserts at line ${Math.floor(lines / 2)}): ${median(samples).toFixed(1)} ms (samples: ${samples.map(s => s.toFixed(0)).join(', ')})`);
+}
+
+test('edit small file (10 lines)', async ({page}) => {
+    await benchTyping(page, 'Small.md', 10, 'Small.md');
+});
+
+test('edit medium file (500 lines)', async ({page}) => {
+    await benchTyping(page, 'Medium.md', 500, 'Medium.md');
+});
+
+test('edit big file (5000 lines)', async ({page}) => {
+    test.setTimeout(60000);
+    await benchTyping(page, 'Big5k.md', 5000, 'Big5k.md');
+});
+
+// Reference run for comparison: same setup as 'edit big file', but the
+// viewportMargin: Infinity that files.js sets ~200ms after open is reset
+// to a finite value. Demonstrates that rendering all 5000 lines in the DOM
+// is the dominant per-keystroke cost (~11x slower with Infinity).
+test('edit big file (5000 lines) - no :has() selectors', async ({page}) => {
+    test.setTimeout(60000);
+    await page.evaluate(async ({filename, lines}) => {
+        window.getTemporaryStorageDirHandle = async function () {
+            const root = await navigator.storage.getDirectory();
+            const fh = await root.getFileHandle(filename, {create: true});
+            const w = await fh.createWritable();
+            let buf = '';
+            for (let i = 0; i < lines; i++) {
+                buf += `Line ${i} with prose, **bold**, *italic*, and \`code\`.\n`;
+            }
+            await w.write(buf);
+            await w.close();
+            return root;
+        };
+    }, {filename: 'Big5kNH.md', lines: 5000});
+    await page.evaluate(() => init(document.getElementById('editor')));
+    await page.waitForTimeout(300);
+    await page.evaluate(async () => { await openFile('/Big5kNH.md'); });
+    await page.waitForTimeout(500);
+    // Walk all loaded CSSStyleSheets and delete every rule that contains :has().
+    await page.evaluate(() => {
+        for (const sheet of document.styleSheets) {
+            let rules;
+            try { rules = sheet.cssRules; } catch { continue; }
+            if (!rules) continue;
+            for (let i = rules.length - 1; i >= 0; i--) {
+                if (rules[i].cssText && rules[i].cssText.includes(':has(')) {
+                    sheet.deleteRule(i);
+                }
+            }
+        }
+    });
+
+    const samples = [];
+    for (let i = 0; i < RUNS; i++) {
+        const ms = await page.evaluate(() => {
+            const cm = document.querySelector('.CodeMirror').CodeMirror;
+            cm.setCursor({line: 2500, ch: 0});
+            const t = performance.now();
+            for (let i = 0; i < 100; i++) cm.replaceRange('x', cm.getCursor());
+            return performance.now() - t;
+        });
+        samples.push(ms);
+        await page.evaluate(() => {
+            const cm = document.querySelector('.CodeMirror').CodeMirror;
+            for (let i = 0; i < 100; i++) cm.undo();
+        });
+        await page.waitForTimeout(50);
+    }
+    console.log(`Big5k.md (no :has() rules) (100 char inserts at line 2500): ${median(samples).toFixed(1)} ms (samples: ${samples.map(s => s.toFixed(0)).join(', ')})`);
+});
+
+test('edit big file (5000 lines) - finite viewportMargin', async ({page}) => {
+    test.setTimeout(60000);
+    await page.evaluate(async ({filename, lines}) => {
+        window.getTemporaryStorageDirHandle = async function () {
+            const root = await navigator.storage.getDirectory();
+            const fh = await root.getFileHandle(filename, {create: true});
+            const w = await fh.createWritable();
+            let buf = '';
+            for (let i = 0; i < lines; i++) {
+                buf += `Line ${i} with prose, **bold**, *italic*, and \`code\`.\n`;
+            }
+            await w.write(buf);
+            await w.close();
+            return root;
+        };
+    }, {filename: 'Big5kFV.md', lines: 5000});
+    await page.evaluate(() => init(document.getElementById('editor')));
+    await page.waitForTimeout(300);
+    await page.evaluate(async () => { await openFile('/Big5kFV.md'); });
+    // Override the viewportMargin set 100ms after open in files.js.
+    await page.waitForTimeout(500);
+    await page.evaluate(() => {
+        const cm = document.querySelector('.CodeMirror').CodeMirror;
+        cm.setOption('viewportMargin', 10);
+    });
+    await page.waitForTimeout(300);
+
+    const samples = [];
+    for (let i = 0; i < RUNS; i++) {
+        const ms = await page.evaluate(() => {
+            const cm = document.querySelector('.CodeMirror').CodeMirror;
+            cm.setCursor({line: 2500, ch: 0});
+            const t = performance.now();
+            for (let i = 0; i < 100; i++) cm.replaceRange('x', cm.getCursor());
+            return performance.now() - t;
+        });
+        samples.push(ms);
+        await page.evaluate(() => {
+            const cm = document.querySelector('.CodeMirror').CodeMirror;
+            for (let i = 0; i < 100; i++) cm.undo();
+        });
+        await page.waitForTimeout(50);
+    }
+    console.log(`Big5k.md (viewportMargin=10) (100 char inserts at line 2500): ${median(samples).toFixed(1)} ms (samples: ${samples.map(s => s.toFixed(0)).join(', ')})`);
+});

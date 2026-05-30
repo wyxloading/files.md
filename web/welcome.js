@@ -194,15 +194,31 @@ class MemDir {
 const WELCOME_FILES = {
     "brain/": {
         "We think that we understand, but in reality we just know.md": {
-            "content": "Reading and rereading can easily fool us into believing that we understand a text. Rereading is especially dangerous because of the mere-exposure effect: The moment we become familiar with something, we start believing we also understand it. On top of that, we also tend to like it it more.\n\n[Brain is the most complex object in known universe](/brain/Brain%20is%20the%20most%20complex%20object%20in%20known%20universe.md)",
+            "content": "Reading and rereading can easily fool us into believing that we understand a text. Rereading is especially dangerous because of the mere-exposure effect: The moment we become familiar with something, we start believing we also understand it. On top of that, we also tend to like it it more.\n\n[Brain is the most complex object in known universe](/brain/Brain%20is%20the%20most%20complex%20object%20in%20known%20universe.md)\n[Zettelkasten](/brain/Zettelkasten.md)",
             isFile: true,
         },
         "Brain is the most complex object in known universe.md": {
-            "content": "Nothing will make you appreciate human intelligence like learning about how unbelievably challenging it is to try to create a computer as smart as we are. Building skyscrapers, putting humans in space, figuring out the details of how the Big Bang went down - all far easier than understanding our own brain or how to make something as cool as it\n\n[We think that we understand, but in reality we just know](/brain/We%20think%20that%20we%20understand,%20but%20in%20reality%20we%20just%20know.md)",
+            "content": "Nothing will make you appreciate human intelligence like learning about how unbelievably challenging it is to try to create a computer as smart as we are. Building skyscrapers, putting humans in space, figuring out the details of how the Big Bang went down - all far easier than understanding our own brain or how to make something as cool as it\n\n[We think that we understand, but in reality we just know](/brain/We%20think%20that%20we%20understand,%20but%20in%20reality%20we%20just%20know.md)\n[Zettelkasten](/brain/Zettelkasten.md)",
             isFile: true,
         },
         "Change your environment instead of using willpower.md": {
-            "content": "When scientists analyze people who appear to have tremendous self-control, it turns out those individuals aren’t all that different from those who are struggling. Instead, “disciplined” people are better at structuring their lives in a way that does not require heroic willpower and self-control.\n",
+            "content": "When scientists analyze people who appear to have tremendous self-control, it turns out those individuals aren’t all that different from those who are struggling. Instead, “disciplined” people are better at structuring their lives in a way that does not require heroic willpower and self-control.\n\nIt is the way Luhmann and his slip-box  worked together that allowed him to move freely and flexibly between different tasks and levels of thinking. It is about having the right tools and knowing how to use them - and very few understand that you need both.\n\n" +
+                "Luhmann was able to focus on the important things right in front of him, pick up quickly where he left off and stay in control of the process because the structure of his work allowed him to do this.\n\n" +
+                "[Zettelkasten](/brain/Zettelkasten.md)",
+            isFile: true,
+        },
+        "Zettelkasten.md": {
+            "content":
+                "Zettelkasten, slipbox, or card file - a collection of small items of information stored on paper slips, linked to each other through subject headings or links. It has often been used as a system of note-taking and personal knowledge management for research, study, and writing.\n\n" +
+                "Niklas Luhmann described his slip-box as a \"competent communication partner\", a \"second memory\" he could communicate with.\n\n" +
+                "![](img/slipbox.jpg)\n\n" +
+                "## Main Zettelkasten principles\n" +
+                "**The principle of atomicity**: each note should contain one idea and one idea only. This makes it possible to link ideas with a laser focus.\n\n" +
+                "**The principle of autonomy**: each note should be autonomous, meaning it should be self-contained and comprehensible on its own. This allows notes to be moved, processed, separated, and concatenated independently of its neighbors. It also ensures that notes remain useful even if the original source of information disappears.\n\n" +
+                "**Always link your notes**: whenever you add a note, make sure to link it to already existing notes. Avoid notes that are disconnected from other notes. As Luhmann himself put it, \"each note is just an element that derives its quality from the network of links in the system. A note that is not connected to the network will be lost, will be forgotten by the Zettelkasten\".\n\n" +
+                "**Files.md** has just enough features for you to grow your **Zettelkasten**.\n\n" +
+                "[Change your environment instead of using willpower](/brain/Change%20your%20environment%20instead%20of%20using%20willpower.md)\n" +
+                "[Brain is the most complex object in known universe](/brain/Brain%20is%20the%20most%20complex%20object%20in%20known%20universe.md)",
             isFile: true,
         },
     },
@@ -221,7 +237,7 @@ const WELCOME_FILES = {
             "To store files in a local folder, [open or create folder](cmd:openDir).\n\n" +
             "Use [chat](cmd:openChat) to dump whatever is on your mind.\n\n" +
             "Press `Cmd+K` or `Ctrl+K` to quick switch between files.\n\n" +
-            "[Markdown Guide](/Markdown%20Guide.md)\n[Hotkeys](/Hotkeys.md)\n[Links](/Links.md)",
+            "[Markdown Guide](/Markdown%20Guide.md)\n[Zettelkasten](/brain/Zettelkasten.md)\n[Hotkeys](/Hotkeys.md)\n[Links](/Links.md)",
         isFile: true,
     },
     "Links.md": {
@@ -261,7 +277,7 @@ const WELCOME_FILES = {
             "Syntax:\n`- [ ] Item`\n" +
             "\n" +
             "## Image\n" +
-            "![Why taking notes](img/tomas_sanchez.jpg)\n" +
+            "![](img/tomas_sanchez.jpg)\n" +
             "\n" +
             "*You can paste your own images via `Cmd/Ctrl + V`*\n\n" +
             "## Blockquote\n" +

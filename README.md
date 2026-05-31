@@ -82,6 +82,13 @@ Open the chat, write something and press `Enter`:
 
 That's it.
 
+Full bot's functionality:  
+<div align="center">
+    <img src="https://github.com/zakirullin/files.md/raw/main/web/img/bot.png" width="500"/>
+</div>
+
+Don't worry, by default it is way simpler than that.  
+
 [Telegram Bot](https://t.me/FilesMDBot). **Other messengers will follow**.
 
 ## How to think deeply 

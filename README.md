@@ -346,6 +346,7 @@ Read 4K randomly from SSD = 150,000 ns
 ```
 
 ## ADRs (Architecture Decision Records)
+- `01.06.2026` Audio and video are now supported. I believe enriching journal with these kind of media can be useful for our emotional healing.  
 - `24.05.2026` Unfold everything (images, math, mermaid) in viewport immediately. It prevents flickering and doesn't add performance penalty. P.S. We should also schedule full document unfold on viewportChange, otherwise latex/mermaid block off the viewport won't be folded.  
 - `22.05.2026` Added Mermaid support. It was decided to lazy-load the script, because mermaid.min.js size is 3MB. It's quite a load to load synchronously for such a small app. 
 - `20.05.2026` Added LaTeX support, even though I wasn't happy about +20 font files. LaTeX is text-based and LLM-friendly. Text + Math will cover pretty much everything. 

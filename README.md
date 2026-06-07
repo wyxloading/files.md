@@ -107,7 +107,7 @@ How I did that:
 - Each note should be understandable without context
 - I moved notes to either `brain` or `dev` folders (can be done after reading)
 
-The main thing at this point is not to distract yourself from the reading process. That's why I used the chat.  
+The main thing at this point is not to distract yourself from the reading process. That's why I use the chat.  
 
 Occasionally, I did the following thought work:
 - **I spent time travelling through the notes and thinking them through**

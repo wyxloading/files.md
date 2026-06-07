@@ -355,13 +355,13 @@ function initEditor(el) {
         'Cmd-Y': function (cm) {
             var cursor = cm.getCursor();
             var lineStart = {line: cursor.line, ch: 0};
-            cm.replaceRange('✅ ', lineStart);
+            cm.replaceRange('- [ ] ', lineStart);
             cm.focus();
         },
         'Ctrl-Y': function (cm) {
             var cursor = cm.getCursor();
             var lineStart = {line: cursor.line, ch: 0};
-            cm.replaceRange('✅ ', lineStart);
+            cm.replaceRange('- [ ] ', lineStart);
             cm.focus();
         },
         'Cmd-B': function (cm) {

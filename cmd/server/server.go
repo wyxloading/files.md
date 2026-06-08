@@ -23,7 +23,7 @@ import (
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		fmt.Printf("No .env file found, relying on process environment: %s\n", err)
+		fmt.Println("No .env file found, relying on process environment")
 	}
 	if err := config.LoadBotConfig(); err != nil {
 		panic(fmt.Sprintf("Error loading cfg: %s\n", err))
@@ -32,21 +32,20 @@ func main() {
 	fs.LogRename = sync.LogRename
 	fs.LogDelete = sync.LogDelete
 
-	// TODO apphost?
-	// Launch habits server if needed
-	if apiHost := config.ServerCfg.APIHost(); apiHost != "" {
-		go sync.Serve(
-			apiHost,
-			config.ServerCfg.AppHost(),
-			config.ServerCfg.ServerCertDir,
-			config.ServerCfg.ServerLogFile,
-		)
-	}
+	// Launch the HTTP server, it does two things:
+	// - Serves the PWA app
+	// - Provides the API for synchronization (if API_URL is not empty)
+	go sync.Serve(
+		config.ServerCfg.APIHost(),
+		config.ServerCfg.AppHost(),
+		config.ServerCfg.ServerCertDir,
+		config.ServerCfg.ServerLogFile,
+	)
 
 	// Telegram bot is optional - server can run as web-only.
 	api, err := tgbotapi.NewBotAPI(config.ServerCfg.BotAPIToken)
 	if err != nil {
-		fmt.Printf("No Telegram bot token found, running web server only: %s\n", err)
+		fmt.Println("No Telegram bot token found, running web and api server only")
 		select {} // block forever
 	}
 	telegram := tg.NewTG(api)

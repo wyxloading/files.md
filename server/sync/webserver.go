@@ -117,18 +117,21 @@ func router(serverLogger *log.Logger) *http.ServeMux {
 		http.NotFound(w, r)
 	})
 
-	r.HandleFunc("/syncFilenames", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncFilenames)))))
-	r.HandleFunc("/syncFile", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncFile)))))
-	r.HandleFunc("/syncMediaFilenames", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncMediaFilenames)))))
-	r.HandleFunc("/syncMediaFile", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncMediaFile)))))
-	r.HandleFunc("/issuePermanentToken", corsMiddleware(panicMiddleware(IssueToken)))
+	// Sync API is on only when API_URL is not empty.
+	if config.ServerCfg.APIHost() != "" {
+		r.HandleFunc("/syncFilenames", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncFilenames)))))
+		r.HandleFunc("/syncFile", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncFile)))))
+		r.HandleFunc("/syncMediaFilenames", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncMediaFilenames)))))
+		r.HandleFunc("/syncMediaFile", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncMediaFile)))))
+		r.HandleFunc("/issuePermanentToken", corsMiddleware(panicMiddleware(IssueToken)))
 
-	// Deprecated due to cryptic names :) Will be removed soon.
-	r.HandleFunc("/syncTexts", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncFilenames)))))
-	r.HandleFunc("/syncText", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncFile)))))
-	r.HandleFunc("/syncMedias", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncMediaFilenames)))))
-	r.HandleFunc("/syncMedia", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncMediaFile)))))
-	r.HandleFunc("/token", corsMiddleware(panicMiddleware(IssueToken)))
+		// Deprecated due to cryptic names :) Will be removed soon.
+		r.HandleFunc("/syncTexts", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncFilenames)))))
+		r.HandleFunc("/syncText", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncFile)))))
+		r.HandleFunc("/syncMedias", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncMediaFilenames)))))
+		r.HandleFunc("/syncMedia", corsMiddleware(panicMiddleware(tokenMiddleware(gzipMiddleware(SyncMediaFile)))))
+		r.HandleFunc("/token", corsMiddleware(panicMiddleware(IssueToken)))
+	}
 
 	// For now it is possible to see other user's habits, but is it a big deal?
 	// TODO use X-Telegram-Init-Data header to verify requests

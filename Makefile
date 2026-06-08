@@ -17,7 +17,7 @@ docker_run: # run container, host 80 -> container 8080
 		files-md
 
 compose_up: # build + start via compose.yaml, logs attached
-	$(DOCKER) compose up
+	$(DOCKER) compose up --build
 
 compose_down: # stop and remove the compose container (named volumes survive)
 	$(DOCKER) compose down

@@ -400,10 +400,10 @@ function tableInsert(cm) {
     cm.operation(function () {
         if (line.trim() === '') {
             cm.replaceRange(table, {line: cursor.line, ch: 0}, {line: cursor.line, ch: line.length});
-            cm.setCursor({line: cursor.line, ch: 1});
+            cm.setCursor({line: cursor.line, ch: 2});
         } else {
             cm.replaceRange('\n' + table, {line: cursor.line, ch: line.length});
-            cm.setCursor({line: cursor.line + 1, ch: 1});
+            cm.setCursor({line: cursor.line + 1, ch: 2});
         }
     });
 }
@@ -428,15 +428,10 @@ function tableEnterCell(cm) {
             start = i + 1;
         }
     }
-    const cellStart = start; // after the pipe, before the padding spaces
     let end = text.indexOf('|', start);
     if (end < 0) end = text.length;
     while (start < end && text[start] === ' ') start++;
     while (end > start && text[end - 1] === ' ') end--;
-    if (start === end) {
-        cm.setCursor({line: target, ch: cellStart});
-        return true;
-    }
     cm.setSelection({line: target, ch: start}, {line: target, ch: end});
     return true;
 }
@@ -469,7 +464,7 @@ function tableAddColumn(cm, range) {
             }
         }
         const header = cm.getLine(range.from);
-        const inNewCell = /\|\s*$/.test(header) ? header.lastIndexOf('|') - 2 : header.length - 2;
+        const inNewCell = /\|\s*$/.test(header) ? header.lastIndexOf('|') - 1 : header.length;
         cm.setCursor({line: range.from, ch: inNewCell});
     });
     cm.focus();

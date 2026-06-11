@@ -349,13 +349,13 @@ const WELCOME_FILES = {
             "## Checklist\n" +
             "- [x] Completed task\n" +
             "- [ ] Incomplete task\n\n" +
-            "Syntax:\n`- [ ] Item` **(Cmd/Ctrl + Y)**\n" +
+            "Syntax:\n`- [ ] Item`\n" +
             "\n" +
             "## Table\n" +
-            "| Header | Header |\n" +
+            "| Action | Hotkey |\n" +
             "| --- | --- |\n" +
-            "| Text  | Text   |\n\n" +
-            "Insert a table with **Cmd/Ctrl + T**\n\n" +
+            "| Insert table | `Cmd/Ctrl + T` |\n" +
+            "| Insert checkbox | `Cmd/Ctrl + Y` |\n\n" +
             "## Image\n" +
             "![](img/tomas_sanchez.jpg)\n" +
             "\n" +

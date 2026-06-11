@@ -201,6 +201,56 @@ class MemDir {
     }
 }
 
+// When a user starts in the temporary FS and later opens a local folder,
+// copy their in-mem files to local fs.
+async function moveUserFiles(targetRoot) {
+    const welcome = new Set(['Help.md']);
+    (function collect(obj, prefix) {
+        for (const [name, data] of Object.entries(obj)) {
+            if (data.isFile) {
+                welcome.add(prefix + name);
+                // Archive flattens names, archived welcome files keep theirs
+                welcome.add('archive/' + name);
+            } else {
+                collect(data, prefix + removeTrailingSlash(name) + '/');
+            }
+        }
+    })(WELCOME_FILES, '');
+
+    const tempRoot = await getTemporaryStorageDirHandle();
+
+    async function moveDir(srcDir, getDestDir, prefix) {
+        const entries = [];
+        for await (const entry of srcDir.values()) entries.push(entry);
+        let destDir = null;
+        const ensureDest = async () => destDir || (destDir = await getDestDir());
+        for (const entry of entries) {
+            const relPath = prefix + entry.name;
+            if (entry.kind === 'directory') {
+                await moveDir(
+                    entry,
+                    async () => (await ensureDest()).getDirectoryHandle(entry.name, { create: true }),
+                    relPath + '/',
+                );
+                continue;
+            }
+            if (welcome.has(relPath)) continue;
+            const dest = await ensureDest();
+            let exists = true;
+            try { await dest.getFileHandle(entry.name); } catch { exists = false; }
+            if (exists) continue;
+            const content = await (await entry.getFile()).arrayBuffer();
+            const fileHandle = await dest.getFileHandle(entry.name, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(content);
+            await writable.close();
+            await srcDir.removeEntry(entry.name);
+        }
+    }
+
+    await moveDir(tempRoot, async () => targetRoot, '');
+}
+
 function prefetchWelcomeImages() {
     const urls = ['img/slipbox.webp', 'img/tomas_sanchez.jpg'];
     for (const url of urls) {

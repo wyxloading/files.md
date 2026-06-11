@@ -300,6 +300,13 @@ async function openDir() {
     await saveDirectoryHandle(dirHandle);
     await write('/Help.md', getHelpContent());
 
+    // Copy user-created files from the temporary FS into the opened folder.
+    try {
+        await moveUserFiles(dirHandle);
+    } catch (e) {
+        logError("Can't move user files from temporary storage:", e);
+    }
+
     isLoadingLocalFiles = false
     try {
         files = await loadLocalFiles(dirHandle);

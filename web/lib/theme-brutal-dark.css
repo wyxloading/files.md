@@ -234,12 +234,12 @@
 }
 
 .cm-s-hypermd-light pre.HyperMD-quote-1:before {
-    background: var(--color-neo-blue) !important;
+    background: var(--color-neo-orange) !important;
     width: 4px !important;
 }
 
 .cm-s-hypermd-light pre.HyperMD-quote-1 {
-    background: color-mix(in srgb, var(--color-neo-blue) 8%, var(--col-bg)) !important;
+    background: color-mix(in srgb, var(--color-neo-orange) 8%, var(--col-bg)) !important;
 }
 /* Match escape chars to the theme text color (hypermd.css default is too light). */
 .cm-s-hypermd-light span.cm-hmd-escape-backslash,
@@ -263,7 +263,7 @@
 }
 
 .cm-s-hypermd-light span.cm-formatting-quote {
-    color: var(--color-neo-blue);
+    color: var(--color-neo-orange);
     position: relative;
     left: 1px;
 }

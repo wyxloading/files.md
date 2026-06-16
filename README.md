@@ -24,7 +24,7 @@ You can use this app for Second Brain, Zettelkasten, Notes, Journaling, Tasks, C
 > Own the software that opens those files.   
 > Grow your personal workspace with files.  
 > Grow the software around it with an LLM.  
-> **Plain files and self-owned software can last through the ages**.  
+> **Local files and self-owned software can last through the ages**.  
 
 **I have been building this project for 5 years**. Consider **[supporting on GitHub 💚](https://github.com/sponsors/zakirullin)**.  
 

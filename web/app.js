@@ -63,9 +63,6 @@ async function init() {
     const savedDirs = await listSavedDirHandles();
     log('Saved directories:', savedDirs.map(d => d.folderName));
 
-    // Render recent directories list in the sidebar.
-    renderRecentDirs(savedDirs);
-
     const savedDirHandle = await getSavedRootDirHandle();
     const hasSavedLocalDir = savedDirHandle instanceof FileSystemDirectoryHandle;
     if (hasSavedLocalDir) {
@@ -115,6 +112,9 @@ async function init() {
     perf = performance.now();
     renderSidebar();
     log(`Sidebar built in: ${(performance.now() - perf).toFixed(3)} milliseconds`);
+
+    // Render recent directories list below the sidebar file tree.
+    renderRecentDirs(savedDirs);
 
     const userHasCustomAPIUrl = localStorage.getItem('apiUrl') !== null;
     if (isMemFS && !userHasCustomAPIUrl) {
@@ -294,9 +294,13 @@ async function openDir() {
 
     const folderName = dirHandle.name;
     if (folderName) {
-        // Duplicate detection: check if another tab already has this directory open.
+        // Duplicate detection: check if this directory is already open (same tab or another tab).
         if (isDirClaimedByOtherTab(folderName)) {
-            alert('该目录已在其他标签页中打开');
+            if (_currentlyOpenDir === folderName) {
+                alert('该目录已在当前标签页中打开');
+            } else {
+                alert('该目录已在其他标签页中打开');
+            }
             return;
         }
     }
@@ -384,7 +388,11 @@ function renderRecentDirs(savedDirs) {
 async function openSavedDir(folderName) {
     // --- Duplicate detection ---
     if (isDirClaimedByOtherTab(folderName)) {
-        alert('该目录已在其他标签页中打开');
+        if (_currentlyOpenDir === folderName) {
+            alert('该目录已在当前标签页中打开');
+        } else {
+            alert('该目录已在其他标签页中打开');
+        }
         return;
     }
 

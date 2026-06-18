@@ -30,14 +30,17 @@ function renderSidebar(focusDir = '', modifiedPaths) {
         // Save state for all nodes (both directories and files)
         function saveNodeState(node) {
             if (node.isExpanded()) {
-                expandedDirs.add(node.toString());
+                expandedDirs.add(node.path);
             }
             if (node.isSelected()) {
-                selectedNodes.add(node.toString());
+                selectedNodes.add(node.path);
             }
 
-            // Recursively save state for child nodes
-            if (node.getChildren) {
+            // Only recurse into expanded nodes — a collapsed parent's
+            // children should not have their state preserved, otherwise
+            // expand-on-rebuild propagates to descendants that were
+            // expanded before the parent was last collapsed.
+            if (node.isExpanded() && node.getChildren) {
                 node.getChildren().forEach(child => {
                     saveNodeState(child);
                 });
@@ -103,14 +106,18 @@ function renderSidebar(focusDir = '', modifiedPaths) {
         const parentNode = dirNodes[parentDirPath] || root;
         parentNode.addChild(dirNode);
 
-        // Handle focus directory or restore previous state
+        // Handle focus directory or restore previous state.
+        // Compare against the basename for focusDir (callers pass just a
+        // name like "life"), but use the full path for the Saved-state
+        // lookups so that /life/notes and /work/notes don't collide.
         let dir = toFilename(path);
+        const dirPath = removeTrailingSlash(path);
         if (dir === focusDir) {
             dirNode.setExpanded(true);
             dirNode.setSelected(true);
         } else {
-            if (expandedDirs.has(dir)) dirNode.setExpanded(true);
-            if (selectedNodes.has(dir)) dirNode.setSelected(true);
+            if (expandedDirs.has(dirPath)) dirNode.setExpanded(true);
+            if (selectedNodes.has(dirPath)) dirNode.setSelected(true);
         }
 
         if (modifiedPaths !== undefined && modifiedPaths.some(modPath => toRootDirName(modPath) === dir)) {
@@ -474,6 +481,19 @@ function TreeNode(userObject, options) {
             }
 
             expanded = _expanded;
+
+            // When collapsing a directory, also collapse every descendant
+            // directory so that re-expanding it later doesn't leak
+            // previously-expanded state from the in-memory tree.  Without
+            // this, collapse-then-expand on a parent would show child dirs
+            // still expanded from an earlier toggle.
+            if (!_expanded && children.length > 0) {
+                children.forEach(function (child) {
+                    if (!child.isLeaf()) {
+                        child.setExpanded(false);
+                    }
+                });
+            }
 
             if (_expanded) {
                 this.on("expand")(this);

@@ -63,6 +63,9 @@ async function init() {
     const savedDirs = await listSavedDirHandles();
     log('Saved directories:', savedDirs.map(d => d.folderName));
 
+    // Render recent directories list in the sidebar.
+    renderRecentDirs(savedDirs);
+
     const savedDirHandle = await getSavedRootDirHandle();
     const hasSavedLocalDir = savedDirHandle instanceof FileSystemDirectoryHandle;
     if (hasSavedLocalDir) {
@@ -101,6 +104,11 @@ async function init() {
     let perf = performance.now();
     files = await loadLocalFiles(rootDirHandle);
     log(`Files loaded in ${performance.now() - perf}ms`);
+
+    // If we loaded a local directory on startup, claim it for duplicate detection.
+    if (!isMemFS && rootDirHandle instanceof FileSystemDirectoryHandle && rootDirHandle.name) {
+        claimDir(rootDirHandle.name);
+    }
 
     initChat();
 
@@ -283,21 +291,17 @@ async function openDir() {
         }
         return;
     }
+
+    const folderName = dirHandle.name;
+    if (folderName) {
+        // Duplicate detection: check if another tab already has this directory open.
+        if (isDirClaimedByOtherTab(folderName)) {
+            alert('该目录已在其他标签页中打开');
+            return;
+        }
+    }
     // TODO check that permissions are given?
 
-    // Don't race the existing files loading.
-    while (isLoadingLocalFiles) {
-        await new Promise(r => setTimeout(r, 50));
-    }
-    isLoadingLocalFiles = true
-
-    // Don't race with files sync.
-    while (isSyncingFiles) {
-        await new Promise(r => setTimeout(r, 50));
-    }
-    isSyncingFiles = true
-
-    await saveDirectoryHandle(dirHandle);
     // Help.md is no longer auto-created in local folders (REQ-260618-001-TASK-002).
     // getHelpContent() is still used by the temporary/demo FS via WELCOME_FILES.
     // await write('/Help.md', getHelpContent());
@@ -309,15 +313,161 @@ async function openDir() {
         logError("Can't move user files from temporary storage:", e);
     }
 
-    isLoadingLocalFiles = false
+    // _switchToLocalDirectory handles claimDir internally so that failed
+    // switches don't leave orphaned localStorage claims.
+    await _switchToLocalDirectory(dirHandle);
+}
+
+// --- Recent directories list ---
+
+const MAX_RECENT_DIRS = 10;
+
+/**
+ * Render the "Recent Directories" list in the sidebar.
+ * Hides the container when there are no saved directories.
+ * @param {{folderName: string, handle: FileSystemDirectoryHandle}[]} savedDirs
+ */
+function renderRecentDirs(savedDirs) {
+    const container = document.getElementById('recent-dirs');
+    const list = document.getElementById('recent-dirs-list');
+    if (!container || !list) return;
+
+    // Clear existing list items.
+    list.innerHTML = '';
+
+    if (!savedDirs || savedDirs.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
+    // Cap at MAX_RECENT_DIRS, showing most recent first (the array is
+    // already in the order returned by listSavedDirHandles, which is
+    // insertion order from IndexedDB cursor).
+    const dirs = savedDirs.slice(0, MAX_RECENT_DIRS);
+
+    for (const { folderName } of dirs) {
+        const li = document.createElement('li');
+        li.className = 'recent-dir-item';
+        li.title = `Open ${folderName}`;
+
+        // Folder icon (same SVG as toolbar open-folder button).
+        const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        icon.setAttribute('width', '18');
+        icon.setAttribute('height', '18');
+        icon.setAttribute('fill', 'none');
+        icon.setAttribute('viewBox', '0 0 32 32');
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('d', 'M28 11v13a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h6c3 0 3 3 5 3h9.003C27.108 9 28 9.895 28 11z');
+        icon.appendChild(path);
+        li.appendChild(icon);
+
+        // Folder name.
+        const span = document.createElement('span');
+        span.className = 'recent-dir-name';
+        span.textContent = folderName;
+        li.appendChild(span);
+
+        li.addEventListener('click', () => openSavedDir(folderName));
+        list.appendChild(li);
+    }
+
+    container.style.display = 'block';
+}
+
+/**
+ * Open a previously-saved directory by folder name.
+ * Performs duplicate-detection via localStorage before opening.
+ * @param {string} folderName
+ */
+async function openSavedDir(folderName) {
+    // --- Duplicate detection ---
+    if (isDirClaimedByOtherTab(folderName)) {
+        alert('该目录已在其他标签页中打开');
+        return;
+    }
+
+    // Resolve the handle from IndexedDB.
+    const handle = await getSavedRootDirHandle(folderName);
+    if (!(handle instanceof FileSystemDirectoryHandle)) {
+        alert('无法访问该目录，请重新打开。');
+        return;
+    }
+
+    // Ensure we have readwrite permission.
+    let perm = await handle.queryPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') {
+        try {
+            perm = await handle.requestPermission({ mode: 'readwrite' });
+        } catch (e) {
+            logError('Permission request failed:', e);
+        }
+        if (perm !== 'granted') {
+            alert('需要目录访问权限才能打开。');
+            return;
+        }
+    }
+
+    // _switchToLocalDirectory handles claimDir internally so that failed
+    // switches don't leave orphaned localStorage claims.
+    await _switchToLocalDirectory(handle);
+}
+
+/**
+ * Shared logic for switching the app to a local directory handle.
+ *
+ * Guards against concurrent file loads/syncs, persists the handle,
+ * refreshes the recent-directories sidebar list, loads files from disk,
+ * resets chat state, and re-renders the UI.
+ *
+ * Called by both openDir() (fresh picker) and openSavedDir() (re-open from
+ * IndexedDB) so the two paths stay in sync.
+ *
+ * @param {FileSystemDirectoryHandle} dirHandle
+ */
+async function _switchToLocalDirectory(dirHandle) {
+    // Don't race with existing files loading or syncing.
+    while (isLoadingLocalFiles) {
+        await new Promise(r => setTimeout(r, 50));
+    }
+    isLoadingLocalFiles = true;
+
+    while (isSyncingFiles) {
+        await new Promise(r => setTimeout(r, 50));
+    }
+    isSyncingFiles = true;
+
+    await saveDirectoryHandle(dirHandle);
+
+    // Claim the directory in localStorage so other tabs can detect it.
+    // Must happen after saveDirectoryHandle (which validates the handle)
+    // but before loadLocalFiles (which is where failures can occur).
+    // Release the claim if loading fails to avoid orphaned claims blocking
+    // other tabs from opening this directory.
+    const folderName = dirHandle.name;
+    if (folderName) {
+        claimDir(folderName);
+    }
+
+    // Refresh the recent directories list so the folder appears / moves to
+    // the top (most-recent) position immediately without a page reload.
+    const recentDirs = await listSavedDirHandles();
+    renderRecentDirs(recentDirs);
+
+    isLoadingLocalFiles = false;
     try {
         files = await loadLocalFiles(dirHandle);
+    } catch (e) {
+        // Release the claim we just set — the directory switch failed.
+        releaseCurrentDirClaim();
+        throw e;
     } finally {
         isSyncingFiles = false;
     }
 
     isMemFS = false;
-    // Reset in-memory chat state when switching to a new local folder,
+    // Reset in-memory chat state when switching directories,
     // so content from the previous folder doesn't leak into the new one.
     chatContent = '';
     lastChatText = null;
@@ -393,6 +543,91 @@ function showToast(msg, ms = 1500) {
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), ms);
 }
+
+// --- Cross-tab duplicate directory detection ---
+//
+// When a directory is opened we write a localStorage marker:
+//   openedDir:<folderName> = <Date.now() timestamp>
+//
+// Other tabs check this marker before opening the same directory.
+// Markers older than DUPLICATE_DIR_ZOMBIE_TIMEOUT (10 min) are considered
+// zombie and ignored — they're cleaned up on next access.
+//
+// On tab close (beforeunload), the marker is removed so other tabs can
+// open the directory without the alert.
+
+const DUPLICATE_DIR_MARKER_PREFIX = 'openedDir:';
+const DUPLICATE_DIR_ZOMBIE_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+
+let _currentlyOpenDir = null;
+
+/**
+ * Track the currently-open directory for beforeunload and storage-event cleanup.
+ * @param {string|null} folderName
+ */
+function setCurrentOpenDir(folderName) {
+    // Release the previous claim if any.
+    if (_currentlyOpenDir && _currentlyOpenDir !== folderName) {
+        try { localStorage.removeItem(DUPLICATE_DIR_MARKER_PREFIX + _currentlyOpenDir); } catch (_) {}
+    }
+    _currentlyOpenDir = folderName;
+}
+
+/**
+ * Check whether a directory is already claimed by another tab.
+ * Zombie markers (older than ZOMBIE_TIMEOUT) are cleaned up and return false.
+ * @param {string} folderName
+ * @returns {boolean} true if another tab has an active claim
+ */
+function isDirClaimedByOtherTab(folderName) {
+    const key = DUPLICATE_DIR_MARKER_PREFIX + folderName;
+    let existing;
+    try { existing = localStorage.getItem(key); } catch (_) { return false; }
+    if (existing === null) return false;
+
+    const ts = parseInt(existing, 10);
+    if (isNaN(ts)) {
+        try { localStorage.removeItem(key); } catch (_) {}
+        return false;
+    }
+    if (Date.now() - ts >= DUPLICATE_DIR_ZOMBIE_TIMEOUT) {
+        // Zombie marker.
+        try { localStorage.removeItem(key); } catch (_) {}
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Claim a directory in localStorage so other tabs can detect it.
+ * @param {string} folderName
+ */
+function claimDir(folderName) {
+    try { localStorage.setItem(DUPLICATE_DIR_MARKER_PREFIX + folderName, Date.now().toString()); } catch (_) {}
+    setCurrentOpenDir(folderName);
+}
+
+/**
+ * Release the claim on the currently-open directory.
+ */
+function releaseCurrentDirClaim() {
+    if (_currentlyOpenDir) {
+        try { localStorage.removeItem(DUPLICATE_DIR_MARKER_PREFIX + _currentlyOpenDir); } catch (_) {}
+        _currentlyOpenDir = null;
+    }
+}
+
+// Listen for other tabs claiming the same directory.
+window.addEventListener('storage', (event) => {
+    if (!event.key || !event.key.startsWith(DUPLICATE_DIR_MARKER_PREFIX)) return;
+    // Another tab wrote a marker. If it's the same directory we have open,
+    // show a warning toast.
+    const folderName = event.key.slice(DUPLICATE_DIR_MARKER_PREFIX.length);
+    if (folderName === _currentlyOpenDir && event.newValue !== null) {
+        log('Another tab opened the same directory:', folderName);
+        showToast(`⚠️ ${folderName} 已在其他标签页中打开`, 4000);
+    }
+});
 
 // --- IndexedDB multi-key directory handle storage ---
 //
@@ -484,24 +719,34 @@ async function _listSavedDirHandlesInDB(db) {
 }
 
 async function _migrateLegacyKey(db) {
-    // Check the legacy key exists and migrate it to the new format.
-    const legacyHandle = await _readKey(db, LEGACY_HANDLE_KEY);
-    if (!(legacyHandle instanceof FileSystemDirectoryHandle)) return;
+    try {
+        // Guard: only attempt migration if the legacy key actually exists.
+        const legacyHandle = await _readKey(db, LEGACY_HANDLE_KEY);
+        if (!(legacyHandle instanceof FileSystemDirectoryHandle)) return;
 
-    const folderName = legacyHandle.name;
-    if (!folderName) {
-        // OPFS root handles have an empty name — skip migration, they are
-        // never saved by openDir() anyway.
-        await _deleteKey(db, LEGACY_HANDLE_KEY);
-        return;
+        const folderName = legacyHandle.name;
+        if (!folderName) {
+            // OPFS root handles have an empty name — skip migration, they are
+            // never saved by openDir() anyway.
+            await _deleteKey(db, LEGACY_HANDLE_KEY);
+            return;
+        }
+
+        // Serialise with saveDirectoryHandle / removeSavedRootDirHandle
+        // to avoid cross-tab write races during the brief migration window.
+        await navigator.locks.request('filesmd-db-write', async () => {
+            const newKey = DIR_HANDLE_PREFIX + folderName;
+            await _writeKey(db, newKey, legacyHandle);
+            await _writeKey(db, LAST_USED_KEY, folderName);
+            await _deleteKey(db, LEGACY_HANDLE_KEY);
+        });
+
+        log('Migrated legacy directory handle to multi-key format:', folderName);
+    } catch (err) {
+        // Migration is best-effort — swallowing the error lets the app
+        // continue with the in-memory FS fallback instead of failing startup.
+        logError('Legacy handle migration failed:', err);
     }
-
-    const newKey = DIR_HANDLE_PREFIX + folderName;
-    await _writeKey(db, newKey, legacyHandle);
-    await _writeKey(db, LAST_USED_KEY, folderName);
-    await _deleteKey(db, LEGACY_HANDLE_KEY);
-
-    log('Migrated legacy directory handle to multi-key format:', folderName);
 }
 
 // --- Public API ---
@@ -596,7 +841,15 @@ async function removeSavedRootDirHandle(folderName) {
 
             const lastUsed = await _readKey(db, LAST_USED_KEY);
             if (lastUsed === folderName) {
-                await _deleteKey(db, LAST_USED_KEY);
+                // Pick another saved directory as the new _lastUsed so that
+                // getSavedRootDirHandle() returns a deterministic result
+                // instead of falling through to arbitrary cursor order.
+                const remaining = await _listSavedDirHandlesInDB(db);
+                if (remaining.length > 0) {
+                    await _writeKey(db, LAST_USED_KEY, remaining[0].folderName);
+                } else {
+                    await _deleteKey(db, LAST_USED_KEY);
+                }
             }
         } else {
             // Legacy backward-compat: delete the old single-directory key.
@@ -1086,6 +1339,7 @@ document.addEventListener('keydown', (e) => {
 
 window.addEventListener('beforeunload', function() {
     clearInterval(window.saver);
+    releaseCurrentDirClaim();
 });
 
 // Worker to process the saving queue

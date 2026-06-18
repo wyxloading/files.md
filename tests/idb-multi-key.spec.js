@@ -440,3 +440,110 @@ test('server state is preserved across directory handle operations', async ({pag
     expect(serverStillIntact).toBeDefined();
     expect(serverStillIntact.hash).toBe('abc');
 });
+
+// ── Test 14: isDirClaimedByOtherTab returns false when no claim exists ──
+test('isDirClaimedByOtherTab returns false when no claim exists', async ({page}) => {
+    // Ensure no leftover marker.
+    await page.evaluate(() => { try { localStorage.removeItem('openedDir:no-claim'); } catch (_) {} });
+    const claimed = await page.evaluate(async (name) => {
+        return isDirClaimedByOtherTab(name);
+    }, 'no-claim');
+    expect(claimed).toBe(false);
+});
+
+// ── Test 15: isDirClaimedByOtherTab returns true for a fresh claim ──
+test('isDirClaimedByOtherTab returns true for a fresh claim', async ({page}) => {
+    await page.evaluate((name) => {
+        claimDir(name);
+    }, 'fresh-claim');
+    // Reading the claim in the same tab returns false because claimDir
+    // also called setCurrentOpenDir, and isDirClaimedByOtherTab reads
+    // the marker that we just wrote — need to bypass setCurrentOpenDir.
+    // Instead, write the marker directly via localStorage to simulate
+    // "another tab".
+    await page.evaluate((name) => {
+        try { localStorage.setItem('openedDir:' + name, Date.now().toString()); } catch (_) {}
+    }, 'other-claim');
+    const claimed = await page.evaluate(async (name) => {
+        return isDirClaimedByOtherTab(name);
+    }, 'other-claim');
+    expect(claimed).toBe(true);
+    // Cleanup.
+    await page.evaluate((name) => {
+        try { localStorage.removeItem('openedDir:' + name); } catch (_) {}
+    }, 'other-claim');
+    await page.evaluate((name) => {
+        try { localStorage.removeItem('openedDir:' + name); } catch (_) {}
+    }, 'fresh-claim');
+});
+
+// ── Test 16: isDirClaimedByOtherTab cleans zombie markers (older than 10 min) ──
+test('isDirClaimedByOtherTab cleans zombie markers', async ({page}) => {
+    // Write a marker pretending to be 11 minutes old.
+    await page.evaluate((name) => {
+        const zombieTs = Date.now() - (11 * 60 * 1000);
+        try { localStorage.setItem('openedDir:' + name, zombieTs.toString()); } catch (_) {}
+    }, 'zombie-dir');
+    const claimed = await page.evaluate(async (name) => {
+        return isDirClaimedByOtherTab(name);
+    }, 'zombie-dir');
+    expect(claimed).toBe(false);
+    // Verify the key was cleaned up.
+    const stillExists = await page.evaluate((name) => {
+        return localStorage.getItem('openedDir:' + name) !== null;
+    }, 'zombie-dir');
+    expect(stillExists).toBe(false);
+});
+
+// ── Test 17: claimDir writes a localStorage marker ──
+test('claimDir writes a localStorage marker with correct prefix', async ({page}) => {
+    await page.evaluate((name) => {
+        try { localStorage.removeItem('openedDir:' + name); } catch (_) {}
+        claimDir(name);
+    }, 'claim-test');
+    const val = await page.evaluate((name) => {
+        return localStorage.getItem('openedDir:' + name);
+    }, 'claim-test');
+    expect(val).not.toBeNull();
+    const ts = parseInt(val, 10);
+    expect(isNaN(ts)).toBe(false);
+    // Should be within last 5 seconds.
+    expect(Date.now() - ts).toBeLessThan(5000);
+    // Cleanup.
+    await page.evaluate((name) => {
+        try { localStorage.removeItem('openedDir:' + name); } catch (_) {}
+    }, 'claim-test');
+});
+
+// ── Test 18: releaseCurrentDirClaim removes the marker ──
+test('releaseCurrentDirClaim removes the localStorage marker', async ({page}) => {
+    await page.evaluate((name) => {
+        claimDir(name);
+        releaseCurrentDirClaim();
+    }, 'release-test');
+    const val = await page.evaluate((name) => {
+        return localStorage.getItem('openedDir:' + name);
+    }, 'release-test');
+    expect(val).toBeNull();
+});
+
+// ── Test 19: setCurrentOpenDir releases previous claim when switching directories ──
+test('setCurrentOpenDir releases previous claim when switching', async ({page}) => {
+    await page.evaluate(async () => {
+        claimDir('first-dir');
+        claimDir('second-dir');
+    });
+    // After switching, first-dir should be released, second-dir should be claimed.
+    const firstClaim = await page.evaluate(() => {
+        return localStorage.getItem('openedDir:first-dir');
+    });
+    const secondClaim = await page.evaluate(() => {
+        return localStorage.getItem('openedDir:second-dir');
+    });
+    expect(firstClaim).toBeNull();
+    expect(secondClaim).not.toBeNull();
+    // Cleanup.
+    await page.evaluate(() => {
+        releaseCurrentDirClaim();
+    });
+});

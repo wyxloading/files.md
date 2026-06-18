@@ -506,4 +506,11 @@
 .btn-label::after {
     border-top-color: #000 !important;
 }
+
+.recent-dir-item:hover {
+    color: #1F1D1A !important;
+}
+.recent-dir-item:hover svg {
+    stroke: #1F1D1A !important;
+}
 } /* end @media (prefers-color-scheme: dark) */

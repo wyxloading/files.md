@@ -34,6 +34,19 @@ let isLoadingLocalFiles = false;
 const LAST_SERVER_OK_KEY = 'lastServerOk';
 const MAX_DIR_NESTING_LEVEL = 10;
 
+// Directory and file entries whose names are in this list are filtered out
+// during local file loading. Everything else — including other dot-prefixed
+// directories and files — is shown. `.` and `..` are filesystem virtual entries.
+const IGNORED_NAMES = ['.', '..', '.git', '.DS_Store', '.obsidian', '.cargo', '.pytest_cache'];
+
+function isIgnoredName(filename) {
+    return IGNORED_NAMES.includes(filename);
+}
+
+function isDotFile(filename) {
+    return filename.startsWith('.') && !isIgnoredName(filename);
+}
+
 function markServerOk() {
     localStorage.setItem(LAST_SERVER_OK_KEY, Date.now().toString());
 }
@@ -143,6 +156,7 @@ async function loadLocalFiles(rootDirHandle, slowMode = false) {
 
             let isSupportedExtension = SUPPORTED_EXTENSIONS.includes(filename.split('.').pop().toLowerCase());
             let isConfig = filename === toFilename(CONFIG_PATH);
+            let isDot = isDotFile(filename);
 
             let dirs = path.split('/');
             dirs = dirs.filter(d => d !== '');
@@ -156,12 +170,12 @@ async function loadLocalFiles(rootDirHandle, slowMode = false) {
             }
 
             if (entry.kind === 'directory') {
-                if (filename.startsWith('.') || depth >= MAX_DIR_NESTING_LEVEL) continue;
+                if (isIgnoredName(filename) || depth >= MAX_DIR_NESTING_LEVEL) continue;
 
                 currentDir[filename + '/'] = {};
                 const dir = `${path}${filename}/`;
                 dirPromises.push({handle: entry, path: dir, depth: depth + 1});
-            } else if (entry.kind === 'file' && (isSupportedExtension || isConfig)) {
+            } else if (entry.kind === 'file' && (isSupportedExtension || isConfig || isDot)) {
                 // Reuse existing file handle if it exists
                 let existingDir = files;
                 for (let dir of dirs) {

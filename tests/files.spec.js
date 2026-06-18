@@ -1184,3 +1184,69 @@ async function setup(page) {
 
     await page.waitForSelector('#tree', {timeout: 5000});
 }
+
+test('hidden files and directories filtered by IGNORED_NAMES', async ({ page }) => {
+    await page.evaluate(() => {
+        window.getTemporaryStorageDirHandle = async function() {
+            const root = await navigator.storage.getDirectory();
+
+            // Create dot-prefixed directories that SHOULD be visible
+            await root.getDirectoryHandle('.run-task-state', { create: true });
+            await root.getDirectoryHandle('.claude', { create: true });
+            await root.getDirectoryHandle('.github', { create: true });
+
+            // Create dot-prefixed directories that should be HIDDEN
+            await root.getDirectoryHandle('.git', { create: true });
+            await root.getDirectoryHandle('.obsidian', { create: true });
+
+            // Create regular visible files
+            const write = async (dir, name, content) => {
+                const handle = await dir.getFileHandle(name, { create: true });
+                const writable = await handle.createWritable();
+                await writable.write(content);
+                await writable.close();
+            };
+
+            await write(root, 'README.md', 'Hello world');
+            await write(root, '.gitignore', 'node_modules/');
+            await write(root, '.DS_Store', '');
+
+            // Create a task file inside .run-task-state to verify recursion
+            const taskDir = await root.getDirectoryHandle('.run-task-state', { create: true });
+            const reDir = await taskDir.getDirectoryHandle('REQ-001', { create: true });
+            await write(reDir, 'notes.md', 'Task notes');
+
+            return root;
+        };
+    });
+
+    await page.evaluate(() => {
+        init(document.getElementById('editor'));
+    });
+
+    await page.waitForSelector('#tree', { timeout: 5000 });
+    await page.waitForTimeout(500);
+
+    // Visible dot-directories should appear in the sidebar
+    await expect(page.locator('#tree .tree-item:text-is(".run-task-state")')).toBeVisible();
+    await expect(page.locator('#tree .tree-item:text-is(".claude")')).toBeVisible();
+    await expect(page.locator('#tree .tree-item:text-is(".github")')).toBeVisible();
+
+    // Hidden directories should NOT appear
+    await expect(page.locator('#tree .tree-item:text-is(".git")')).toHaveCount(0);
+    await expect(page.locator('#tree .tree-item:text-is(".obsidian")')).toHaveCount(0);
+
+    // Dot-prefixed files not in ignore list should appear
+    await expect(page.locator('#tree .tree-item:text-is(".gitignore")')).toBeVisible();
+
+    // Hidden files in IGNORED_NAMES (.DS_Store) should NOT appear
+    await expect(page.locator('#tree .tree-item:text-is(".DS_Store")')).toHaveCount(0);
+
+    // Regular files should still appear
+    await expect(page.locator('#tree .tree-item:text-is("README")')).toBeVisible();
+
+    // Verify .run-task-state can be expanded and shows subdirectories
+    await page.click('#tree .tree-item:text-is(".run-task-state")');
+    await page.waitForTimeout(200);
+    await expect(page.locator('#tree .tree-item:text-is("REQ-001")')).toBeVisible();
+});

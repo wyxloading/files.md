@@ -13,7 +13,7 @@
     --font-mono: ui-monospace, SFMono-Regular, "Cascadia Code", "IBM Plex Mono",
     "Roboto Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Monaco,
     "Consolas", "Source Code Pro", monospace;
-    --normal-width: 95%;
+    --normal-width: min(95%, 1200px);
     -webkit-font-smoothing: antialiased;
     color-scheme: light dark;
 }

@@ -222,3 +222,142 @@ test('dir ctx menu: delete removes the directory', async ({page}) => {
 
     await expect(page.locator('#tree .tree-item:text-is("life")')).toHaveCount(0);
 });
+
+// --- expand/collapse state propagation -------------------------------------
+
+// Regression: expanding a parent directory used to leak saved expanded state
+// to child directories. If /life/notes was expanded, collapsing then
+// re-expanding /life would incorrectly show /life/notes as expanded too.
+
+// Seed OPFS with a nested directory structure and init the app.
+async function setupSidebarNested(page) {
+    await page.goto('/index.html');
+    await page.waitForSelector('#tree', {timeout: 5000});
+
+    await page.evaluate(() => {
+        window.getTemporaryStorageDirHandle = async function () {
+            const root = await navigator.storage.getDirectory();
+            const write = async (dir, name, content) => {
+                const h = await dir.getFileHandle(name, {create: true});
+                const w = await h.createWritable();
+                await w.write(content);
+                await w.close();
+            };
+            const lifeDir = await root.getDirectoryHandle('life', {create: true});
+            await write(lifeDir, 'Pilaf.md', 'Pilaf recipe');
+            const notesDir = await lifeDir.getDirectoryHandle('notes', {create: true});
+            await write(notesDir, 'Ideas.md', 'Some ideas');
+            const workDir = await root.getDirectoryHandle('work', {create: true});
+            await write(workDir, 'Tasks.md', 'Task list');
+            return root;
+        };
+    });
+
+    await page.evaluate(() => init(document.getElementById('editor')));
+    await page.waitForTimeout(300);
+}
+
+test('expanding parent does not auto-expand previously-expanded child', async ({page}) => {
+    await setupSidebarNested(page);
+
+    // 1. Expand /life
+    await page.locator('#tree .tree-item:text-is("life")').click();
+    await page.waitForTimeout(100);
+    // notes subdir should appear but be collapsed — its children hidden
+    await expect(page.locator('#tree .tree-item:text-is("notes")')).toBeVisible();
+    await expect(page.locator('#tree .tree-item:text-is("Ideas")')).toHaveCount(0);
+
+    // 2. Expand /life/notes
+    await page.locator('#tree .tree-item:text-is("notes")').click();
+    await page.waitForTimeout(100);
+    await expect(page.locator('#tree .tree-item:text-is("Ideas")')).toBeVisible();
+
+    // 3. Collapse /life — this hides notes and Ideas
+    await page.locator('#tree .tree-item:text-is("life")').click();
+    await page.waitForTimeout(100);
+    await expect(page.locator('#tree .tree-item:text-is("notes")')).toHaveCount(0);
+    await expect(page.locator('#tree .tree-item:text-is("Ideas")')).toHaveCount(0);
+
+    // 4. Re-expand /life — this is where the bug lived:
+    //    notes should be VISIBLE but COLLAPSED (Ideas hidden).
+    await page.locator('#tree .tree-item:text-is("life")').click();
+    await page.waitForTimeout(100);
+    await expect(page.locator('#tree .tree-item:text-is("notes")')).toBeVisible();
+    await expect(page.locator('#tree .tree-item:text-is("Ideas")')).toHaveCount(0);
+});
+
+test('fresh page load shows all directories collapsed', async ({page}) => {
+    await setupSidebarNested(page);
+
+    // life should be visible at root level but collapsed
+    await expect(page.locator('#tree .tree-item:text-is("life")')).toBeVisible();
+    // Its child notes should NOT be visible yet
+    await expect(page.locator('#tree .tree-item:text-is("notes")')).toHaveCount(0);
+
+    // Same for work
+    await expect(page.locator('#tree .tree-item:text-is("work")')).toBeVisible();
+    await expect(page.locator('#tree .tree-item:text-is("Tasks")')).toHaveCount(0);
+});
+
+test('expand/collapse/expand cycle keeps child collapsed', async ({page}) => {
+    await setupSidebarNested(page);
+
+    // Expand life → notes visible but collapsed
+    await page.locator('#tree .tree-item:text-is("life")').click();
+    await page.waitForTimeout(100);
+    await expect(page.locator('#tree .tree-item:text-is("notes")')).toBeVisible();
+    await expect(page.locator('#tree .tree-item:text-is("Ideas")')).toHaveCount(0);
+
+    // Expand notes → Ideas visible
+    await page.locator('#tree .tree-item:text-is("notes")').click();
+    await page.waitForTimeout(100);
+    await expect(page.locator('#tree .tree-item:text-is("Ideas")')).toBeVisible();
+
+    // Collapse life → both hidden
+    await page.locator('#tree .tree-item:text-is("life")').click();
+    await page.waitForTimeout(100);
+    await expect(page.locator('#tree .tree-item:text-is("notes")')).toHaveCount(0);
+
+    // Re-expand life → notes visible, but collapsed (Ideas hidden)
+    await page.locator('#tree .tree-item:text-is("life")').click();
+    await page.waitForTimeout(100);
+    await expect(page.locator('#tree .tree-item:text-is("notes")')).toBeVisible();
+    await expect(page.locator('#tree .tree-item:text-is("Ideas")')).toHaveCount(0);
+
+    // Expand notes again — Ideas should appear now
+    await page.locator('#tree .tree-item:text-is("notes")').click();
+    await page.waitForTimeout(100);
+    await expect(page.locator('#tree .tree-item:text-is("Ideas")')).toBeVisible();
+
+    // Collapse everything
+    await page.locator('#tree .tree-item:text-is("notes")').click();
+    await page.waitForTimeout(100);
+    await page.locator('#tree .tree-item:text-is("life")').click();
+    await page.waitForTimeout(100);
+
+    // Expand life a final time — notes collapsed
+    await page.locator('#tree .tree-item:text-is("life")').click();
+    await page.waitForTimeout(100);
+    await expect(page.locator('#tree .tree-item:text-is("notes")')).toBeVisible();
+    await expect(page.locator('#tree .tree-item:text-is("Ideas")')).toHaveCount(0);
+});
+
+test('two sibling dirs: expanding one does not expand the other', async ({page}) => {
+    await setupSidebarNested(page);
+
+    // Both life and work are visible but collapsed
+    await expect(page.locator('#tree .tree-item:text-is("life")')).toBeVisible();
+    await expect(page.locator('#tree .tree-item:text-is("work")')).toBeVisible();
+
+    // Expand work — Tasks appears, but life's child notes does NOT
+    await page.locator('#tree .tree-item:text-is("work")').click();
+    await page.waitForTimeout(100);
+    await expect(page.locator('#tree .tree-item:text-is("Tasks")')).toBeVisible();
+    await expect(page.locator('#tree .tree-item:text-is("notes")')).toHaveCount(0);
+
+    // Expand life — notes appears, work's Tasks still visible
+    await page.locator('#tree .tree-item:text-is("life")').click();
+    await page.waitForTimeout(100);
+    await expect(page.locator('#tree .tree-item:text-is("notes")')).toBeVisible();
+    await expect(page.locator('#tree .tree-item:text-is("Tasks")')).toBeVisible();
+});

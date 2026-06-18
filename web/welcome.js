@@ -61,8 +61,9 @@ async function getTemporaryStorageDirHandle() {
         }
         await createFiles(WELCOME_FILES, root);
 
-        // Retouch My project.md file, so it appears in chat's quick buttons for better demo.
-        if (!archived.has('My Project.md')) {
+        // Retouch My Project.md file, so it appears in chat's quick buttons for better demo.
+        // Also check for old-name "My project.md" for backward compatibility.
+        if (!archived.has('My Project.md') && !archived.has('My project.md')) {
             await new Promise(r => setTimeout(r, 10));
             const fh = await root.getFileHandle('My Project.md', { create: true });
             const w = await fh.createWritable();
@@ -116,7 +117,7 @@ class MemFile {
         this.kind = 'file';
         this.name = name;
         this.content = content;
-        // We want "My project.md" to appear in chat's quick buttons, for better demo.
+        // We want "My Project.md" to appear in chat's quick buttons, for better demo.
         this.lastModified = Date.now() + (name === 'My Project.md' ? 1 : 0);
         this.parent = null;
     }
@@ -303,7 +304,7 @@ const WELCOME_FILES = {
             isFile: true,
         },
         "Boredom is just an emotion.md": {
-            "content": "It's not an indicator that you're doing something wrong in your life.\n\nBefore we had phones and technologies, we would just sit around the fire and we would talk. We wouldn't call that boring, that was just life.\n\n![](img/tomas_sanchez.jpg)\n\nAnd now we have that endless need for entertainment. When nothing is happening, we think it's wrong and we need to fix it.\n\nNon eventfulness is just a part of our life, and you can embrace it as peace, or you can frantically try to create more chaos.\n\n[Abundant meditation](/happiness/Abundant meditation.md)",
+            "content": "It's not an indicator that you're doing something wrong in your life.\n\nBefore we had phones and technologies, we would just sit around the fire and we would talk. We wouldn't call that boring, that was just life.\n\n![](img/tomas_sanchez.jpg)\n\nAnd now we have that endless need for entertainment. When nothing is happening, we think it's wrong and we need to fix it.\n\nNon eventfulness is just a part of our life, and you can embrace it as peace, or you can frantically try to create more chaos.\n\n[Abundant meditation](/happiness/Abundant%20meditation.md)",
             isFile: true,
         },
     },

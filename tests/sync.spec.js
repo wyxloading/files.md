@@ -606,6 +606,52 @@ test('sync changes from client, update clientLastModified & lastClientModified',
     expect(serverFiles['New file.md'].lastClientModified).toEqual(clientFileLastModified);
 });
 
+test('rename collision shows toast when filename exists case-insensitively', async ({ page }) => {
+    await createFileOnServer('Collision.md', '# Collision\nContent A');
+    await createFileOnServer('Other.md', '# Other\nContent B');
+
+    await setup(page);
+
+    await page.waitForTimeout(500);
+
+    // Open "Other.md" first
+    await page.click(`#tree .tree-item:has-text('Other')`);
+    await page.waitForTimeout(300);
+
+    // Edit the first-line header to "# Collision" which would produce filename "Collision.md",
+    // colliding case-insensitively with the existing "Collision.md".
+    await page.evaluate(() => {
+        const cm = document.querySelector('.CodeMirror').CodeMirror;
+        cm.setValue('# Collision\nContent B');
+    });
+    await page.waitForTimeout(100);
+
+    // Trigger blur to fire syncCurrentFile, which runs the rename collision check.
+    await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+
+    // Wait for toast: 'File "Collision" already exists'
+    await page.waitForFunction(() => {
+        const toasts = document.querySelectorAll('div');
+        for (const el of toasts) {
+            if (el.textContent && el.textContent.includes('already exists')) {
+                return true;
+            }
+        }
+        return false;
+    }, { timeout: 5000 });
+
+    // Both files should retain their original content.
+    await page.click(`#tree .tree-item:has-text('Collision')`);
+    await page.waitForTimeout(300);
+    await expectCurrentContent(page, '# Collision\nContent A');
+
+    // The "Other" file should still exist and have its original content
+    // (not overwritten by the blocked rename).
+    await page.click(`#tree .tree-item:has-text('Other')`);
+    await page.waitForTimeout(300);
+    await expectCurrentContent(page, '# Other\nContent B');
+});
+
 async function createFileOnServer(filepath, content) {
     const p = path.join(getServerDir(), filepath);
 

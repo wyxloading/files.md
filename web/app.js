@@ -13,6 +13,11 @@ let openChatIdleTimer = null;
 let isChat = false;
 let isMemFS = false;
 let debug = false;
+// Per-tab in-memory cache of the current directory handle.
+// Prevents cross-tab hijacking: without this, focus/blur handlers
+// would re-read the globally-shared _lastUsed IndexedDB key and
+// load whatever directory another tab most recently opened.
+let _currentTabDirHandle = null;
 // let debug = {dir: '', file: 'File.md', loaded: false};
 
 async function init() {
@@ -803,6 +808,10 @@ async function saveDirectoryHandle(directoryHandle) {
     }
     const key = DIR_HANDLE_PREFIX + folderName;
 
+    // Cache in memory so this tab won't be hijacked by another tab's
+    // _lastUsed write.  Memory is per-tab; IndexedDB is shared across tabs.
+    _currentTabDirHandle = directoryHandle;
+
     await navigator.locks.request('filesmd-db-write', async () => {
         const db = await initDB();
         const tx = db.transaction('handles', 'readwrite');
@@ -885,10 +894,26 @@ async function removeSavedRootDirHandle(folderName) {
             await _deleteKey(db, LEGACY_HANDLE_KEY);
         }
     });
+
+    // If we just removed this tab's current directory, clear the in-memory
+    // cache so the next getRootDirHandle() call falls through to IndexedDB
+    // instead of returning a stale revoked handle.
+    if (_currentTabDirHandle && folderName !== undefined && _currentTabDirHandle.name === folderName) {
+        _currentTabDirHandle = null;
+    }
+
     log('Removed saved directory handle:', folderName || '(legacy)');
 }
 
 async function getRootDirHandle() {
+    // Use the per-tab in-memory cache when available.  Without this guard,
+    // focus/blur handlers would re-read the globally-shared _lastUsed key
+    // from IndexedDB and load whatever directory another tab most recently
+    // opened, hijacking this tab's view.
+    if (_currentTabDirHandle) {
+        return _currentTabDirHandle;
+    }
+
     const savedDirHandle = await getSavedRootDirHandle();
     // If the saved handle is from a browser missing createWritable or
     // remove (Safari OPFS, older Chromium), fall back to the in-memory FS
@@ -897,6 +922,8 @@ async function getRootDirHandle() {
         return await getTemporaryStorageDirHandle();
     }
 
+    // Cache for subsequent focus/blur calls within this tab.
+    _currentTabDirHandle = savedDirHandle;
     return savedDirHandle;
 }
 

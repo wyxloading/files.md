@@ -1244,6 +1244,14 @@ async function syncCurrentFile(switchAwayEditor = false) {
     }
 
     if (path === CHAT_PATH) {
+        // When a local folder is open (not demo/temporary FS), chat content
+        // is stored in-memory only — there's no Chat.md file on disk to
+        // sync. (REQ-260618-001-TASK-002)
+        if (!isMemFS) {
+            isMessingWithCurrentEditor = false;
+            return;
+        }
+
         // Try to load local changes.
         if (chatIsClean) {
             try {

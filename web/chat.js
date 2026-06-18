@@ -13,6 +13,38 @@ const RECENT_FILES = 1;
 // work when the file's content hasn't changed.
 let lastChatText = null;
 
+// In-memory chat content buffer. When isMemFS === false (local folder opened),
+// chat content is kept in memory instead of being written to a file on disk.
+// When isMemFS === true (demo/temporary FS), existing file-based behavior is used.
+let chatContent = '';
+
+async function getChatContent() {
+    if (isMemFS) {
+        try {
+            const handle = await getFileHandle(CHAT_PATH, false);
+            const file = await handle.getFile();
+            return await file.text();
+        } catch {
+            return '';
+        }
+    }
+    return chatContent;
+}
+
+async function saveChatContent(content) {
+    chatContent = content;
+    if (isMemFS) {
+        await write(CHAT_PATH, content);
+    }
+}
+
+async function appendChatContent(text) {
+    chatContent += text;
+    if (isMemFS) {
+        await writeAtEnd(CHAT_PATH, text);
+    }
+}
+
 function updateChatActionButton() {
     if (!sendChatBtn || !micChatBtn) return;
     // Don't swap while a recording is in progress - keep the mic visible so
@@ -61,7 +93,7 @@ async function sendToChat() {
         minute: '2-digit'
     });
     const formattedContent = `\n- [ ] \`${timestamp}\` ${text}\n`;
-    await writeAtEnd(CHAT_PATH, formattedContent);
+    await appendChatContent(formattedContent);
 
     chatInput.value = '';
     chatIsClean = false;
@@ -158,7 +190,7 @@ async function toggleMicRecording() {
                 hour12: false, hour: '2-digit', minute: '2-digit',
             });
             const formattedContent = `\n- [ ] \`${timestamp}\` ![](media/${fileName})\n`;
-            await writeAtEnd(CHAT_PATH, formattedContent);
+            await appendChatContent(formattedContent);
 
             chatIsClean = false;
             await renderMessages();
@@ -240,8 +272,7 @@ async function toggleChatModal() {
 }
 
 async function parseMessagesFromChat() {
-    const file = await ((await getFileHandle(CHAT_PATH, true)).getFile());
-    let chat = await file.text();
+    let chat = await getChatContent();
 
     // Normalize line endings
     chat = chat.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
@@ -350,7 +381,7 @@ async function saveMessagesToChat(messages) {
         });
     });
 
-    await write(CHAT_PATH, content);
+    await saveChatContent(content);
     lastChatText = content;
 }
 
@@ -361,10 +392,6 @@ async function saveMessagesToChat(messages) {
 //   - [x] `HH:MM` text    (new, done)
 // and rewrites it to the requested done/undone marker.
 async function toggleChatMessage(timestamp, text, done) {
-    const handle = await getFileHandle(CHAT_PATH, true);
-    const file = await handle.getFile();
-    let content = await file.text();
-
     const escapeRegex = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const marker = done ? 'x' : ' ';
     const re = timestamp
@@ -374,15 +401,13 @@ async function toggleChatMessage(timestamp, text, done) {
         ? `- [${marker}] \`${timestamp}\` ${text}`
         : `- [${marker}] ${text}`;
 
+    let content = await getChatContent();
     if (!re.test(content)) {
         logError('toggleChatMessage: line not found', {timestamp, text});
         return;
     }
     content = content.replace(re, replacement);
-
-    const writable = await handle.createWritable();
-    await writable.write(content);
-    await writable.close();
+    await saveChatContent(content);
     lastChatText = content;
 }
 

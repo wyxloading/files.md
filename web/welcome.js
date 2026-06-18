@@ -204,7 +204,7 @@ class MemDir {
 // When a user starts in the temporary FS and later opens a local folder,
 // copy their in-mem files to local fs.
 async function moveUserFiles(targetRoot) {
-    const welcome = new Set(['Help.md']);
+    const welcome = new Set(['Help.md', 'Chat.md']);
     (function collect(obj, prefix) {
         for (const [name, data] of Object.entries(obj)) {
             if (data.isFile) {

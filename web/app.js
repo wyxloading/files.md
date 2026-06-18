@@ -59,6 +59,10 @@ async function init() {
         }
     }
 
+    // Enumerate all saved directories (for TASK-002 multi-directory UI).
+    const savedDirs = await listSavedDirHandles();
+    log('Saved directories:', savedDirs.map(d => d.folderName));
+
     const savedDirHandle = await getSavedRootDirHandle();
     const hasSavedLocalDir = savedDirHandle instanceof FileSystemDirectoryHandle;
     if (hasSavedLocalDir) {
@@ -85,7 +89,9 @@ async function init() {
         if (permission !== 'granted') {
             document.getElementById('open-folder').style.display = 'flex';
             // TODO maybe ask user to check "Allow on every visit" on left part of the sidebar
-            await removeSavedRootDirHandle();
+            // Use the handle's name so the multi-key entry is cleaned up
+            // instead of only the legacy key.
+            await removeSavedRootDirHandle(savedDirHandle.name);
             alert('Can\'t access folder.\n\nPlease, reopen the folder again and check "Allow on every visit" checkbox');
         }
     }
@@ -291,12 +297,6 @@ async function openDir() {
     }
     isSyncingFiles = true
 
-    // New folder would miss files that were synced from server before,
-    // into a previous folder. That would send a signal to server "client has deleted some files".
-    // Which we do not want, so we clean our server files "understanding".
-    server = {files: {}, media: {}, timestamps: {}, mediaTimestamp: 0};
-    localStorage.removeItem("server");
-
     await saveDirectoryHandle(dirHandle);
     // Help.md is no longer auto-created in local folders (REQ-260618-001-TASK-002).
     // getHelpContent() is still used by the temporary/demo FS via WELCOME_FILES.
@@ -394,6 +394,19 @@ function showToast(msg, ms = 1500) {
     setTimeout(() => toast.remove(), ms);
 }
 
+// --- IndexedDB multi-key directory handle storage ---
+//
+// Key scheme (REQ-260618-005):
+//   dirHandle:<folderName>  → FileSystemDirectoryHandle   (one per opened directory)
+//   _lastUsed               → string (folderName)          (tracks most-recently-used)
+//
+// Legacy key migrated on first read:
+//   savedDirectoryHandle    → migrated to dirHandle:<handle.name>
+
+const DIR_HANDLE_PREFIX = 'dirHandle:';
+const LAST_USED_KEY = '_lastUsed';
+const LEGACY_HANDLE_KEY = 'savedDirectoryHandle';
+
 function initDB() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open('files', 1);
@@ -408,35 +421,189 @@ function initDB() {
     });
 }
 
-async function saveDirectoryHandle(directoryHandle) {
-    const db = await initDB();
-    const transaction = db.transaction('handles', 'readwrite');
-    const store = transaction.objectStore('handles');
-    await store.put(directoryHandle, 'savedDirectoryHandle');
-}
+// --- Internal helpers ---
 
-async function getSavedRootDirHandle() {
-    const db = await initDB();
-    const tx = db.transaction("handles", "readonly");
-    const store = tx.objectStore("handles");
-
+function _readKey(db, key) {
+    const tx = db.transaction('handles', 'readonly');
+    const store = tx.objectStore('handles');
     return new Promise((resolve, reject) => {
-        const req = store.get("savedDirectoryHandle");
+        const req = store.get(key);
         req.onsuccess = () => resolve(req.result ?? null);
         req.onerror = () => reject(req.error);
-        tx.onabort = () => reject(tx.error || new Error("Transaction aborted"));
+        tx.onabort = () => reject(tx.error || new Error('Transaction aborted'));
     });
 }
 
-async function removeSavedRootDirHandle() {
-    const db = await initDB();
+function _writeKey(db, key, value) {
+    const tx = db.transaction('handles', 'readwrite');
+    const store = tx.objectStore('handles');
+    store.put(value, key);
     return new Promise((resolve, reject) => {
-        const transaction = db.transaction('handles', 'readwrite');
-        const store = transaction.objectStore('handles');
-        const request = store.delete('savedDirectoryHandle');
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error || new Error('Transaction aborted'));
     });
+}
+
+function _deleteKey(db, key) {
+    const tx = db.transaction('handles', 'readwrite');
+    const store = tx.objectStore('handles');
+    store.delete(key);
+    return new Promise((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error || new Error('Transaction aborted'));
+    });
+}
+
+async function _listSavedDirHandlesInDB(db) {
+    const tx = db.transaction('handles', 'readonly');
+    const store = tx.objectStore('handles');
+    return new Promise((resolve, reject) => {
+        const result = [];
+        const req = store.openCursor();
+        req.onsuccess = (ev) => {
+            const cursor = ev.target.result;
+            if (cursor) {
+                if (typeof cursor.key === 'string'
+                    && cursor.key.startsWith(DIR_HANDLE_PREFIX)
+                    && cursor.value instanceof FileSystemDirectoryHandle) {
+                    result.push({
+                        folderName: cursor.key.slice(DIR_HANDLE_PREFIX.length),
+                        handle: cursor.value,
+                    });
+                }
+                cursor.continue();
+            } else {
+                resolve(result);
+            }
+        };
+        req.onerror = () => reject(req.error);
+        tx.onabort = () => reject(tx.error || new Error('Transaction aborted'));
+    });
+}
+
+async function _migrateLegacyKey(db) {
+    // Check the legacy key exists and migrate it to the new format.
+    const legacyHandle = await _readKey(db, LEGACY_HANDLE_KEY);
+    if (!(legacyHandle instanceof FileSystemDirectoryHandle)) return;
+
+    const folderName = legacyHandle.name;
+    if (!folderName) {
+        // OPFS root handles have an empty name — skip migration, they are
+        // never saved by openDir() anyway.
+        await _deleteKey(db, LEGACY_HANDLE_KEY);
+        return;
+    }
+
+    const newKey = DIR_HANDLE_PREFIX + folderName;
+    await _writeKey(db, newKey, legacyHandle);
+    await _writeKey(db, LAST_USED_KEY, folderName);
+    await _deleteKey(db, LEGACY_HANDLE_KEY);
+
+    log('Migrated legacy directory handle to multi-key format:', folderName);
+}
+
+// --- Public API ---
+
+/**
+ * List all saved directory handles from IndexedDB.
+ * @returns {Promise<{folderName: string, handle: FileSystemDirectoryHandle}[]>}
+ */
+async function listSavedDirHandles() {
+    const db = await initDB();
+    // Opportunistically run migration so legacy handles show up in the list.
+    await _migrateLegacyKey(db);
+    return _listSavedDirHandlesInDB(db);
+}
+
+/**
+ * Persist a directory handle to IndexedDB under the key dirHandle:<folderName>.
+ * Uses the Web Locks API to serialise writes across tabs.
+ */
+async function saveDirectoryHandle(directoryHandle) {
+    const folderName = directoryHandle.name;
+    if (!folderName) {
+        logError('saveDirectoryHandle: handle has empty name, refusing to persist');
+        return;
+    }
+    const key = DIR_HANDLE_PREFIX + folderName;
+
+    await navigator.locks.request('filesmd-db-write', async () => {
+        const db = await initDB();
+        const tx = db.transaction('handles', 'readwrite');
+        const store = tx.objectStore('handles');
+        store.put(directoryHandle, key);
+        store.put(folderName, LAST_USED_KEY);
+        await new Promise((resolve, reject) => {
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+            tx.onabort = () => reject(tx.error || new Error('Transaction aborted'));
+        });
+    });
+
+    log('Saved directory handle:', folderName);
+}
+
+/**
+ * Read a saved directory handle.
+ *
+ * @param {string} [folderName] — if given, look up that specific directory.
+ *   When omitted, return the most-recently-used directory (via _lastUsed marker).
+ * @returns {Promise<FileSystemDirectoryHandle|null>}
+ */
+async function getSavedRootDirHandle(folderName) {
+    const db = await initDB();
+
+    // Migrate legacy data on every read — idempotent once the old key is gone.
+    await _migrateLegacyKey(db);
+
+    let key;
+    if (folderName !== undefined) {
+        key = DIR_HANDLE_PREFIX + folderName;
+    } else {
+        const lastUsed = await _readKey(db, LAST_USED_KEY);
+        if (lastUsed && typeof lastUsed === 'string') {
+            key = DIR_HANDLE_PREFIX + lastUsed;
+        } else {
+            // No last-used marker — pick any saved directory as a fallback.
+            const dirs = await _listSavedDirHandlesInDB(db);
+            if (dirs.length > 0) {
+                key = DIR_HANDLE_PREFIX + dirs[0].folderName;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    return _readKey(db, key);
+}
+
+/**
+ * Remove a saved directory handle.
+ *
+ * @param {string} [folderName] — if given, delete only that directory's handle.
+ *   When omitted, delete the legacy key (backward-compat for the permission-denied path).
+ */
+async function removeSavedRootDirHandle(folderName) {
+    // Serialise with saveDirectoryHandle to avoid cross-tab write races.
+    await navigator.locks.request('filesmd-db-write', async () => {
+        const db = await initDB();
+        if (folderName !== undefined) {
+            // Delete the directory handle and clear _lastUsed if it points here.
+            const key = DIR_HANDLE_PREFIX + folderName;
+            await _deleteKey(db, key);
+
+            const lastUsed = await _readKey(db, LAST_USED_KEY);
+            if (lastUsed === folderName) {
+                await _deleteKey(db, LAST_USED_KEY);
+            }
+        } else {
+            // Legacy backward-compat: delete the old single-directory key.
+            await _deleteKey(db, LEGACY_HANDLE_KEY);
+        }
+    });
+    log('Removed saved directory handle:', folderName || '(legacy)');
 }
 
 async function getRootDirHandle() {

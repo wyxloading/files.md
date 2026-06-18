@@ -3573,9 +3573,14 @@
         // stay character-accurate. The cap keeps normal selections pretty.
         if (endLine - startLine > 200) {
           // Content wraps at --normal-width (the editor centers text at that
-          // fixed width), so the block ends at leftSide + that width - same
+          // width), so the block ends at leftSide + that width - same
           // right edge as a regular selection, never the full editor width.
-          let normalWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--normal-width'));
+          // --normal-width may be a pixel value (e.g. "1200px") or a
+          // percentage (e.g. "95%"). parseFloat strips the unit only for
+          // px values; percentages give a meaningless number. When the
+          // raw value ends with %, fall back to the remaining space.
+          let normalWidthRaw = getComputedStyle(document.documentElement).getPropertyValue('--normal-width');
+          let normalWidth = normalWidthRaw.endsWith('%') ? 0 : parseFloat(normalWidthRaw);
           let blockWidth = normalWidth ? normalWidth : rightSide - leftSide;
           drawSelectionRect(leftSide, leftEnd.bottom, blockWidth, rightStart.top);
         } else {

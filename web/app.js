@@ -438,22 +438,43 @@ async function _switchToLocalDirectory(dirHandle) {
     }
     isSyncingFiles = true;
 
-    await saveDirectoryHandle(dirHandle);
+    // Note: the server state reset (server = {files: {}, …},
+    // localStorage.removeItem("server")) from the original openDir() is
+    // intentionally omitted here.  The app is frontend-only — there is no
+    // server backend — so the in-memory server variable doesn't need to be
+    // cleared between directory switches.  Preserving it keeps prior state
+    // available for any OPFS/demo-fs flows that reference it.
 
-    // Claim the directory in localStorage so other tabs can detect it.
-    // Must happen after saveDirectoryHandle (which validates the handle)
-    // but before loadLocalFiles (which is where failures can occur).
-    // Release the claim if loading fails to avoid orphaned claims blocking
-    // other tabs from opening this directory.
-    const folderName = dirHandle.name;
-    if (folderName) {
-        claimDir(folderName);
+    let claimMade = false;
+    try {
+        await saveDirectoryHandle(dirHandle);
+
+        // Claim the directory in localStorage so other tabs can detect it.
+        // Must happen after saveDirectoryHandle (which validates the handle)
+        // but before loadLocalFiles (which is where failures can occur).
+        // Release the claim if loading fails to avoid orphaned claims blocking
+        // other tabs from opening this directory.
+        const folderName = dirHandle.name;
+        if (folderName) {
+            claimDir(folderName);
+            claimMade = true;
+        }
+
+        // Refresh the recent directories list so the folder appears / moves to
+        // the top (most-recent) position immediately without a page reload.
+        const recentDirs = await listSavedDirHandles();
+        renderRecentDirs(recentDirs);
+    } catch (e) {
+        // If saveDirectoryHandle, claimDir, listSavedDirHandles, or
+        // renderRecentDirs throws, reset the guard flags and release
+        // any claim we made so the app stays functional.
+        isLoadingLocalFiles = false;
+        isSyncingFiles = false;
+        if (claimMade) {
+            releaseCurrentDirClaim();
+        }
+        throw e;
     }
-
-    // Refresh the recent directories list so the folder appears / moves to
-    // the top (most-recent) position immediately without a page reload.
-    const recentDirs = await listSavedDirHandles();
-    renderRecentDirs(recentDirs);
 
     isLoadingLocalFiles = false;
     try {

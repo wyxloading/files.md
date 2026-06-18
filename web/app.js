@@ -298,7 +298,9 @@ async function openDir() {
     localStorage.removeItem("server");
 
     await saveDirectoryHandle(dirHandle);
-    await write('/Help.md', getHelpContent());
+    // Help.md is no longer auto-created in local folders (REQ-260618-001-TASK-002).
+    // getHelpContent() is still used by the temporary/demo FS via WELCOME_FILES.
+    // await write('/Help.md', getHelpContent());
 
     // Copy user-created files from the temporary FS into the opened folder.
     try {
@@ -315,6 +317,10 @@ async function openDir() {
     }
 
     isMemFS = false;
+    // Reset in-memory chat state when switching to a new local folder,
+    // so content from the previous folder doesn't leak into the new one.
+    chatContent = '';
+    lastChatText = null;
     document.getElementById('open-folder').style.display = 'none';
     renderSidebar();
     await openChat();

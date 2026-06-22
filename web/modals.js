@@ -644,3 +644,115 @@ class MoveModal {
 
 const searchModal = new SearchModal();
 const moveModal = new MoveModal();
+
+// --- Conflict dialog (REQ-260618-010-TASK-003) ---
+//
+// When a file is modified externally while the editor has unsaved changes,
+// showConflictDialog presents a two-button choice: keep the editor's version
+// or load the external version from disk.
+//
+// The overlay cannot be dismissed by clicking the backdrop or pressing Escape
+// – the user must make an explicit choice to prevent accidental data loss.
+//
+// If the user switches to a different file while the dialog is open, the
+// dialog auto-closes with 'external' (the saver's merge block handles the
+// editor-switch case without reloading from disk).
+
+// Shared via window with files.js (initialized in files.js which loads first).
+// window.conflictPath — path of the file currently in conflict resolution
+// window.conflictQueue — [{path, resolve}] — queued conflicts, processed one at a time
+
+// Defensive init in case modals.js is loaded standalone (e.g. test pages).
+if (window.conflictPath === undefined) window.conflictPath = null;
+if (window.conflictQueue === undefined) window.conflictQueue = [];
+
+/**
+ * Show the conflict resolution dialog for a file.
+ *
+ * @param {string} path - The file path to display in the dialog.
+ * @returns {Promise<'mine'|'external'>}  'mine' → keep editor content; 'external' → load from disk.
+ */
+async function showConflictDialog(path) {
+    // Already showing for this same path — don't double-show.
+    if (window.conflictPath === path) {
+        return 'mine';
+    }
+
+    // Another conflict dialog is open — queue this one.
+    if (window.conflictPath !== null) {
+        return new Promise((resolve) => {
+            window.conflictQueue.push({ path, resolve });
+        });
+    }
+
+    return await _showConflictDialogInternal(path);
+}
+
+async function _showConflictDialogInternal(path) {
+    window.conflictPath = path;
+
+    try {
+        const overlay = document.getElementById('conflict-dialog-overlay');
+        const bodyEl = document.getElementById('conflict-dialog-body');
+        const keepBtn = document.getElementById('conflict-keep-mine');
+        const loadBtn = document.getElementById('conflict-load-external');
+
+        // Guard against missing DOM elements — the conflict dialog HTML template
+        // must be present in the page for this function to work correctly.
+        if (!overlay || !bodyEl || !keepBtn || !loadBtn) {
+            console.error('Conflict dialog: required DOM elements not found.');
+            return 'external';
+        }
+
+        // Display the file path in the dialog body.
+        bodyEl.textContent = path;
+
+        // Show the dialog.
+        overlay.style.display = 'flex';
+
+        const result = await new Promise((resolve) => {
+            // Poll: if the user switches to a different file while the dialog
+            // is open, auto-close with 'external' (the caller handles the
+            // editor-switch without reloading from disk).
+            const checkInterval = setInterval(() => {
+                if (window.currentEditor && window.currentEditor.path !== path) {
+                    clearInterval(checkInterval);
+                    overlay.style.display = 'none';
+                    keepBtn.removeEventListener('click', onKeep);
+                    loadBtn.removeEventListener('click', onLoad);
+                    resolve('external');
+                }
+            }, 200);
+
+            const onKeep = () => {
+                clearInterval(checkInterval);
+                overlay.style.display = 'none';
+                keepBtn.removeEventListener('click', onKeep);
+                loadBtn.removeEventListener('click', onLoad);
+                resolve('mine');
+            };
+
+            const onLoad = () => {
+                clearInterval(checkInterval);
+                overlay.style.display = 'none';
+                keepBtn.removeEventListener('click', onKeep);
+                loadBtn.removeEventListener('click', onLoad);
+                resolve('external');
+            };
+
+            keepBtn.addEventListener('click', onKeep);
+            loadBtn.addEventListener('click', onLoad);
+        });
+
+        return result;
+    } finally {
+        window.conflictPath = null;
+
+        // Process the next queued conflict, if any.
+        if (window.conflictQueue.length > 0) {
+            const next = window.conflictQueue.shift();
+            // Kick off the next dialog; chain the stored resolve.
+            showConflictDialog(next.path).then(next.resolve);
+        }
+    }
+}

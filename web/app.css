@@ -1120,3 +1120,80 @@ pre.HyperMD-codeblock-end {
 .cm-formatting-task.cm-property {
     opacity: 0.6;
 }
+
+/* --- Conflict dialog (REQ-260618-010-TASK-003) --- */
+
+#conflict-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20000;
+}
+
+#conflict-dialog {
+    background: var(--col-bg);
+    border-radius: 12px;
+    padding: 28px 32px 24px;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+#conflict-dialog-title {
+    font-size: 1.25em;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--col-tx);
+}
+
+#conflict-dialog-body {
+    color: var(--col-inline-code);
+    margin-bottom: 24px;
+    word-break: break-all;
+    line-height: 1.5;
+    font-size: 0.95em;
+}
+
+#conflict-dialog-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+#conflict-keep-mine {
+    background: var(--col-link);
+    color: #fff;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-family: var(--font);
+    transition: opacity 0.15s;
+}
+
+#conflict-keep-mine:hover {
+    opacity: 0.85;
+}
+
+#conflict-load-external {
+    background: transparent;
+    color: var(--col-tx);
+    border: 1px solid var(--col-border);
+    padding: 9px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-family: var(--font);
+    transition: background 0.15s;
+}
+
+#conflict-load-external:hover {
+    background: var(--col-bg-alt);
+}

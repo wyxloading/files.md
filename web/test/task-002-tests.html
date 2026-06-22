@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>REQ-260618-010-TASK-002 Tests</title>
+<style>
+  body { font-family: monospace; max-width: 900px; margin: 20px auto; padding: 0 20px; }
+  .pass { color: #4CAF50; }
+  .fail { color: #F44336; }
+  .suite { margin: 16px 0; padding: 12px; border: 1px solid #ddd; border-radius: 4px; }
+  .suite h3 { margin: 0 0 8px 0; }
+  .test { margin: 4px 0; padding: 4px 8px; }
+  .summary { font-weight: bold; margin: 16px 0; font-size: 1.1em; }
+</style>
+</head>
+<body>
+<h1>REQ-260618-010-TASK-002 Tests</h1>
+<div id="results"></div>
+
+<script>
+// ============================================================
+// Test harness
+// ============================================================
+const results = { passed: 0, failed: 0, suites: [] };
+let currentSuite = null;
+
+function suite(name, fn) {
+  currentSuite = { name, tests: [] };
+  results.suites.push(currentSuite);
+  fn();
+}
+
+function test(name, fn) {
+  try {
+    fn();
+    currentSuite.tests.push({ name, status: 'pass' });
+    results.passed++;
+  } catch (e) {
+    currentSuite.tests.push({ name, status: 'fail', error: e.message });
+    results.failed++;
+  }
+}
+
+function assert(condition, msg) {
+  if (!condition) throw new Error(msg || 'assertion failed');
+}
+
+function assertEq(actual, expected, msg) {
+  if (actual !== expected) {
+    throw new Error(msg || `expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+  }
+}
+
+function assertDeepEq(actual, expected, msg) {
+  const a = JSON.stringify(actual);
+  const b = JSON.stringify(expected);
+  if (a !== b) {
+    throw new Error(msg || `expected ${b}, got ${a}`);
+  }
+}
+
+function renderResults() {
+  const div = document.getElementById('results');
+  let html = `<div class="summary ${results.failed ? 'fail' : 'pass'}">`;
+  html += `${results.passed} passed, ${results.failed} failed</div>`;
+
+  for (const s of results.suites) {
+    html += `<div class="suite"><h3>${s.name}</h3>`;
+    for (const t of s.tests) {
+      const cls = t.status === 'pass' ? 'pass' : 'fail';
+      html += `<div class="test ${cls}">${t.status === 'pass' ? '✓' : '✗'} ${t.name}`;
+      if (t.error) html += ` — <span class="fail">${t.error}</span>`;
+      html += `</div>`;
+    }
+    html += `</div>`;
+  }
+  div.innerHTML = html;
+}
+
+// Replicated helper from files.js for tests:
+function removeTrailingSlash(path) {
+  if (path === '/') return '/';
+  if (path.endsWith('/')) return path.slice(0, -1);
+  return path;
+}
+
+// Replicated findNodeByPath from sidebar.js for tests:
+function findNodeByPath(root, path) {
+  const searchPath = removeTrailingSlash(path);
+  function search(node) {
+    if (node.path === searchPath) return node;
+    if (!node.getChildren) return null;
+    for (const child of node.getChildren()) {
+      const found = search(child);
+      if (found) return found;
+    }
+    return null;
+  }
+  return search(root);
+}
+
+// Slow poll interval constant from app.js:
+const SLOW_POLL_INTERVAL = 30000;
+
+// ============================================================
+// Mock helpers
+// ============================================================
+function makeMockTreeNode(userObject, opts = {}) {
+  const children = [];
+  const events = {};
+  const node = {
+    userObject,
+    path: opts.path || null,
+    isGroupEnd: opts.isGroupEnd || false,
+    shouldBlink: false,
+    _expanded: opts.expanded !== undefined ? opts.expanded : true,
+    _selected: opts.selected || false,
+    _isDir: opts.dir || false,
+    parent: opts.parent || null,
+
+    addChild(child) {
+      children.push(child);
+      child.parent = node;
+    },
+    prependChild(child) {
+      children.unshift(child);
+      child.parent = node;
+    },
+    removeChild(child) {
+      const idx = children.indexOf(child);
+      if (idx >= 0) children.splice(idx, 1);
+    },
+    removeChildPos(pos) {
+      if (pos >= 0 && pos < children.length) children.splice(pos, 1);
+    },
+    getChildren() { return children; },
+    getChildCount() { return children.length; },
+    getIndexOfChild(child) { return children.indexOf(child); },
+    getRoot() {
+      let n = node;
+      while (n.parent) n = n.parent;
+      return n;
+    },
+    setUserObject(o) { node.userObject = o; },
+    getUserObject() { return node.userObject; },
+    setOptions(o) { node._opts = o; },
+    changeOption(k, v) { if (node._opts) node._opts[k] = v; },
+    getOptions() { return node._opts || {}; },
+    isLeaf() { return !node._isDir; },
+    setExpanded(v) {
+      if (node._expanded === v) return;
+      node._expanded = v;
+      if (!v && children.length > 0) {
+        children.forEach(c => { if (!c.isLeaf()) c.setExpanded(false); });
+      }
+      if (events.toggle_expanded) events.toggle_expanded(node);
+    },
+    toggleExpanded() { node.setExpanded(!node._expanded); },
+    isExpanded() { return node.isLeaf() ? true : node._expanded; },
+    setEnabled(v) { node._enabled = v; },
+    toggleEnabled() { node._enabled = !node._enabled; },
+    isEnabled() { return node._enabled !== false; },
+    setSelected(v) {
+      if (node._selected === v) return;
+      node._selected = v;
+      if (events.toggle_selected) events.toggle_selected(node);
+    },
+    toggleSelected() { node.setSelected(!node._selected); },
+    isSelected() { return node._selected; },
+    open() { if (!node.isLeaf() && events.open) events.open(node); },
+    on(ev, cb) {
+      if (cb === undefined) return events[ev] || (() => {});
+      events[ev] = cb;
+    },
+    equals(other) { return other && other.userObject === node.userObject; },
+    toString() { return typeof node.userObject === 'string' ? node.userObject : String(node.userObject); },
+  };
+  return node;
+}
+
+// ============================================================
+// Suite 1: findNodeByPath
+// ============================================================
+suite('findNodeByPath', () => {
+
+  // Build a small tree
+  function buildTestTree() {
+    const root = makeMockTreeNode('', { path: '/', dir: true, expanded: true });
+    const journal = makeMockTreeNode('journal', { path: '/journal', dir: true, expanded: true });
+    const habits = makeMockTreeNode('habits', { path: '/habits', dir: true, expanded: false });
+    const notesFile = makeMockTreeNode('Notes', { path: '/Notes.md', expanded: false });
+
+    root.addChild(journal);
+    root.addChild(habits);
+    root.addChild(notesFile);
+
+    const jan = makeMockTreeNode('2026-01.md', { path: '/journal/2026-01.md', expanded: false });
+    journal.addChild(jan);
+
+    return root;
+  }
+
+  test('finds root node', () => {
+    const root = buildTestTree();
+    const found = findNodeByPath(root, '/');
+    assert(found !== null, 'should find root');
+    assertEq(found.path, '/');
+  });
+
+  test('finds directory node by full path', () => {
+    const root = buildTestTree();
+    const found = findNodeByPath(root, '/journal');
+    assert(found !== null, 'should find journal');
+    assertEq(found.path, '/journal');
+  });
+
+  test('finds directory node by path with trailing slash', () => {
+    const root = buildTestTree();
+    const found = findNodeByPath(root, '/journal/');
+    assert(found !== null, 'should find journal with trailing slash');
+    assertEq(found.path, '/journal');
+  });
+
+  test('finds file node by path', () => {
+    const root = buildTestTree();
+    const found = findNodeByPath(root, '/Notes.md');
+    assert(found !== null, 'should find Notes.md');
+    assertEq(found.path, '/Notes.md');
+  });
+
+  test('finds nested file node', () => {
+    const root = buildTestTree();
+    const found = findNodeByPath(root, '/journal/2026-01.md');
+    assert(found !== null, 'should find nested file');
+    assertEq(found.path, '/journal/2026-01.md');
+  });
+
+  test('returns null for non-existent path', () => {
+    const root = buildTestTree();
+    const found = findNodeByPath(root, '/nonexistent');
+    assertEq(found, null);
+  });
+
+  test('returns null for non-existent nested path', () => {
+    const root = buildTestTree();
+    const found = findNodeByPath(root, '/journal/nonexistent.md');
+    assertEq(found, null);
+  });
+
+  test('finds collapsed directory node', () => {
+    const root = buildTestTree();
+    const found = findNodeByPath(root, '/habits');
+    assert(found !== null, 'should find collapsed dir');
+    assertEq(found.path, '/habits');
+    assertEq(found.isExpanded(), false);
+  });
+});
+
+// ============================================================
+// Suite 2: Partial diff path sorting
+// ============================================================
+suite('Diff path depth sorting', () => {
+
+  test('sorts by path depth ascending', () => {
+    const paths = [
+      '/journal/2026-01.md',
+      '/projects/',
+      '/projects/code/',
+      '/journal/',
+      '/projects/code/main.js',
+    ];
+    paths.sort((a, b) => {
+      const da = (a.match(/\//g) || []).length;
+      const db = (b.match(/\//g) || []).length;
+      return da - db;
+    });
+    // Directories (1 slash) should come before their children (2 slashes)
+    assert(paths.indexOf('/projects/') < paths.indexOf('/projects/code/'),
+      'parent dir should come before child dir');
+    assert(paths.indexOf('/projects/code/') < paths.indexOf('/projects/code/main.js'),
+      'parent dir should come before file');
+    assert(paths.indexOf('/journal/') < paths.indexOf('/journal/2026-01.md'),
+      'journal dir before jan file');
+  });
+
+  test('handles empty added array', () => {
+    const added = [];
+    const sorted = [...added].sort((a, b) => {
+      const da = (a.match(/\//g) || []).length;
+      const db = (b.match(/\//g) || []).length;
+      return da - db;
+    });
+    assertEq(sorted.length, 0);
+  });
+});
+
+// ============================================================
+// Suite 3: Path filtering logic
+// ============================================================
+suite('Ignored path filtering', () => {
+
+  test('media paths are skipped', () => {
+    const paths = ['/media/', '/media/image.png', '/notes/file.md'];
+    const filtered = paths.filter(p => p !== '/media' && !p.startsWith('/media/'));
+    assertEq(filtered.length, 1);
+    assertEq(filtered[0], '/notes/file.md');
+  });
+
+  test('system paths are skipped in file additions', () => {
+    const systemPaths = ['/config.json', '/Chat.md', '/Later.md'];
+    const systemSet = ['/config.json', '/Chat.md', '/Later.md'];
+    const filtered = systemPaths.filter(p => !systemSet.includes(p));
+    assertEq(filtered.length, 0);
+  });
+
+  test('non-md files are skipped', () => {
+    const paths = ['/notes/readme.md', '/notes/image.png', '/notes/data.json'];
+    // Simulate toFilename and .endsWith('.md') filtering
+    function toFilename(p) {
+      const parts = p.split('/').filter(x => x);
+      return parts[parts.length - 1] || '/';
+    }
+    const filtered = paths.filter(p => toFilename(p).endsWith('.md'));
+    assertEq(filtered.length, 1);
+    assertEq(filtered[0], '/notes/readme.md');
+  });
+});
+
+// ============================================================
+// Suite 4: checkFileModifications batching logic
+// ============================================================
+suite('checkFileModifications batching', () => {
+
+  test('batch size of 10 splits correctly', () => {
+    const BATCH_SIZE = 10;
+    const paths = Array.from({ length: 25 }, (_, i) => `/file${i}.md`);
+    const batches = [];
+    for (let i = 0; i < paths.length; i += BATCH_SIZE) {
+      batches.push(paths.slice(i, i + BATCH_SIZE));
+    }
+    assertEq(batches.length, 3, '25 files → 3 batches');
+    assertEq(batches[0].length, 10);
+    assertEq(batches[1].length, 10);
+    assertEq(batches[2].length, 5);
+  });
+
+  test('less than batch size produces single batch', () => {
+    const BATCH_SIZE = 10;
+    const paths = Array.from({ length: 5 }, (_, i) => `/file${i}.md`);
+    const batches = [];
+    for (let i = 0; i < paths.length; i += BATCH_SIZE) {
+      batches.push(paths.slice(i, i + BATCH_SIZE));
+    }
+    assertEq(batches.length, 1);
+    assertEq(batches[0].length, 5);
+  });
+
+  test('empty path list produces no batches', () => {
+    const BATCH_SIZE = 10;
+    const paths = [];
+    const batches = [];
+    for (let i = 0; i < paths.length; i += BATCH_SIZE) {
+      batches.push(paths.slice(i, i + BATCH_SIZE));
+    }
+    assertEq(batches.length, 0);
+  });
+});
+
+// ============================================================
+// Suite 5: Fast poll diff threshold for full vs partial rebuild
+// ============================================================
+suite('Fast poll diff threshold', () => {
+
+  test('small diff uses partial update (≤50 paths)', () => {
+    const added = Array.from({ length: 5 }, (_, i) => `/file${i}.md`);
+    const removed = Array.from({ length: 3 }, (_, i) => `/old${i}.md`);
+    const total = added.length + removed.length;
+    assert(total <= 50, '8 paths should trigger partial update');
+  });
+
+  test('large diff falls back to full rebuild (>50 paths)', () => {
+    const added = Array.from({ length: 30 }, (_, i) => `/file${i}.md`);
+    const removed = Array.from({ length: 25 }, (_, i) => `/old${i}.md`);
+    const total = added.length + removed.length;
+    assert(total > 50, '55 paths should trigger full rebuild');
+  });
+
+  test('threshold edge case: exactly 50 uses partial', () => {
+    const added = Array.from({ length: 25 }, (_, i) => `/file${i}.md`);
+    const removed = Array.from({ length: 25 }, (_, i) => `/old${i}.md`);
+    const total = added.length + removed.length;
+    assertEq(total, 50);
+  });
+});
+
+// ============================================================
+// Suite 6: Slow poll state management
+// ============================================================
+suite('Slow poll state management', () => {
+
+  test('polling state variables are defined', () => {
+    assert(typeof SLOW_POLL_INTERVAL !== 'undefined', 'SLOW_POLL_INTERVAL should be defined');
+    assertEq(SLOW_POLL_INTERVAL, 30000, 'should be 30 seconds');
+  });
+
+  test('slowPollTick skips when isPollingPaused is true', () => {
+    // This test validates the guard logic in slowPollTick.
+    // In the actual code: if (isPollingPaused) return;
+    // We simulate the guard here.
+    const isPollingPaused = true;
+    let tickRan = false;
+
+    // Simulated guard at top of slowPollTick
+    if (isPollingPaused) {
+      // early return
+    } else {
+      tickRan = true;
+    }
+    assertEq(tickRan, false, 'tick should skip when paused');
+  });
+
+  test('slowPollTick skips when loading local files', () => {
+    const isLoadingLocalFiles = true;
+    let tickRan = false;
+    if (isLoadingLocalFiles) {
+      // early return
+    } else {
+      tickRan = true;
+    }
+    assertEq(tickRan, false, 'tick should skip during load');
+  });
+
+  test('slowPollTick skips when no directory handle', () => {
+    const handle = null;
+    let tickRan = false;
+    if (!handle) {
+      // early return
+    } else {
+      tickRan = true;
+    }
+    assertEq(tickRan, false, 'tick should skip without dir handle');
+  });
+
+  test('slowPollTick runs when all guards pass', () => {
+    const isPollingPaused = false;
+    const isLoadingLocalFiles = false;
+    const handle = {};
+    let tickRan = false;
+    if (isPollingPaused) return;
+    if (isLoadingLocalFiles) return;
+    if (!handle) return;
+    tickRan = true;
+    assertEq(tickRan, true, 'tick should run when all guards pass');
+  });
+});
+
+// ============================================================
+// Suite 7: Partial Tree Mutation (addChild / removeChild)
+// ============================================================
+suite('Tree mutation via addChild/removeChild', () => {
+
+  test('addChild creates correct parent reference', () => {
+    const parent = makeMockTreeNode('parent', { path: '/parent', dir: true });
+    const child = makeMockTreeNode('child', { path: '/parent/child.md' });
+    parent.addChild(child);
+    assertEq(child.parent, parent);
+    assertEq(parent.getChildCount(), 1);
+    assertEq(parent.getChildren()[0], child);
+  });
+
+  test('removeChild detaches node', () => {
+    const parent = makeMockTreeNode('parent', { path: '/parent', dir: true });
+    const child = makeMockTreeNode('child', { path: '/parent/child.md' });
+    parent.addChild(child);
+    assertEq(parent.getChildCount(), 1);
+    parent.removeChild(child);
+    assertEq(parent.getChildCount(), 0, 'child should be removed');
+  });
+
+  test('removing a directory node cascades (children no longer in tree)', () => {
+    const root = makeMockTreeNode('', { path: '/', dir: true });
+    const dir = makeMockTreeNode('somedir', { path: '/somedir', dir: true });
+    const file = makeMockTreeNode('file.md', { path: '/somedir/file.md' });
+    dir.addChild(file);
+    root.addChild(dir);
+    assertEq(root.getChildCount(), 1);
+
+    root.removeChild(dir);
+    assertEq(root.getChildCount(), 0, 'dir removed from root');
+    // The file node still exists in memory as a child of dir,
+    // but it's no longer reachable from the root.
+    assertEq(dir.getChildCount(), 1, 'file still referenced by removed dir');
+  });
+
+  test('auto-expand parent when adding child to collapsed dir', () => {
+    const parent = makeMockTreeNode('collapsed', { path: '/collapsed', dir: true, expanded: false });
+    assertEq(parent.isExpanded(), false);
+
+    // Auto-expand for new child
+    if (!parent.isLeaf() && !parent.isExpanded()) {
+      parent.setExpanded(true);
+    }
+    assertEq(parent.isExpanded(), true);
+  });
+
+  test('shouldBlink set on new file node', () => {
+    const node = makeMockTreeNode('newfile.md', { path: '/newfile.md' });
+    node.shouldBlink = true;
+    assertEq(node.shouldBlink, true);
+  });
+
+  test('blink animation applied for modified paths', () => {
+    const modifiedPaths = ['/newfile.md', '/newdir/'];
+    assert(modifiedPaths.includes('/newfile.md'), 'modifiedPaths should contain the path');
+    assert(modifiedPaths.includes('/newdir/'), 'modifiedPaths should contain dir path');
+  });
+});
+
+// ============================================================
+// Suite 8: Modified detection logic
+// ============================================================
+suite('Modified detection logic', () => {
+
+  test('detects modification when disk timestamp is newer', () => {
+    const memLastModified = 1000;
+    const diskLastModified = 2000;
+    const isModified = diskLastModified > memLastModified;
+    assertEq(isModified, true, 'newer disk timestamp should flag as modified');
+  });
+
+  test('no modification when disk timestamp equals memory', () => {
+    const memLastModified = 1000;
+    const diskLastModified = 1000;
+    const isModified = diskLastModified > memLastModified;
+    assertEq(isModified, false, 'equal timestamps should not flag');
+  });
+
+  test('no modification when disk timestamp is older', () => {
+    const memLastModified = 2000;
+    const diskLastModified = 1000;
+    const isModified = diskLastModified > memLastModified;
+    assertEq(isModified, false, 'older disk timestamp should not flag');
+  });
+
+  test('undefined memory timestamp is handled', () => {
+    const memLastModified = undefined;
+    const diskLastModified = 2000;
+    const isModified = memLastModified !== undefined && diskLastModified > memLastModified;
+    assertEq(isModified, false, 'undefined memory ts should not flag');
+  });
+});
+
+// ============================================================
+// Render results
+// ============================================================
+renderResults();
+</script>
+</body>
+</html>

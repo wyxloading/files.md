@@ -1858,3 +1858,69 @@ async function openRandomFile() {
         logError('Failed to open random file:', error);
     }
 }
+
+// checkFileModifications compares every file's on-disk lastModified against the
+// in-memory `files[path].lastModified` timestamp. Files whose disk timestamp is
+// newer are reported as `modified`; files whose handle throws (e.g. deleted) are
+// reported as `deleted`. The current editor's file and /media/ paths are skipped.
+//
+// To avoid blocking the UI on large directories, getFile() calls are batched
+// (BATCH_SIZE = 10) with a setTimeout(0) yield between batches.
+async function checkFileModifications(filesObj, rootDirHandle, lastCheckTime) {
+    const modified = [];
+    const deleted = [];
+
+    // Collect all file paths to check.
+    const filePaths = [];
+    walk(filesObj, (path, isFile) => {
+        if (!isFile) return;
+        // Skip the file currently open in the editor — the saver handles it.
+        if (currentEditor && currentEditor.path === path) return;
+        // Skip media paths.
+        if (path.startsWith('/media/') || path === '/media') return;
+        filePaths.push(path);
+    });
+
+    const BATCH_SIZE = 10;
+    for (let i = 0; i < filePaths.length; i += BATCH_SIZE) {
+        const batch = filePaths.slice(i, i + BATCH_SIZE);
+        const results = await Promise.allSettled(batch.map(async (path) => {
+            const memFile = getMemFile(path);
+            if (!memFile || !memFile.handle) return null;
+            try {
+                const file = await memFile.handle.getFile();
+                const diskModified = file.lastModified;
+                if (memFile.lastModified !== undefined && diskModified > memFile.lastModified) {
+                    // Update the in-memory timestamp so we don't re-report
+                    // the same modification on the next poll.
+                    memFile.lastModified = diskModified;
+                    return { path, modified: true };
+                }
+                // Keep the in-memory timestamp current.
+                if (diskModified > (memFile.lastModified || 0)) {
+                    memFile.lastModified = diskModified;
+                }
+                return { path, modified: false };
+            } catch (e) {
+                // File handle is no longer valid — likely deleted externally.
+                return { path, deleted: true };
+            }
+        }));
+
+        for (const result of results) {
+            if (result.status !== 'fulfilled' || !result.value) continue;
+            if (result.value.deleted) {
+                deleted.push(result.value.path);
+            } else if (result.value.modified) {
+                modified.push(result.value.path);
+            }
+        }
+
+        // Yield to the event loop between batches to avoid UI jank.
+        if (i + BATCH_SIZE < filePaths.length) {
+            await new Promise(r => setTimeout(r, 0));
+        }
+    }
+
+    return { modified, deleted };
+}

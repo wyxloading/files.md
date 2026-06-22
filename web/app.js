@@ -20,6 +20,11 @@ let prevEntrySet = new Set();
 let isPollingPaused = false;
 let fastPollRunning = false; // guard against overlapping ticks
 const FAST_POLL_INTERVAL = 5000; // ms
+
+// --- Slow polling (REQ-260618-010-TASK-002) ---
+let slowPollTimer = null;
+let slowPollRunning = false; // guard against overlapping ticks
+const SLOW_POLL_INTERVAL = 30000; // 30 seconds
 // Per-tab in-memory cache of the current directory handle.
 // Prevents cross-tab hijacking: without this, focus/blur handlers
 // would re-read the globally-shared _lastUsed IndexedDB key and
@@ -145,6 +150,7 @@ async function init() {
     // Start fast polling if a local directory is open.
     if (!isMemFS && _currentTabDirHandle) {
         startFastPoll();
+        startSlowPoll();
     }
 }
 
@@ -247,8 +253,15 @@ async function fastPollTick() {
     }
 
     prevEntrySet = currentSet;
-    // Full sidebar rebuild with changed paths marked for blinking.
-    renderSidebar(null, [...added, ...removed]);
+    // Use partial sidebar update when the diff is manageable; fall back to
+    // full rebuild for large diffs (>50 paths) to avoid too many individual
+    // tree mutations.
+    const modifiedPaths = [...added, ...removed];
+    if (added.length + removed.length > 50) {
+        renderSidebar(null, modifiedPaths);
+    } else {
+        renderSidebar(null, modifiedPaths, { added, removed });
+    }
     } finally {
         fastPollRunning = false;
     }
@@ -276,6 +289,11 @@ function pauseFastPoll() {
     if (fastPollTimer) {
         clearInterval(fastPollTimer);
         fastPollTimer = null;
+    }
+    // Pause slow polling as well (REQ-260618-010-TASK-002).
+    if (slowPollTimer) {
+        clearInterval(slowPollTimer);
+        slowPollTimer = null;
     }
     // Don't clear prevEntrySet — we want to diff against the last known
     // state when we resume, not treat everything as new.
@@ -306,9 +324,85 @@ async function resumeFastPoll() {
     if (!fastPollTimer) {
         fastPollTimer = setInterval(fastPollTick, FAST_POLL_INTERVAL);
     }
+    // Resume slow polling (REQ-260618-010-TASK-002).
+    if (!slowPollTimer && !isMemFS) {
+        slowPollTimer = setInterval(slowPollTick, SLOW_POLL_INTERVAL);
+    }
 }
 
 // --- End fast polling framework ---
+
+// --- Slow polling (REQ-260618-010-TASK-002) ---
+
+async function slowPollTick() {
+    // Guard against overlapping invocations.
+    if (slowPollRunning) return;
+    // Skip if a full scan is already in progress.
+    if (isLoadingLocalFiles) return;
+    // Skip if polling is paused (visibility hidden, chat open, etc.).
+    if (isPollingPaused) return;
+    // Need an open directory to poll.
+    if (!_currentTabDirHandle) return;
+
+    slowPollRunning = true;
+    try {
+        const rootDirHandle = await getRootDirHandle();
+        if (!(rootDirHandle instanceof FileSystemDirectoryHandle)) return;
+
+        const { modified, deleted } = await checkFileModifications(
+            files, rootDirHandle, 0 /* lastCheckTime unused — we compare lastModified */
+        );
+
+        if (modified.length === 0 && deleted.length === 0) return;
+
+        log('slowPollTick: modifications detected', { modified, deleted });
+
+        // Handle deleted files — update sidebar.
+        if (deleted.length > 0) {
+            // Remove from in-memory `files` as well.
+            for (const path of deleted) {
+                removeMemFile(path);
+            }
+            renderSidebar(null, deleted, { added: [], removed: deleted });
+        }
+
+        // Handle modified files.
+        for (const path of modified) {
+            if (currentEditor.path === path) {
+                if (currentEditor.isClean()) {
+                    // Editor is clean — safe to auto-reload from disk.
+                    log('slowPollTick: auto-reloading clean editor for', path);
+                    await openFile(path);
+                } else {
+                    // Editor is dirty — conflict detected. The conflict dialog
+                    // is implemented by TASK-003. For now we log the event so
+                    // the integration point is ready.
+                    log('slowPollTick: conflict detected for', path, '(editor dirty)');
+                }
+            }
+        }
+    } catch (err) {
+        logError('slowPollTick: error', err);
+    } finally {
+        slowPollRunning = false;
+    }
+}
+
+function startSlowPoll() {
+    if (slowPollTimer) return;
+    log('startSlowPoll');
+    slowPollTimer = setInterval(slowPollTick, SLOW_POLL_INTERVAL);
+}
+
+function stopSlowPoll() {
+    if (slowPollTimer) {
+        clearInterval(slowPollTimer);
+        slowPollTimer = null;
+    }
+    log('stopSlowPoll');
+}
+
+// --- End slow polling ---
 
 // Refresh button handler (REQ-260618-010-TASK-001)
 {   // block scope for const
@@ -710,6 +804,7 @@ async function _switchToLocalDirectory(dirHandle) {
 
     // Restart polling with the new directory (REQ-260618-010-TASK-001).
     stopFastPoll();
+    stopSlowPoll();
     if (!isMemFS && _currentTabDirHandle) {
         // Rebuild the baseline from the freshly-loaded files.
         try {
@@ -717,6 +812,7 @@ async function _switchToLocalDirectory(dirHandle) {
             prevEntrySet = scanResult.entrySet;
         } catch (_) {}
         startFastPoll();
+        startSlowPoll();
     }
 
     await openChat();
@@ -1617,6 +1713,7 @@ document.addEventListener('keydown', (e) => {
 window.addEventListener('beforeunload', function() {
     clearInterval(window.saver);
     stopFastPoll();
+    stopSlowPoll();
     releaseCurrentDirClaim();
 });
 

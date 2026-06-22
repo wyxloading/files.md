@@ -21,7 +21,105 @@ function selectSidebarItem(path) {
     tree.reload();
 }
 
-function renderSidebar(focusDir = '', modifiedPaths) {
+// findNodeByPath searches the tree rooted at `root` for a node whose .path
+// matches `searchPath`. Directories are stored without trailing slash, so the
+// incoming path is normalised before comparison. Returns the TreeNode or null.
+function findNodeByPath(root, path) {
+    const searchPath = removeTrailingSlash(path);
+    function search(node) {
+        if (node.path === searchPath) return node;
+        if (!node.getChildren) return null;
+        for (const child of node.getChildren()) {
+            const found = search(child);
+            if (found) return found;
+        }
+        return null;
+    }
+    return search(root);
+}
+
+// renderSidebar builds the sidebar file tree. When `diff` is null (default),
+// it performs a full in-memory tree rebuild + DOM render. When `diff` is
+// {added: string[], removed: string[]}, it patches the existing in-memory tree
+// with only the changed nodes and re-renders the DOM — avoiding a full rebuild.
+function renderSidebar(focusDir = '', modifiedPaths, diff = null) {
+
+    // --- Partial update path ---
+    if (diff !== null && tree && tree.getRoot()) {
+        const rootNode = tree.getRoot();
+
+        // Process removed paths first so parent-dir removal cascades.
+        for (const path of (diff.removed || [])) {
+            const node = findNodeByPath(rootNode, path);
+            if (node && node.parent) {
+                node.parent.removeChild(node);
+            }
+        }
+
+        // Sort added paths by depth so parent directories are created before
+        // the files that live inside them. When depth is equal, directories
+        // (paths ending with '/') sort before files so a newly-created dir is
+        // available as a parent for its immediate children.
+        const added = [...(diff.added || [])].sort((a, b) => {
+            const da = (a.match(/\//g) || []).length;
+            const db = (b.match(/\//g) || []).length;
+            if (da !== db) return da - db;
+            // Directories before files at the same depth.
+            const aDir = a.endsWith('/');
+            const bDir = b.endsWith('/');
+            if (aDir && !bDir) return -1;
+            if (!aDir && bDir) return 1;
+            return a.localeCompare(b);
+        });
+
+        for (const path of added) {
+            // Skip ignored paths (media, system files).
+            if (path === '/media' || path.startsWith('/media/')) continue;
+
+            const parentPath = toDirPath(path);
+            let parentNode = findNodeByPath(rootNode, removeTrailingSlash(parentPath));
+            if (!parentNode) parentNode = rootNode;
+
+            // Auto-expand collapsed parent directories so the new child is visible.
+            if (parentNode !== rootNode && !parentNode.isLeaf() && !parentNode.isExpanded()) {
+                parentNode.setExpanded(true);
+            }
+
+            if (path.endsWith('/')) {
+                // New directory.
+                const dirNode = new TreeNode(toFilename(path), {expanded: false, dir: true});
+                dirNode.path = removeTrailingSlash(path);
+                parentNode.addChild(dirNode);
+                if (modifiedPaths && modifiedPaths.includes(path)) {
+                    dirNode.shouldBlink = true;
+                }
+            } else {
+                // New file — sidebar only lists .md files.
+                if (!toFilename(path).endsWith('.md')) continue;
+                // Skip system paths rendered elsewhere.
+                if ([CONFIG_PATH, CHAT_PATH, LATER_PATH].includes(path)) continue;
+                // Root-level checklists are rendered in the Lists group during
+                // full rebuild; for partial updates they're still added to root.
+                if (isChecklist(toFilename(path)) && toRootPath(path) === '/') continue;
+
+                const displayName = toFilename(path).replace(/\.md$/, '').replace(/\.txt$/, '');
+                const fileNode = new TreeNode(displayName, {expanded: false});
+                fileNode.path = path;
+                fileNode.on('click', async function (n, node) {
+                    await openFile(path);
+                });
+                parentNode.addChild(fileNode);
+                if (modifiedPaths && modifiedPaths.includes(path)) {
+                    fileNode.shouldBlink = true;
+                }
+            }
+        }
+
+        tree.reload();
+        return;
+    }
+
+    // --- Full rebuild path (diff === null, or tree doesn't exist yet) ---
     let expandedDirs = new Set();
     let selectedNodes = new Set();
 

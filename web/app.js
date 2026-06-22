@@ -162,93 +162,92 @@ async function fastPollTick() {
 
     fastPollRunning = true;
     try {
+        const rootDirHandle = await getRootDirHandle();
+        if (!(rootDirHandle instanceof FileSystemDirectoryHandle)) return;
 
-    const rootDirHandle = await getRootDirHandle();
-    if (!(rootDirHandle instanceof FileSystemDirectoryHandle)) return;
+        let currentEntries;
+        try {
+            currentEntries = await scanDirEntries(rootDirHandle);
+        } catch (err) {
+            logError('fastPollTick: scanDirEntries failed', err);
+            return;
+        }
 
-    let currentEntries;
-    try {
-        currentEntries = await scanDirEntries(rootDirHandle);
-    } catch (err) {
-        logError('fastPollTick: scanDirEntries failed', err);
-        return;
-    }
+        const currentSet = currentEntries.entrySet;
+        const handles = currentEntries.handles;
 
-    const currentSet = currentEntries.entrySet;
-    const handles = currentEntries.handles;
+        // Diff: find added and removed paths.
+        const added = [];
+        const removed = [];
 
-    // Diff: find added and removed paths.
-    const added = [];
-    const removed = [];
+        for (const p of currentSet) {
+            if (!prevEntrySet.has(p)) added.push(p);
+        }
+        for (const p of prevEntrySet) {
+            if (!currentSet.has(p)) removed.push(p);
+        }
 
-    for (const p of currentSet) {
-        if (!prevEntrySet.has(p)) added.push(p);
-    }
-    for (const p of prevEntrySet) {
-        if (!currentSet.has(p)) removed.push(p);
-    }
+        if (added.length === 0 && removed.length === 0) {
+            prevEntrySet = currentSet;
+            return;
+        }
 
-    if (added.length === 0 && removed.length === 0) {
-        prevEntrySet = currentSet;
-        return;
-    }
+        log('fastPollTick: changes detected', { added, removed });
 
-    log('fastPollTick: changes detected', { added, removed });
-
-    // Apply additions to in-memory `files`.
-    for (const p of added) {
-        if (p.endsWith('/')) {
-            // New directory.
-            const dirs = p.split('/').filter(d => d !== '');
-            let currentDir = files;
-            for (const dir of dirs) {
-                const dirKey = dir + '/';
-                if (!currentDir[dirKey]) {
-                    currentDir[dirKey] = {};
+        // Apply additions to in-memory `files`.
+        for (const p of added) {
+            if (p.endsWith('/')) {
+                // New directory.
+                const dirs = p.split('/').filter(d => d !== '');
+                let currentDir = files;
+                for (const dir of dirs) {
+                    const dirKey = dir + '/';
+                    if (!currentDir[dirKey]) {
+                        currentDir[dirKey] = {};
+                    }
+                    currentDir = currentDir[dirKey];
                 }
-                currentDir = currentDir[dirKey];
-            }
-        } else {
-            // New file — add a minimal memFile entry with handle from scan.
-            const handle = handles.get(p);
-            addMemFile(p, {
-                isFile: true,
-                path: p,
-                handle: handle || undefined,
-            });
-            // Fill in lastModified lazily.
-            if (handle) {
-                handle.getFile().then(file => {
-                    const mem = getMemFile(p);
-                    if (mem) mem.lastModified = file.lastModified;
-                }).catch(() => {});
+            } else {
+                // New file — add a minimal memFile entry with handle from scan.
+                const handle = handles.get(p);
+                addMemFile(p, {
+                    isFile: true,
+                    path: p,
+                    handle: handle || undefined,
+                });
+                // Fill in lastModified lazily.
+                if (handle) {
+                    handle.getFile().then(file => {
+                        const mem = getMemFile(p);
+                        if (mem) mem.lastModified = file.lastModified;
+                    }).catch(() => {});
+                }
             }
         }
-    }
 
-    // Apply removals from in-memory `files`.
-    for (const p of removed) {
-        if (p.endsWith('/')) {
-            // Remove directory from memory.
-            const dirs = p.split('/').filter(d => d !== '');
-            let currentDir = files;
-            for (let i = 0; i < dirs.length - 1; i++) {
-                const dirKey = dirs[i] + '/';
-                if (!currentDir[dirKey]) break;
-                currentDir = currentDir[dirKey];
+        // Apply removals from in-memory `files`.
+        for (const p of removed) {
+            if (p.endsWith('/')) {
+                // Remove directory from memory.
+                const dirs = p.split('/').filter(d => d !== '');
+                let currentDir = files;
+                for (let i = 0; i < dirs.length - 1; i++) {
+                    const dirKey = dirs[i] + '/';
+                    if (!currentDir[dirKey]) break;
+                    currentDir = currentDir[dirKey];
+                }
+                const lastDir = dirs[dirs.length - 1] + '/';
+                if (currentDir[lastDir]) {
+                    delete currentDir[lastDir];
+                }
+            } else {
+                removeMemFile(p);
             }
-            const lastDir = dirs[dirs.length - 1] + '/';
-            if (currentDir[lastDir]) {
-                delete currentDir[lastDir];
-            }
-        } else {
-            removeMemFile(p);
         }
-    }
 
-    prevEntrySet = currentSet;
-    // Full sidebar rebuild with changed paths marked for blinking.
-    renderSidebar(null, [...added, ...removed]);
+        prevEntrySet = currentSet;
+        // Full sidebar rebuild with changed paths marked for blinking.
+        renderSidebar(null, [...added, ...removed]);
     } finally {
         fastPollRunning = false;
     }
@@ -309,6 +308,51 @@ async function resumeFastPoll() {
 }
 
 // --- End fast polling framework ---
+
+// --- Slow-poll conflict handler (REQ-260618-010-TASK-003) ---
+//
+// Infrastructure for TASK-002's slow-poll path.  This function is NOT yet
+// wired up — TASK-002 must add a caller in the slow-poll diff loop (files.js)
+// that invokes handleSlowPollModification for each externally-modified file.
+//
+// When a file is detected as modified externally:
+//   - If it's the current editor AND has unsaved changes → trigger a sync so
+//     the saver's merge block presents the conflict dialog.
+//   - Otherwise → just update lastModified so the sidebar stays accurate.
+//
+// @param {string} modifiedPath - path of the file modified externally
+// @todo Wire up from TASK-002 slow-poll diff loop in files.js
+
+async function handleSlowPollModification(modifiedPath) {
+    // If it's the current editor and has unsaved changes, trigger conflict
+    // resolution via the saver (which calls isContentEqual → detects the
+    // external modification → shows the conflict dialog).
+    if (currentEditor && currentEditor.path === modifiedPath && !currentEditor.isClean()) {
+        log('Slow poll: external modification of current editor, syncing to trigger conflict dialog:', modifiedPath);
+        // The sync will call isContentEqual, detect the external modification,
+        // enter the merge block, and show the conflict dialog.
+        await syncCurrentFile();
+        return;
+    }
+
+    // Not the current editor (or editor is clean) — just update lastModified
+    // so the sidebar / file tree stays accurate.
+    try {
+        const memFile = getMemFile(modifiedPath);
+        if (memFile) {
+            const handle = await getFileHandle(modifiedPath);
+            if (handle) {
+                const file = await handle.getFile();
+                memFile.lastModified = file.lastModified;
+                log('Slow poll: updated lastModified for', modifiedPath, file.lastModified);
+            }
+        }
+    } catch (e) {
+        logError('Slow poll: failed to update lastModified for', modifiedPath, e);
+    }
+}
+
+// --- End slow-poll conflict handler ---
 
 // Refresh button handler (REQ-260618-010-TASK-001)
 {   // block scope for const

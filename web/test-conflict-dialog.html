@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Conflict Dialog Tests - REQ-260618-010-TASK-003</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+  .pass { color: green; }
+  .fail { color: red; }
+  .test { border: 1px solid #ccc; border-radius: 6px; padding: 0.5rem 1rem; margin: 0.5rem 0; }
+  .test-name { font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>Conflict Dialog Tests</h1>
+<p>Open the browser console to see detailed results.</p>
+
+<div id="results"></div>
+
+<!-- Minimal DOM for conflict dialog -->
+<div id="conflict-dialog-overlay" style="display: none;">
+    <div id="conflict-dialog">
+        <div id="conflict-dialog-title">文件已被外部修改</div>
+        <div id="conflict-dialog-body"></div>
+        <div id="conflict-dialog-actions">
+            <button id="conflict-keep-mine">保留我的编辑</button>
+            <button id="conflict-load-external">加载外部版本</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize conflict globals (normally done by files.js which isn't loaded here).
+window.conflictPath = null;
+window.conflictQueue = [];
+</script>
+<script src="modals.js?v="></script>
+<script>
+// Mock window.currentEditor (used by conflict dialog polling).
+window.currentEditor = { path: null };
+
+function addResult(name, pass, detail) {
+    const div = document.createElement('div');
+    div.className = 'test';
+    div.innerHTML = `<span class="test-name">${pass ? '✓' : '✗'} ${name}</span>`
+        + (detail ? ` — <span class="${pass ? 'pass' : 'fail'}">${detail}</span>` : '');
+    document.getElementById('results').appendChild(div);
+    console.log(`${pass ? 'PASS' : 'FAIL'}: ${name}${detail ? ' — ' + detail : ''}`);
+}
+
+async function runTests() {
+    // Test 1: showConflictDialog returns 'mine' when "Keep mine" is clicked.
+    {
+        const testName = 'Click "保留我的编辑" returns "mine"';
+        try {
+            window.currentEditor.path = '/test/file.md';
+            const promise = showConflictDialog('/test/file.md');
+            // Simulate click on keep-mine button after a tick.
+            setTimeout(() => {
+                document.getElementById('conflict-keep-mine').click();
+            }, 50);
+            const result = await promise;
+            const pass = result === 'mine';
+            addResult(testName, pass, pass ? 'ok' : `got "${result}", expected "mine"`);
+        } catch (e) {
+            addResult(testName, false, e.message);
+        }
+    }
+
+    // Test 2: showConflictDialog returns 'external' when "Load external" is clicked.
+    {
+        const testName = 'Click "加载外部版本" returns "external"';
+        try {
+            window.currentEditor.path = '/test/another.md';
+            const promise = showConflictDialog('/test/another.md');
+            setTimeout(() => {
+                document.getElementById('conflict-load-external').click();
+            }, 50);
+            const result = await promise;
+            const pass = result === 'external';
+            addResult(testName, pass, pass ? 'ok' : `got "${result}", expected "external"`);
+        } catch (e) {
+            addResult(testName, false, e.message);
+        }
+    }
+
+    // Test 3: Dialog auto-closes with 'external' when editor switches.
+    {
+        const testName = 'Editor switch auto-closes with "external"';
+        try {
+            window.currentEditor.path = '/test/switch-test.md';
+            const promise = showConflictDialog('/test/switch-test.md');
+            // Simulate editor switch after a short delay.
+            setTimeout(() => {
+                window.currentEditor.path = '/test/other-file.md';
+            }, 100);
+            const result = await promise;
+            const pass = result === 'external';
+            addResult(testName, pass, pass ? 'ok' : `got "${result}", expected "external"`);
+        } catch (e) {
+            addResult(testName, false, e.message);
+        }
+    }
+
+    // Test 4: Dialog body shows the correct file path.
+    {
+        const testName = 'Dialog body displays file path';
+        try {
+            window.currentEditor.path = '/test/path-display.md';
+            const promise = showConflictDialog('/test/path-display.md');
+            // Check the body content before clicking.
+            await new Promise(r => setTimeout(r, 50));
+            const bodyText = document.getElementById('conflict-dialog-body').textContent;
+            const pass = bodyText === '/test/path-display.md';
+            // Clean up.
+            document.getElementById('conflict-keep-mine').click();
+            await promise;
+            addResult(testName, pass, pass ? `ok ("${bodyText}")` : `got "${bodyText}", expected "/test/path-display.md"`);
+        } catch (e) {
+            addResult(testName, false, e.message);
+        }
+    }
+
+    // Test 5: Dialog overlay becomes visible when shown.
+    {
+        const testName = 'Dialog overlay becomes visible';
+        try {
+            window.currentEditor.path = '/test/visibility.md';
+            const promise = showConflictDialog('/test/visibility.md');
+            await new Promise(r => setTimeout(r, 50));
+            const display = document.getElementById('conflict-dialog-overlay').style.display;
+            const pass = display === 'flex';
+            // Clean up.
+            document.getElementById('conflict-keep-mine').click();
+            await promise;
+            addResult(testName, pass, pass ? 'ok' : `display is "${display}", expected "flex"`);
+        } catch (e) {
+            addResult(testName, false, e.message);
+        }
+    }
+
+    // Test 6: Dialog overlay hides after resolution.
+    {
+        const testName = 'Dialog overlay hides after resolution';
+        try {
+            window.currentEditor.path = '/test/hide.md';
+            const promise = showConflictDialog('/test/hide.md');
+            await new Promise(r => setTimeout(r, 50));
+            document.getElementById('conflict-keep-mine').click();
+            await promise;
+            await new Promise(r => setTimeout(r, 50));
+            const display = document.getElementById('conflict-dialog-overlay').style.display;
+            const pass = display === 'none';
+            addResult(testName, pass, pass ? 'ok' : `display is "${display}", expected "none"`);
+        } catch (e) {
+            addResult(testName, false, e.message);
+        }
+    }
+
+    // Test 7: Multiple calls for the same path return 'mine' without double-showing.
+    {
+        const testName = 'Duplicate call for same path returns "mine"';
+        try {
+            window.currentEditor.path = '/test/duplicate.md';
+            // First call: show the dialog.
+            const promise1 = showConflictDialog('/test/duplicate.md');
+            await new Promise(r => setTimeout(r, 50));
+            // Second call for the same path while dialog is open.
+            const promise2 = showConflictDialog('/test/duplicate.md');
+            const result2 = await promise2; // Should resolve immediately with 'mine'.
+            const pass = result2 === 'mine';
+            // Clean up.
+            document.getElementById('conflict-keep-mine').click();
+            await promise1;
+            addResult(testName, pass, pass ? 'ok' : `got "${result2}", expected "mine"`);
+        } catch (e) {
+            addResult(testName, false, e.message);
+        }
+    }
+
+    // Test 8: Queueing — conflict for a different path during an existing dialog.
+    {
+        const testName = 'Second conflict is queued during existing dialog';
+        try {
+            window.currentEditor.path = '/test/first-conflict.md';
+            const promise1 = showConflictDialog('/test/first-conflict.md');
+            await new Promise(r => setTimeout(r, 50));
+
+            // Start a second conflict for a different path.
+            const promise2 = showConflictDialog('/test/second-conflict.md');
+
+            // Verify dialog still shows the FIRST path.
+            const bodyText = document.getElementById('conflict-dialog-body').textContent;
+            const passFirst = bodyText === '/test/first-conflict.md';
+
+            // Resolve the first dialog.
+            document.getElementById('conflict-keep-mine').click();
+            await promise1;
+
+            // Now the second dialog should be showing.
+            await new Promise(r => setTimeout(r, 100));
+            const bodyText2 = document.getElementById('conflict-dialog-body').textContent;
+            const passSecond = bodyText2 === '/test/second-conflict.md';
+
+            // Resolve the second.
+            window.currentEditor.path = '/test/second-conflict.md';
+            document.getElementById('conflict-keep-mine').click();
+            const result2 = await promise2;
+
+            const pass = passFirst && passSecond && result2 === 'mine';
+            addResult(testName, pass,
+                pass ? 'ok (first shows, second queued, both resolve)' :
+                `first body="${bodyText}", second body="${bodyText2}", result2="${result2}"`);
+        } catch (e) {
+            addResult(testName, false, e.message);
+        }
+    }
+
+    console.log('All conflict dialog tests completed.');
+}
+
+// Run tests after a short delay to ensure DOM is ready.
+setTimeout(runTests, 100);
+</script>
+</body>
+</html>

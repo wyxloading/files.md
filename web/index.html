@@ -165,6 +165,17 @@
     </form>
     <ul id="move-results"></ul>
 </div>
+<!-- Conflict dialog: shown when a file is modified externally while editor has unsaved changes -->
+<div id="conflict-dialog-overlay" style="display: none;">
+    <div id="conflict-dialog">
+        <div id="conflict-dialog-title">文件已被外部修改</div>
+        <div id="conflict-dialog-body"></div>
+        <div id="conflict-dialog-actions">
+            <button id="conflict-keep-mine" class="btn-primary">保留我的编辑</button>
+            <button id="conflict-load-external" class="btn-secondary">加载外部版本</button>
+        </div>
+    </div>
+</div>
 <script src="editor.js?v="></script>
 <script src="app.js?v="></script>
 <script src="chat.js?v="></script>

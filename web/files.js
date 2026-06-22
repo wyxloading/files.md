@@ -1255,6 +1255,11 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
     }
 }
 
+// Conflict resolution globals (shared with modals.js via window).
+// Initialized here because files.js loads before modals.js.
+window.conflictPath = null;     // path of the file currently in conflict resolution
+window.conflictQueue = [];      // [{path, resolve}] — queued conflicts, processed one at a time
+
 // 0) Read content from local fs
 // 1) Save current editor content to local filesystem if there's diff
 // 2) Sync it with the server
@@ -1287,6 +1292,13 @@ async function syncCurrentFile(switchAwayEditor = false) {
     const path = currentEditor.path;
     let isCurrentEditorSame = () => {
         return path === window.currentEditor.path;
+    }
+
+    // Skip saver cycles while this file is waiting for conflict resolution
+    // (the conflict dialog is open for this path).
+    if (window.conflictPath !== null && window.conflictPath === path) {
+        isMessingWithCurrentEditor = false;
+        return;
     }
 
     if (path === CHAT_PATH) {
@@ -1492,8 +1504,70 @@ async function syncCurrentFile(switchAwayEditor = false) {
             if (file && file.handle) {
                 const freshContent = getCurrentContent();
                 if (!currentEditor.isClean() && contentWasModifiedLocally) {
-                    // Changes from both sides: editor and local fs, need merging
+                    // Changes from both sides: editor and local fs, need merging.
+                    // The editor has unsaved modifications AND the file on disk
+                    // was changed externally — user must pick which version to keep.
 
+                    // Release the editor lock so the UI remains interactive
+                    // while the user decides.  We do NOT set conflictPath here:
+                    // showConflictDialog → _showConflictDialogInternal sets it
+                    // internally, which correctly guards the saver against
+                    // re-entry for this path.  The isSaving flag (set above)
+                    // prevents saver re-entry during the async gap before
+                    // _showConflictDialogInternal takes over.  Setting
+                    // conflictPath prematurely would cause showConflictDialog
+                    // to short-circuit and return 'mine' without showing the UI.
+                    isMessingWithCurrentEditor = false;
+
+                    log('Conflict detected for', path);
+                    const choice = await showConflictDialog(path);
+
+                    // _showConflictDialogInternal's finally block already
+                    // reset conflictPath to null, so we only need to clean
+                    // up saver state.
+
+                    // If the user switched to a different file while the dialog
+                    // was open, abort — no reload needed (the new file is already
+                    // open). The saver will resume for the new file.
+                    if (!isCurrentEditorSame()) {
+                        isSaving = false;
+                        isMessingWithCurrentEditor = false;
+                        return;
+                    }
+
+                    // Reacquire the editor lock before proceeding.
+                    isMessingWithCurrentEditor = true;
+
+                    if (choice === 'external') {
+                        // User chose to discard local edits and load the external
+                        // version from disk.
+                        isSaving = false;
+                        isMessingWithCurrentEditor = false;
+                        if (!switchAwayEditor) {
+                            const el = currentEditor === editor2 ? 'editor2-textarea' : 'editor-textarea';
+                            try {
+                                await openFile(path, false, el);
+                            } catch (openErr) {
+                                // openFile failure is handled locally — the outer
+                                // catch block's undo logic is meant for save-failure
+                                // recovery, not file-open-failure recovery.
+                                logError('Failed to load external version for', path, openErr);
+                            }
+                        }
+                        return;
+                    }
+
+                    // choice === 'mine': keep editor content, fall through to save.
+                    log('User chose to keep local edits for', path);
+
+                    // Guard: if the user switched files after choosing 'mine'
+                    // (narrow race window between click and markClean/write),
+                    // abort to avoid marking the wrong editor as clean.
+                    if (!isCurrentEditorSame()) {
+                        isSaving = false;
+                        isMessingWithCurrentEditor = false;
+                        return;
+                    }
                 }
                 // We need to atomically reset the flag once we captured a snapshot of particular version of the content.
                 // This flag can be changed in the event loop, as a result of user making changes to the text in the middle

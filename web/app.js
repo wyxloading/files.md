@@ -13,6 +13,13 @@ let openChatIdleTimer = null;
 let isChat = false;
 let isMemFS = false;
 let debug = false;
+
+// --- Fast polling framework (REQ-260618-010-TASK-001) ---
+let fastPollTimer = null;
+let prevEntrySet = new Set();
+let isPollingPaused = false;
+let fastPollRunning = false; // guard against overlapping ticks
+const FAST_POLL_INTERVAL = 5000; // ms
 // Per-tab in-memory cache of the current directory handle.
 // Prevents cross-tab hijacking: without this, focus/blur handlers
 // would re-read the globally-shared _lastUsed IndexedDB key and
@@ -135,6 +142,199 @@ async function init() {
     await syncMediaFiles();
     log(`Files initialized in: ${(performance.now() - perf).toFixed(3)} milliseconds`);
 
+    // Start fast polling if a local directory is open.
+    if (!isMemFS && _currentTabDirHandle) {
+        startFastPoll();
+    }
+}
+
+// --- Fast polling framework (REQ-260618-010-TASK-001) ---
+
+async function fastPollTick() {
+    // Guard against overlapping invocations from setInterval.
+    if (fastPollRunning) return;
+    // Skip if a full scan is already in progress.
+    if (isLoadingLocalFiles) return;
+    // Skip if polling is paused (visibility hidden, chat open, etc.).
+    if (isPollingPaused) return;
+    // Need an open directory to poll.
+    if (!_currentTabDirHandle) return;
+
+    fastPollRunning = true;
+    try {
+
+    const rootDirHandle = await getRootDirHandle();
+    if (!(rootDirHandle instanceof FileSystemDirectoryHandle)) return;
+
+    let currentEntries;
+    try {
+        currentEntries = await scanDirEntries(rootDirHandle);
+    } catch (err) {
+        logError('fastPollTick: scanDirEntries failed', err);
+        return;
+    }
+
+    const currentSet = currentEntries.entrySet;
+    const handles = currentEntries.handles;
+
+    // Diff: find added and removed paths.
+    const added = [];
+    const removed = [];
+
+    for (const p of currentSet) {
+        if (!prevEntrySet.has(p)) added.push(p);
+    }
+    for (const p of prevEntrySet) {
+        if (!currentSet.has(p)) removed.push(p);
+    }
+
+    if (added.length === 0 && removed.length === 0) {
+        prevEntrySet = currentSet;
+        return;
+    }
+
+    log('fastPollTick: changes detected', { added, removed });
+
+    // Apply additions to in-memory `files`.
+    for (const p of added) {
+        if (p.endsWith('/')) {
+            // New directory.
+            const dirs = p.split('/').filter(d => d !== '');
+            let currentDir = files;
+            for (const dir of dirs) {
+                const dirKey = dir + '/';
+                if (!currentDir[dirKey]) {
+                    currentDir[dirKey] = {};
+                }
+                currentDir = currentDir[dirKey];
+            }
+        } else {
+            // New file — add a minimal memFile entry with handle from scan.
+            const handle = handles.get(p);
+            addMemFile(p, {
+                isFile: true,
+                path: p,
+                handle: handle || undefined,
+            });
+            // Fill in lastModified lazily.
+            if (handle) {
+                handle.getFile().then(file => {
+                    const mem = getMemFile(p);
+                    if (mem) mem.lastModified = file.lastModified;
+                }).catch(() => {});
+            }
+        }
+    }
+
+    // Apply removals from in-memory `files`.
+    for (const p of removed) {
+        if (p.endsWith('/')) {
+            // Remove directory from memory.
+            const dirs = p.split('/').filter(d => d !== '');
+            let currentDir = files;
+            for (let i = 0; i < dirs.length - 1; i++) {
+                const dirKey = dirs[i] + '/';
+                if (!currentDir[dirKey]) break;
+                currentDir = currentDir[dirKey];
+            }
+            const lastDir = dirs[dirs.length - 1] + '/';
+            if (currentDir[lastDir]) {
+                delete currentDir[lastDir];
+            }
+        } else {
+            removeMemFile(p);
+        }
+    }
+
+    prevEntrySet = currentSet;
+    // Full sidebar rebuild with changed paths marked for blinking.
+    renderSidebar(null, [...added, ...removed]);
+    } finally {
+        fastPollRunning = false;
+    }
+}
+
+function startFastPoll() {
+    if (fastPollTimer) return;
+    log('startFastPoll');
+    fastPollTick(); // Run once immediately for baseline.
+    fastPollTimer = setInterval(fastPollTick, FAST_POLL_INTERVAL);
+}
+
+function stopFastPoll() {
+    if (fastPollTimer) {
+        clearInterval(fastPollTimer);
+        fastPollTimer = null;
+    }
+    prevEntrySet = new Set();
+    log('stopFastPoll');
+}
+
+function pauseFastPoll() {
+    if (isPollingPaused) return;
+    isPollingPaused = true;
+    if (fastPollTimer) {
+        clearInterval(fastPollTimer);
+        fastPollTimer = null;
+    }
+    // Don't clear prevEntrySet — we want to diff against the last known
+    // state when we resume, not treat everything as new.
+    log('pauseFastPoll');
+}
+
+async function resumeFastPoll() {
+    if (!isPollingPaused && fastPollTimer) return;
+    log('resumeFastPoll');
+
+    // Full scan to refresh the baseline after being paused.
+    const rootDirHandle = await getRootDirHandle();
+    if (rootDirHandle instanceof FileSystemDirectoryHandle) {
+        try {
+            files = await loadLocalFiles(rootDirHandle);
+            // Rebuild prevEntrySet from the fresh files state.
+            const scanResult = await scanDirEntries(rootDirHandle);
+            prevEntrySet = scanResult.entrySet;
+            renderSidebar();
+        } catch (err) {
+            logError('resumeFastPoll: full scan failed', err);
+        }
+    }
+
+    isPollingPaused = false;
+
+    // Start the interval if not already running.
+    if (!fastPollTimer) {
+        fastPollTimer = setInterval(fastPollTick, FAST_POLL_INTERVAL);
+    }
+}
+
+// --- End fast polling framework ---
+
+// Refresh button handler (REQ-260618-010-TASK-001)
+{   // block scope for const
+    const refreshBtn = document.getElementById('refresh-files');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', async () => {
+            if (isLoadingLocalFiles) return;
+            const rootDirHandle = await getRootDirHandle();
+            if (!(rootDirHandle instanceof FileSystemDirectoryHandle)) return;
+
+            refreshBtn.classList.add('refresh-spinning');
+            try {
+                files = await loadLocalFiles(rootDirHandle);
+                // Rebuild the polling baseline.
+                try {
+                    const scanResult = await scanDirEntries(rootDirHandle);
+                    prevEntrySet = scanResult.entrySet;
+                } catch (_) {}
+                renderSidebar();
+            } catch (err) {
+                logError('Refresh files failed:', err);
+            } finally {
+                refreshBtn.classList.remove('refresh-spinning');
+            }
+        });
+    }
 }
 
 // Logic for click-handling is in click.js => isWikiLink
@@ -507,6 +707,18 @@ async function _switchToLocalDirectory(dirHandle) {
     lastChatText = null;
     document.getElementById('open-folder').style.display = 'none';
     renderSidebar();
+
+    // Restart polling with the new directory (REQ-260618-010-TASK-001).
+    stopFastPoll();
+    if (!isMemFS && _currentTabDirHandle) {
+        // Rebuild the baseline from the freshly-loaded files.
+        try {
+            const scanResult = await scanDirEntries(dirHandle);
+            prevEntrySet = scanResult.entrySet;
+        } catch (_) {}
+        startFastPoll();
+    }
+
     await openChat();
 }
 
@@ -1381,6 +1593,15 @@ window.addEventListener('blur', async function() {
     log('Sync completed');
 });
 
+// Pause/resume fast polling based on page visibility (REQ-260618-010-TASK-001).
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        pauseFastPoll();
+    } else {
+        resumeFastPoll();
+    }
+});
+
 document.addEventListener('keydown', (e) => {
     // If search or move dialog is focused - return
     if (document.getElementById('search').style.display !== 'none' ||
@@ -1395,6 +1616,7 @@ document.addEventListener('keydown', (e) => {
 
 window.addEventListener('beforeunload', function() {
     clearInterval(window.saver);
+    stopFastPoll();
     releaseCurrentDirClaim();
 });
 

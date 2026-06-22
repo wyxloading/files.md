@@ -228,6 +228,7 @@ async function openChat() {
         chatInput.focus();
     }
     isChat = true;
+    pauseFastPoll();
     await renderMessages();
     scrollToBottom();
 }

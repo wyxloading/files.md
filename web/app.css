@@ -685,6 +685,24 @@ button svg circle {
     color: var(--color-neo-orange);
 }
 
+/* Refresh button (REQ-260618-010-TASK-001) */
+#refresh-files svg {
+    color: var(--col-tx-alt);
+}
+
+#refresh-files:hover svg {
+    color: var(--color-neo-orange);
+}
+
+#refresh-files.refresh-spinning svg {
+    animation: refresh-spin 0.6s linear infinite;
+}
+
+@keyframes refresh-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 /* Fast custom tooltip below toolbar buttons + close-sidebar. The native
    `title=` delay is ~1.5 s in Chrome, way too slow for high-frequency
    icons. We pull the label out via attr(title) and reveal at 250 ms. */

@@ -607,6 +607,37 @@ async function syncMediaFiles() {
     isSyncingMedia = false;
 }
 
+// Lightweight directory scan — only reads entry.name + entry.kind,
+// never calls entry.getFile(). Returns the set of all file/directory
+// paths under rootDirHandle (directories end with '/'), plus a map of
+// FileSystemFileHandle for any files encountered.
+async function scanDirEntries(rootDirHandle, maxDepth = 10) {
+    const entrySet = new Set();
+    const handles = new Map();
+
+    async function scan(dirHandle, path = '/', depth = 0) {
+        for await (const entry of dirHandle.values()) {
+            const filename = entry.name.normalize('NFC');
+
+            if (isIgnoredName(filename)) continue;
+
+            const fullPath = path + filename;
+            if (entry.kind === 'directory') {
+                if (depth >= maxDepth) continue;
+                const dirPath = fullPath + '/';
+                entrySet.add(dirPath);
+                await scan(entry, dirPath, depth + 1);
+            } else if (entry.kind === 'file') {
+                entrySet.add(fullPath);
+                handles.set(fullPath, entry);
+            }
+        }
+    }
+
+    await scan(rootDirHandle);
+    return { entrySet, handles };
+}
+
 // Saves media file and moves pointer
 async function saveMediaFile(path, blob, lastModified) {
     const fileHandle = await getFileHandle(path, true);
@@ -1126,6 +1157,7 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
             chat.style.display = 'none';
             chatInput.style.display = 'none';
             isChat = false;
+            resumeFastPoll();
         }
         // chatButton.classList.remove('hidden');
         chatContainer.style.display = 'none';

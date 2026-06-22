@@ -282,7 +282,7 @@ function stopFastPoll() {
     log('stopFastPoll');
 }
 
-function pauseFastPoll() {
+function pausePolling() {
     if (isPollingPaused) return;
     isPollingPaused = true;
     if (fastPollTimer) {
@@ -296,12 +296,12 @@ function pauseFastPoll() {
     }
     // Don't clear prevEntrySet — we want to diff against the last known
     // state when we resume, not treat everything as new.
-    log('pauseFastPoll');
+    log('pausePolling');
 }
 
-async function resumeFastPoll() {
+async function resumePolling() {
     if (!isPollingPaused && fastPollTimer) return;
-    log('resumeFastPoll');
+    log('resumePolling');
 
     // Full scan to refresh the baseline after being paused.
     const rootDirHandle = await getRootDirHandle();
@@ -313,7 +313,7 @@ async function resumeFastPoll() {
             prevEntrySet = scanResult.entrySet;
             renderSidebar();
         } catch (err) {
-            logError('resumeFastPoll: full scan failed', err);
+            logError('resumePolling: full scan failed', err);
         }
     }
 
@@ -1718,12 +1718,12 @@ window.addEventListener('blur', async function() {
     log('Sync completed');
 });
 
-// Pause/resume fast polling based on page visibility (REQ-260618-010-TASK-001).
+// Pause/resume polling based on page visibility (REQ-260618-010-TASK-001).
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-        pauseFastPoll();
+        pausePolling();
     } else {
-        resumeFastPoll();
+        resumePolling();
     }
 });
 

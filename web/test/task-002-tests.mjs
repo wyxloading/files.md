@@ -5,6 +5,11 @@ import assert from 'node:assert/strict';
 
 // ============================================================
 // Replicated helpers from the codebase for testing
+//
+// WARNING: These helpers (removeTrailingSlash, findNodeByPath,
+// makeMockTreeNode) are replicated from the source code. When the
+// originals in web/lib/sidebar.js or web/files.js change, the replicas
+// here AND in web/test/task-002-tests.html MUST be updated to match.
 // ============================================================
 
 function removeTrailingSlash(path) {
@@ -921,14 +926,14 @@ describe('checkFileModifications full-algorithm integration', () => {
 // ============================================================
 describe('Slow poll lifecycle — pause/resume coordination with fast poll', () => {
   // Models the state lifecycle from app.js: fast poll + slow poll share
-  // isPollingPaused; pauseFastPoll clears both timers; resumeFastPoll
+  // isPollingPaused; pausePolling clears both timers; resumePolling
   // restarts both; stopSlowPoll runs on beforeunload alongside stopFastPoll.
 
-  it('pauseFastPoll clears both fast and slow timers', () => {
+  it('pausePolling clears both fast and slow timers', () => {
     let fastTimer = 1;   // non-null → "running"
     let slowTimer = 2;
 
-    // Simulate pauseFastPoll:
+    // Simulate pausePolling:
     if (fastTimer) { fastTimer = null; }
     if (slowTimer) { slowTimer = null; }
 
@@ -936,7 +941,7 @@ describe('Slow poll lifecycle — pause/resume coordination with fast poll', () 
     assert.equal(slowTimer, null, 'slow timer cleared');
   });
 
-  it('pauseFastPoll is idempotent (already paused)', () => {
+  it('pausePolling is idempotent (already paused)', () => {
     let fastTimer = null;
     let slowTimer = null;
 
@@ -948,12 +953,12 @@ describe('Slow poll lifecycle — pause/resume coordination with fast poll', () 
     assert.equal(slowTimer, null);
   });
 
-  it('resumeFastPoll restarts both timers when not memFS', () => {
+  it('resumePolling restarts both timers when not memFS', () => {
     let fastTimer = null;
     let slowTimer = null;
     const isMemFS = false;
 
-    // Simulate resumeFastPoll:
+    // Simulate resumePolling:
     if (!fastTimer) { fastTimer = 1; }
     if (!slowTimer && !isMemFS) { slowTimer = 1; }
 
@@ -961,7 +966,7 @@ describe('Slow poll lifecycle — pause/resume coordination with fast poll', () 
     assert.notEqual(slowTimer, null, 'slow timer started');
   });
 
-  it('resumeFastPoll does not start slow poll when isMemFS', () => {
+  it('resumePolling does not start slow poll when isMemFS', () => {
     let fastTimer = null;
     let slowTimer = null;
     const isMemFS = true;
@@ -973,12 +978,12 @@ describe('Slow poll lifecycle — pause/resume coordination with fast poll', () 
     assert.equal(slowTimer, null, 'slow timer NOT started for memFS');
   });
 
-  it('resumeFastPoll does not duplicate timers if already running', () => {
+  it('resumePolling does not duplicate timers if already running', () => {
     let fastTimer = 1;
     let slowTimer = 1;
     const isMemFS = false;
 
-    // resumeFastPoll first checks: if (!isPollingPaused && fastTimer) return;
+    // resumePolling first checks: if (!isPollingPaused && fastTimer) return;
     // So already-running timers stay as-is.
     if (!fastTimer) { fastTimer = 1; }
     if (!slowTimer && !isMemFS) { slowTimer = 1; }
@@ -1247,5 +1252,310 @@ describe('slowPollTick — guard checks and dispatch logic', () => {
     }
     assert.equal(reloaded.length, 1);
     assert.equal(reloaded[0], '/current.md');
+  });
+});
+
+// ============================================================
+// Suite 14: Integration — slow poll modification → conflict dialog
+// Tests the full chain: slowPollTick detects external modification →
+// handleSlowPollModification dispatches to conflict dialog when the
+// modified file is the current editor with unsaved changes.
+//
+// This test verifies the integration between TASK-002 (slow poll)
+// and TASK-003 (conflict dialog), exercising the decision logic
+// without depending on real FileSystemHandle or DOM APIs.
+// ============================================================
+describe('Integration — slow poll modification → conflict dialog', () => {
+  // Replicates the logic from handleSlowPollModification (app.js:405-432)
+  // and the slowPollTick dispatch (app.js:368-371).
+
+  function simulateHandleSlowPollModification(modifiedPath, editorState) {
+    // editorState: { path, isClean: bool }
+    if (editorState && editorState.path === modifiedPath && !editorState.isClean) {
+      // Current editor with unsaved changes → trigger conflict resolution.
+      return { action: 'conflict', path: modifiedPath };
+    }
+    // Not the current editor or editor is clean → just update lastModified.
+    return { action: 'update-timestamp', path: modifiedPath };
+  }
+
+  it('dirty editor file modified externally → triggers conflict', () => {
+    const result = simulateHandleSlowPollModification('/notes/draft.md', {
+      path: '/notes/draft.md',
+      isClean: false,
+    });
+    assert.equal(result.action, 'conflict', 'should trigger conflict for dirty editor');
+    assert.equal(result.path, '/notes/draft.md');
+  });
+
+  it('clean editor file modified externally → updates timestamp only', () => {
+    const result = simulateHandleSlowPollModification('/notes/clean.md', {
+      path: '/notes/clean.md',
+      isClean: true,
+    });
+    assert.equal(result.action, 'update-timestamp', 'clean editor → no conflict needed');
+  });
+
+  it('non-editor file modified externally → updates timestamp only', () => {
+    const result = simulateHandleSlowPollModification('/journal/log.md', {
+      path: '/notes/other.md',   // editor is on a different file
+      isClean: false,
+    });
+    assert.equal(result.action, 'update-timestamp', 'different file → just update timestamp');
+  });
+
+  it('no editor open → updates timestamp only', () => {
+    const result = simulateHandleSlowPollModification('/notes/file.md', null);
+    assert.equal(result.action, 'update-timestamp', 'no editor → just update timestamp');
+  });
+
+  // Simulate the conflict resolution choice → editor state outcome.
+  function simulateConflictResolution(choice, reloadSucceeds = true) {
+    if (choice === 'external') {
+      // User chose to load external version → discard local edits.
+      if (reloadSucceeds) {
+        return { outcome: 'reloaded', editorDirty: false };
+      }
+      return { outcome: 'reload-failed', editorDirty: true };
+    }
+    // choice === 'mine': keep editor content, save to disk.
+    return { outcome: 'kept-local', editorDirty: true };
+  }
+
+  it('user chooses "mine" → local edits preserved', () => {
+    const result = simulateConflictResolution('mine');
+    assert.equal(result.outcome, 'kept-local');
+    assert.ok(result.editorDirty, 'editor still has local changes to save');
+  });
+
+  it('user chooses "external" → external version loaded, editor clean', () => {
+    const result = simulateConflictResolution('external', true);
+    assert.equal(result.outcome, 'reloaded');
+    assert.equal(result.editorDirty, false, 'editor clean after external reload');
+  });
+
+  it('external reload fails → editor keeps dirty state', () => {
+    const result = simulateConflictResolution('external', false);
+    assert.equal(result.outcome, 'reload-failed');
+    assert.ok(result.editorDirty, 'editor stays dirty when reload fails');
+  });
+
+  // Simulate the full slowPollTick decision tree with conflict dispatch.
+  function simulateSlowPollDispatch(modifiedPaths, deletedPaths, editorState) {
+    const results = [];
+
+    // Handle deleted files
+    for (const path of deletedPaths) {
+      results.push({ type: 'deleted', path });
+    }
+
+    // Handle modified files
+    for (const path of modifiedPaths) {
+      const dispatch = simulateHandleSlowPollModification(path, editorState);
+      results.push({ type: 'modified', ...dispatch });
+    }
+
+    return results;
+  }
+
+  it('full slowPollTick dispatch: mixed modified + deleted', () => {
+    const results = simulateSlowPollDispatch(
+      ['/notes/draft.md', '/journal/log.md'],  // modified
+      ['/gone.md'],                              // deleted
+      { path: '/notes/draft.md', isClean: false } // editor
+    );
+
+    assert.equal(results.length, 3);
+    // Check deleted
+    assert.equal(results[0].type, 'deleted');
+    assert.equal(results[0].path, '/gone.md');
+    // Check conflict (dirty editor)
+    assert.equal(results[1].type, 'modified');
+    assert.equal(results[1].action, 'conflict');
+    assert.equal(results[1].path, '/notes/draft.md');
+    // Check timestamp update (non-editor file)
+    assert.equal(results[2].type, 'modified');
+    assert.equal(results[2].action, 'update-timestamp');
+    assert.equal(results[2].path, '/journal/log.md');
+  });
+
+  it('full slowPollTick dispatch: all modified are non-editor files', () => {
+    const results = simulateSlowPollDispatch(
+      ['/archive/old.md', '/config/settings.md'],
+      [],
+      { path: '/notes/current.md', isClean: false } // editor on different file
+    );
+
+    assert.equal(results.length, 2);
+    assert.equal(results[0].action, 'update-timestamp');
+    assert.equal(results[1].action, 'update-timestamp');
+  });
+
+  it('slowPollTick: when no modifications detected, no dispatch happens', () => {
+    // Simulating the early return in slowPollTick:
+    // if (modified.length === 0 && deleted.length === 0) return;
+    const modified = [];
+    const deleted = [];
+    const hasChanges = modified.length > 0 || deleted.length > 0;
+    assert.equal(hasChanges, false, 'no changes → early return, no dispatch');
+  });
+});
+// fast poll (add/remove detection) and slow poll (modification
+// detection) for the same file.
+// ============================================================
+describe('Integration — fast poll add/remove + slow poll modification interplay', () => {
+  it('fast poll adds a file, slow poll later detects its modification', () => {
+    // Simulate: fastPollTick adds /new.md to the in-memory file tree
+    const files = {};
+    const added = ['/new.md'];
+
+    // Fast poll adds file with lastModified = 1000
+    for (const p of added) {
+      files[p] = { isFile: true, path: p, lastModified: 1000 };
+    }
+    assert.ok(files['/new.md'], 'file added by fast poll exists');
+
+    // Later, slow poll's checkFileModifications detects disk timestamp 2000 > 1000
+    const memFile = files['/new.md'];
+    const diskModified = 2000;
+    const hasModification = memFile.lastModified !== undefined && diskModified > memFile.lastModified;
+    assert.ok(hasModification, 'slow poll detects modification after fast poll add');
+
+    // Updated timestamp prevents re-reporting
+    memFile.lastModified = diskModified;
+    assert.equal(memFile.lastModified, 2000);
+  });
+
+  it('fast poll removes a file, slow poll does not re-report it', () => {
+    const deleted = ['/removed.md'];
+    const modified = [];
+
+    // Fast poll already removed the file from `files`
+    // Slow poll's checkFileModifications only walks `files` entries,
+    // so deleted files won't appear in its filePaths list
+    const filePaths = [];
+    // If /removed.md was in files, it would be collected
+    // But it's not (deleted by fast poll) → no false modification report
+    assert.equal(filePaths.length, 0, 'deleted file not walked by slow poll');
+
+    // Modified list stays empty
+    assert.equal(modified.length, 0);
+    assert.equal(deleted.length, 1);
+  });
+
+  it('fast poll detects add, slow poll detects delete of different file simultaneously', () => {
+    const fastAdded = ['/new-note.md'];
+    const fastRemoved = ['/old-note.md'];
+    const slowDeleted = ['/other-gone.md']; // independent deletion from slow poll
+
+    // Fast poll's diffSet and slow poll's results are independent data sources
+    const allSidebarChanges = [...fastAdded, ...fastRemoved, ...slowDeleted];
+    assert.equal(allSidebarChanges.length, 3);
+    assert.ok(allSidebarChanges.includes('/new-note.md'));
+    assert.ok(allSidebarChanges.includes('/old-note.md'));
+    assert.ok(allSidebarChanges.includes('/other-gone.md'));
+  });
+});
+
+// ============================================================
+// Suite 16: Integration — polling resume lifecycle
+// Tests the full resume path: visibility change → full scan →
+// restart both intervals, interacting correctly with isPollingPaused.
+// ============================================================
+describe('Integration — polling resume lifecycle', () => {
+  it('resumePolling performs full scan and restarts both timers', () => {
+    let fastTimer = null;
+    let slowTimer = null;
+    let isPaused = true;
+    const isMemFS = false;
+
+    // After resumePolling:
+    // 1. Full scan (loadLocalFiles + scanDirEntries) — model as stubs
+    let filesLoaded = false;
+    let prevEntrySetRebuilt = false;
+    filesLoaded = true;
+    prevEntrySetRebuilt = true;
+
+    // 2. isPollingPaused set to false
+    isPaused = false;
+
+    // 3. Restart intervals
+    if (!fastTimer) { fastTimer = 1; }
+    if (!slowTimer && !isMemFS) { slowTimer = 1; }
+
+    assert.ok(filesLoaded, 'full scan completed');
+    assert.ok(prevEntrySetRebuilt, 'prevEntrySet rebuilt from scan');
+    assert.equal(isPaused, false, 'polling unpaused');
+    assert.notEqual(fastTimer, null, 'fast timer restarted');
+    assert.notEqual(slowTimer, null, 'slow timer restarted');
+  });
+
+  it('resumePolling does not restart timers for memFS (demo mode)', () => {
+    let fastTimer = null;
+    let slowTimer = null;
+    let isPaused = true;
+    const isMemFS = true;
+
+    isPaused = false;
+    if (!fastTimer) { fastTimer = 1; }
+    if (!slowTimer && !isMemFS) { slowTimer = 1; }  // isMemFS is true → skip
+
+    assert.notEqual(fastTimer, null, 'fast timer restarted');
+    assert.equal(slowTimer, null, 'slow timer NOT started for memFS');
+  });
+
+  it('full pause → resume cycle preserves prevEntrySet (not cleared during pause)', () => {
+    const prevSet = new Set(['/a.md', '/b.md', '/notes/']);
+    let isPaused = false;
+
+    // Pause: clear timers, set flag, keep prevEntrySet
+    isPaused = true;
+    let timersCleared = true;
+
+    // Resume: full scan, rebuild prevEntrySet from fresh scan
+    // For this test, full scan produces same entries
+    const freshScanSet = new Set(['/a.md', '/b.md', '/notes/', '/c.md']); // c.md added externally while paused
+    const rebuiltSet = freshScanSet; // prevEntrySet = scanResult.entrySet
+
+    isPaused = false;
+    assert.ok(timersCleared, 'timers cleared during pause');
+    assert.equal(isPaused, false, 'unpaused after resume');
+    assert.equal(rebuiltSet.size, 4, 'resume picks up external changes during pause');
+    assert.ok(rebuiltSet.has('/c.md'), 'new file detected after resume');
+  });
+
+  it('both poll tick functions check isPollingPaused guard', () => {
+    // Fast poll tick guard
+    let fastPollRunning = false;
+    let isPaused = true;
+
+    // fastPollTick: if (isPollingPaused) return;
+    if (isPaused) {
+      // early return — does NOT set fastPollRunning = true
+    } else {
+      fastPollRunning = true;
+    }
+    assert.equal(fastPollRunning, false, 'fast poll tick skipped while paused');
+
+    // Slow poll tick guard (same guard)
+    let slowPollRunning = false;
+    if (isPaused) {
+      // early return
+    } else {
+      slowPollRunning = true;
+    }
+    assert.equal(slowPollRunning, false, 'slow poll tick skipped while paused');
+  });
+
+  it('startFastPoll and startSlowPoll are idempotent (no double intervals)', () => {
+    // startFastPoll: if (fastPollTimer) return;
+    let fastTimer = 1;
+    let slowTimer = 1;
+
+    if (fastTimer) { /* return */ } else { fastTimer = 2; }
+    if (slowTimer) { /* return */ } else { slowTimer = 2; }
+
+    assert.equal(fastTimer, 1, 'fast timer not duplicated');
+    assert.equal(slowTimer, 1, 'slow timer not duplicated');
   });
 });

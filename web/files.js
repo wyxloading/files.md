@@ -1157,7 +1157,7 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
             chat.style.display = 'none';
             chatInput.style.display = 'none';
             isChat = false;
-            resumeFastPoll();
+            resumePolling();
         }
         // chatButton.classList.remove('hidden');
         chatContainer.style.display = 'none';
@@ -1976,8 +1976,15 @@ async function checkFileModifications(filesObj, rootDirHandle, lastCheckTime) {
                 }
                 return { path, modified: false };
             } catch (e) {
-                // File handle is no longer valid — likely deleted externally.
-                return { path, deleted: true };
+                // Only treat NotFoundError (file genuinely deleted) as deletion.
+                // Transient I/O errors, permission issues etc. are logged and skipped
+                // — the fast poll's entrySet diff is the authoritative source for
+                // add/remove detection.
+                if (e && e.name === 'NotFoundError') {
+                    return { path, deleted: true };
+                }
+                logError('checkFileModifications: getFile() error for', path, e);
+                return null;
             }
         }));
 

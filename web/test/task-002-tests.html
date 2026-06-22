@@ -77,6 +77,12 @@ function renderResults() {
   div.innerHTML = html;
 }
 
+// Replicated helpers from the codebase for testing.
+// WARNING: These helpers (removeTrailingSlash, findNodeByPath,
+// makeMockTreeNode) are replicated from the source code.  When the
+// originals in web/lib/sidebar.js or web/files.js change, the replicas
+// here AND in web/test/task-002-tests.mjs MUST be updated to match.
+//
 // Replicated helper from files.js for tests:
 function removeTrailingSlash(path) {
   if (path === '/') return '/';
